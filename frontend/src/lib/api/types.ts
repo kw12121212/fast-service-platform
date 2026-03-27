@@ -49,11 +49,19 @@ export type AccessPermission = {
 
 export type RolePermission = AccessPermission
 
+export type GitCommitSummary = {
+  hash: string
+  summary: string
+}
+
 export type ProjectRepositorySummary = {
   rootPath: string
-  branch: string
+  headState: 'BRANCH' | 'DETACHED' | string
+  branch: string | null
   workingTreeState: 'CLEAN' | 'DIRTY' | string
   latestCommitSummary: string
+  availableBranches: string[]
+  recentCommits: GitCommitSummary[]
 }
 
 export type SoftwareProject = {

@@ -30,6 +30,12 @@ public class ProjectServiceExecutor implements ServiceExecutor {
                     methodArgs[1].getString());
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
         }
+        case "SWITCHPROJECTBRANCH" -> {
+            String result = service.switchprojectbranch(
+                    methodArgs[0].getLong(),
+                    methodArgs[1].getString());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
         case "LISTPROJECTS" -> {
             String result = service.listprojects();
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
@@ -48,6 +54,9 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "BINDPROJECTREPOSITORY" -> service.bindprojectrepository(
                 toLong("PROJECTID", methodArgs),
                 toString("REPOSITORYPATH", methodArgs));
+        case "SWITCHPROJECTBRANCH" -> service.switchprojectbranch(
+                toLong("PROJECTID", methodArgs),
+                toString("BRANCHNAME", methodArgs));
         case "LISTPROJECTS" -> service.listprojects();
         default -> throw noMethodException(methodName);
         };
@@ -63,6 +72,10 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "BINDPROJECTREPOSITORY" -> {
             JsonArray ja = new JsonArray(json);
             yield service.bindprojectrepository(ja.getLong(0), ja.getString(1));
+        }
+        case "SWITCHPROJECTBRANCH" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.switchprojectbranch(ja.getLong(0), ja.getString(1));
         }
         case "LISTPROJECTS" -> service.listprojects();
         default -> throw noMethodException(methodName);

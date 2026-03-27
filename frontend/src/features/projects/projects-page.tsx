@@ -13,15 +13,55 @@ import {
   useBindProjectRepositoryAction,
   useCreateProjectAction,
   useProjectsResource,
+  useSwitchProjectBranchAction,
 } from '@/lib/api/hooks'
 import type { SoftwareProject } from '@/lib/api/types'
 
-function repositoryStateTone(workingTreeState: string) {
+function repositoryStateTone(
+  workingTreeState: string,
+  headState: string | null | undefined,
+) {
+  if (headState === 'DETACHED') {
+    return 'bg-rose-500/12 text-rose-700'
+  }
+
   if (workingTreeState === 'DIRTY') {
     return 'bg-amber-500/14 text-amber-700'
   }
 
   return 'bg-emerald-500/12 text-emerald-700'
+}
+
+function currentRefLabel(project: SoftwareProject) {
+  if (!project.repository) {
+    return null
+  }
+
+  if (project.repository.headState === 'DETACHED') {
+    return 'Detached HEAD'
+  }
+
+  return project.repository.branch
+}
+
+function branchSwitchRestriction(project: SoftwareProject) {
+  if (!project.repository) {
+    return 'Bind a repository first to inspect local branches and switch Git context.'
+  }
+
+  if (project.repository.headState === 'DETACHED') {
+    return 'Branch switching is unavailable while the repository is in detached HEAD state.'
+  }
+
+  if (project.repository.workingTreeState === 'DIRTY') {
+    return 'Branch switching is unavailable while the working tree has uncommitted changes.'
+  }
+
+  if (project.repository.availableBranches.length === 0) {
+    return 'No local branches are available for this repository.'
+  }
+
+  return null
 }
 
 type ProjectRepositoryCardProps = {
@@ -34,8 +74,12 @@ function ProjectRepositoryCard({
   onRepositoryBound,
 }: ProjectRepositoryCardProps) {
   const bindProjectRepository = useBindProjectRepositoryAction()
+  const switchProjectBranch = useSwitchProjectBranchAction()
   const [repositoryPath, setRepositoryPath] = useState(
     project.repository?.rootPath ?? '',
+  )
+  const [targetBranch, setTargetBranch] = useState(
+    project.repository?.branch ?? project.repository?.availableBranches[0] ?? '',
   )
 
   async function handleBindRepository(event: FormEvent<HTMLFormElement>) {
@@ -52,6 +96,27 @@ function ProjectRepositoryCard({
       return
     }
   }
+
+  async function handleSwitchBranch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!targetBranch.trim()) {
+      return
+    }
+
+    try {
+      await switchProjectBranch.submit({
+        projectId: project.id,
+        branchName: targetBranch,
+      })
+      onRepositoryBound()
+    } catch {
+      return
+    }
+  }
+
+  const branchRestriction = branchSwitchRestriction(project)
+  const currentRef = currentRefLabel(project)
 
   return (
     <Card className="overflow-hidden border-border/70 bg-[linear-gradient(155deg,rgba(255,255,255,0.96),rgba(246,245,238,0.92))]">
@@ -97,17 +162,22 @@ function ProjectRepositoryCard({
                 </div>
               </div>
               <Badge
-                className={repositoryStateTone(project.repository.workingTreeState)}
+                className={repositoryStateTone(
+                  project.repository.workingTreeState,
+                  project.repository.headState,
+                )}
               >
-                {project.repository.workingTreeState}
+                {project.repository.headState === 'DETACHED'
+                  ? 'DETACHED HEAD'
+                  : project.repository.workingTreeState}
               </Badge>
             </div>
 
             <div className="mt-4 grid gap-3 text-sm text-muted-foreground">
               <div>
-                Branch{' '}
+                Current ref{' '}
                 <span className="font-medium text-foreground">
-                  {project.repository.branch}
+                  {currentRef}
                 </span>
               </div>
               <div>
@@ -116,6 +186,103 @@ function ProjectRepositoryCard({
                   {project.repository.latestCommitSummary}
                 </span>
               </div>
+            </div>
+
+            <div className="mt-5 space-y-3 rounded-[20px] border border-border/60 bg-muted/28 p-4">
+              <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                Recent commits
+              </div>
+              {project.repository.recentCommits.length > 0 ? (
+                <div className="space-y-2">
+                  {project.repository.recentCommits.map((commit) => (
+                    <div
+                      key={`${project.id}:${commit.hash}`}
+                      className="flex flex-wrap items-center gap-2 text-sm"
+                    >
+                      <span className="rounded-full bg-background px-2 py-0.5 font-mono text-xs text-foreground">
+                        {commit.hash}
+                      </span>
+                      <span className="text-muted-foreground">{commit.summary}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  No commits available for this repository yet.
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 rounded-[20px] border border-border/60 bg-background/80 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                    Local branches
+                  </div>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Select an existing local branch to move this project&apos;s Git
+                    context.
+                  </div>
+                </div>
+                <Badge className="bg-primary/10 text-primary">
+                  {project.repository.availableBranches.length} branches
+                </Badge>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {project.repository.availableBranches.map((branch) => (
+                  <Badge
+                    key={`${project.id}:${branch}`}
+                    className={
+                      branch === project.repository?.branch
+                        ? 'bg-primary/12 text-primary'
+                        : 'bg-muted text-muted-foreground'
+                    }
+                  >
+                    {branch}
+                  </Badge>
+                ))}
+              </div>
+
+              {branchRestriction ? (
+                <div className="rounded-[18px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+                  {branchRestriction}
+                </div>
+              ) : (
+                <form className="space-y-4" onSubmit={handleSwitchBranch}>
+                  <div className="space-y-2">
+                    <Label htmlFor={`switch-project-branch-${project.id}`}>
+                      Local branch
+                    </Label>
+                    <select
+                      id={`switch-project-branch-${project.id}`}
+                      className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none ring-0 transition-colors focus-visible:border-ring"
+                      value={targetBranch}
+                      onChange={(event) => setTargetBranch(event.target.value)}
+                    >
+                      {project.repository.availableBranches.map((branch) => (
+                        <option key={branch} value={branch}>
+                          {branch}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <MutationStatus
+                    status={switchProjectBranch.status}
+                    error={switchProjectBranch.error}
+                    submittingMessage="Switching project branch through the backend project service..."
+                    successMessage="Branch switched and the project list has been refreshed."
+                  />
+
+                  <Button
+                    type="submit"
+                    disabled={switchProjectBranch.status === 'submitting'}
+                  >
+                    Switch branch
+                  </Button>
+                </form>
+              )}
             </div>
           </div>
         ) : (

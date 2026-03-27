@@ -1,6 +1,15 @@
 package com.fastservice.platform.backend.project;
 
-record ProjectRepositorySummary(String rootPath, String branch, boolean dirty, String latestCommitSummary) {
+import java.util.List;
+
+record ProjectRepositorySummary(
+        String rootPath,
+        ProjectGitHeadState headState,
+        String branch,
+        boolean dirty,
+        String latestCommitSummary,
+        List<String> availableBranches,
+        List<ProjectGitCommitSummary> recentCommits) {
 
     String workingTreeState() {
         return dirty ? "DIRTY" : "CLEAN";

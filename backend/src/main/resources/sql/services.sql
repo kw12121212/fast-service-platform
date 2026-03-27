@@ -26,6 +26,7 @@ generate code @serviceSrcDir;
 create service if not exists project_service (
   createProject(projectKey varchar, projectName varchar, description varchar) long,
   bindProjectRepository(projectId long, repositoryPath varchar) varchar,
+  switchProjectBranch(projectId long, branchName varchar) varchar,
   listProjects() varchar
 )
 package @packageName

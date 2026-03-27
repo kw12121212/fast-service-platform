@@ -324,6 +324,15 @@ export function useBindProjectRepositoryAction() {
   })
 }
 
+export function useSwitchProjectBranchAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+      branchName: string
+    }) => invokeService<string>('project_service/switchProjectBranch', args),
+  })
+}
+
 export function useCreateRoleAction() {
   return useBackendMutation({
     run: (args: {

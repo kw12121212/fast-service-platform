@@ -19,9 +19,15 @@ type MockProject = {
   active: boolean
   repository: {
     rootPath: string
-    branch: string
+    headState: 'BRANCH' | 'DETACHED'
+    branch: string | null
     workingTreeState: 'CLEAN' | 'DIRTY'
     latestCommitSummary: string
+    availableBranches: string[]
+    recentCommits: Array<{
+      hash: string
+      summary: string
+    }>
   } | null
 }
 
@@ -204,12 +210,47 @@ function installBackendMock() {
       if (project) {
         project.repository = {
           rootPath: repositoryPath,
+          headState: 'BRANCH',
           branch: 'repo-test',
           workingTreeState: 'CLEAN',
           latestCommitSummary: 'a1b2c3d Initial platform repo',
+          availableBranches: ['feature-preview', 'repo-test'],
+          recentCommits: [
+            {
+              hash: 'a1b2c3d',
+              summary: 'Initial platform repo',
+            },
+            {
+              hash: 'd4e5f6g',
+              summary: 'Add Git management baseline',
+            },
+          ],
         }
       }
       return jsonResponse(repositoryPath)
+    }
+
+    if (path === '/service/project_service/switchProjectBranch') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const branchName = url.searchParams.get('branchName') ?? ''
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (project?.repository) {
+        project.repository = {
+          ...project.repository,
+          headState: 'BRANCH',
+          branch: branchName,
+          workingTreeState: 'CLEAN',
+          latestCommitSummary: `switched ${branchName}`,
+          recentCommits: [
+            {
+              hash: '9f8e7d6',
+              summary: `Switch to ${branchName}`,
+            },
+            ...project.repository.recentCommits,
+          ].slice(0, 3),
+        }
+      }
+      return textResponse(branchName)
     }
 
     if (path === '/service/kanban_service/listKanbansByProject') {
@@ -440,8 +481,35 @@ describe('admin write workflows', () => {
     expect(
       await screen.findByText('/workspace/fast-service-platform'),
     ).toBeInTheDocument()
-    expect(await screen.findByText('repo-test')).toBeInTheDocument()
+    expect(await screen.findByDisplayValue('repo-test')).toBeInTheDocument()
     expect(await screen.findByText('a1b2c3d Initial platform repo')).toBeInTheDocument()
+    expect(
+      await screen.findByRole('option', { name: 'feature-preview' }),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Add Git management baseline')).toBeInTheDocument()
+  })
+
+  it('switches to an existing local branch from the projects page', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    await screen.findByText('/workspace/fast-service-platform')
+
+    fireEvent.change(screen.getByLabelText('Local branch'), {
+      target: { value: 'feature-preview' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Switch branch' }))
+
+    expect(
+      await screen.findByText('Branch switched and the project list has been refreshed.'),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Switch to feature-preview')).toBeInTheDocument()
   })
 
   it('creates a kanban board from the kanban page', async () => {

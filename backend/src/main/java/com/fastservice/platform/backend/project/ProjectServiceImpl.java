@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import com.fastservice.platform.backend.common.db.EntityExistence;
 import com.fastservice.platform.backend.common.db.JdbcSupport;
@@ -20,6 +21,10 @@ public class ProjectServiceImpl {
 
     public String bindprojectrepository(long projectId, String repositoryPath) {
         return bindProjectRepository(projectId, repositoryPath);
+    }
+
+    public String switchprojectbranch(long projectId, String branchName) {
+        return switchProjectBranch(projectId, branchName);
     }
 
     public String listprojects() {
@@ -73,6 +78,12 @@ public class ProjectServiceImpl {
         }
     }
 
+    public String switchProjectBranch(long projectId, String branchName) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return gitRepositoryInspector.switchBranch(repositoryRootPath, branchName);
+    }
+
     public String listProjects() {
         String sql = """
                 SELECT p.id, p.project_key, p.project_name, p.active, b.repository_root_path
@@ -114,9 +125,56 @@ public class ProjectServiceImpl {
         ProjectRepositorySummary repositorySummary = gitRepositoryInspector.inspect(repositoryRootPath);
         builder.append('{');
         builder.append("\"rootPath\":").append(JsonStrings.quote(repositorySummary.rootPath()));
+        builder.append(",\"headState\":").append(JsonStrings.quote(repositorySummary.headState().name()));
         builder.append(",\"branch\":").append(JsonStrings.quote(repositorySummary.branch()));
         builder.append(",\"workingTreeState\":").append(JsonStrings.quote(repositorySummary.workingTreeState()));
         builder.append(",\"latestCommitSummary\":").append(JsonStrings.quote(repositorySummary.latestCommitSummary()));
+        builder.append(",\"availableBranches\":");
+        appendStringArray(builder, repositorySummary.availableBranches());
+        builder.append(",\"recentCommits\":");
+        appendRecentCommits(builder, repositorySummary.recentCommits());
         builder.append('}');
+    }
+
+    private String requireBoundRepositoryPath(long projectId) {
+        String sql = "SELECT repository_root_path FROM project_repository_binding WHERE project_id = ?";
+        try (Connection connection = JdbcSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, projectId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    throw new IllegalArgumentException("Project repository is not bound: " + projectId);
+                }
+                return rs.getString(1);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Unable to read bound project repository", e);
+        }
+    }
+
+    private void appendStringArray(StringBuilder builder, List<String> values) {
+        builder.append('[');
+        for (int i = 0; i < values.size(); i++) {
+            if (i > 0) {
+                builder.append(',');
+            }
+            builder.append(JsonStrings.quote(values.get(i)));
+        }
+        builder.append(']');
+    }
+
+    private void appendRecentCommits(StringBuilder builder, List<ProjectGitCommitSummary> commits) {
+        builder.append('[');
+        for (int i = 0; i < commits.size(); i++) {
+            if (i > 0) {
+                builder.append(',');
+            }
+            ProjectGitCommitSummary commit = commits.get(i);
+            builder.append('{');
+            builder.append("\"hash\":").append(JsonStrings.quote(commit.hash()));
+            builder.append(",\"summary\":").append(JsonStrings.quote(commit.summary()));
+            builder.append('}');
+        }
+        builder.append(']');
     }
 }

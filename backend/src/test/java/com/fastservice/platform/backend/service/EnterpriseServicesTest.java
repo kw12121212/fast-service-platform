@@ -96,10 +96,13 @@ class EnterpriseServicesTest {
         String payload = projects.listProjects();
 
         assertEquals(repositoryDir.toString(), boundRepositoryPath);
+        assertTrue(payload.contains("\"headState\":\"BRANCH\""));
         assertTrue(payload.contains("\"rootPath\":\"" + escapeJson(repositoryDir.toString()) + "\""));
         assertTrue(payload.contains("\"branch\":\"repo-test\""));
         assertTrue(payload.contains("\"workingTreeState\":\"CLEAN\""));
-        assertTrue(payload.contains("Initial platform repo"));
+        assertTrue(payload.contains("\"availableBranches\":[\"feature-preview\",\"repo-test\"]"));
+        assertTrue(payload.contains("\"recentCommits\":["));
+        assertTrue(payload.contains("Second platform repo commit"));
     }
 
     @Test
@@ -111,6 +114,53 @@ class EnterpriseServicesTest {
         assertTrue(projects.listProjects().contains("\"repository\":null"));
     }
 
+    @Test
+    void switchesProjectToExistingLocalBranchWhenWorkingTreeIsClean() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("SWITCH", "Branch Switch", "Branch switch validation");
+        Path repositoryDir = createGitRepository();
+
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+
+        String switchedBranch = projects.switchProjectBranch(projectId, "feature-preview");
+        String payload = projects.listProjects();
+
+        assertEquals("feature-preview", switchedBranch);
+        assertTrue(payload.contains("\"branch\":\"feature-preview\""));
+    }
+
+    @Test
+    void rejectsBranchSwitchWhenWorkingTreeIsDirty() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("DIRTY", "Dirty Switch", "Dirty working tree validation");
+        Path repositoryDir = createGitRepository();
+        Files.writeString(repositoryDir.resolve("README.md"), "dirty working tree\n", StandardCharsets.UTF_8);
+
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> projects.switchProjectBranch(projectId, "feature-preview"));
+
+        assertEquals("Cannot switch branches while working tree is dirty", error.getMessage());
+        assertTrue(projects.listProjects().contains("\"workingTreeState\":\"DIRTY\""));
+        assertTrue(projects.listProjects().contains("\"branch\":\"repo-test\""));
+    }
+
+    @Test
+    void exposesDetachedHeadAsRestrictedState() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("DETACH", "Detached Head", "Detached HEAD validation");
+        Path repositoryDir = createDetachedHeadRepository();
+
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+        String payload = projects.listProjects();
+
+        assertTrue(payload.contains("\"headState\":\"DETACHED\""));
+        assertTrue(payload.contains("\"branch\":null"));
+        assertThrows(IllegalStateException.class, () -> projects.switchProjectBranch(projectId, "feature-preview"));
+    }
+
     private Path createGitRepository() throws Exception {
         Path repositoryDir = Files.createTempDirectory("fsp-project-repository-");
         runGit(repositoryDir, "init");
@@ -120,10 +170,28 @@ class EnterpriseServicesTest {
         Files.writeString(repositoryDir.resolve("README.md"), "repository binding test\n", StandardCharsets.UTF_8);
         runGit(repositoryDir, "add", "README.md");
         runGit(repositoryDir, "commit", "-m", "Initial platform repo");
+        runGit(repositoryDir, "branch", "feature-preview");
+        Files.writeString(repositoryDir.resolve("README.md"), "repository binding test\nsecond commit\n", StandardCharsets.UTF_8);
+        runGit(repositoryDir, "add", "README.md");
+        runGit(repositoryDir, "commit", "-m", "Second platform repo commit");
+        return repositoryDir;
+    }
+
+    private Path createDetachedHeadRepository() throws Exception {
+        Path repositoryDir = createGitRepository();
+        String headCommit = runGitAndReadOutput(repositoryDir, "rev-parse", "HEAD");
+        runGit(repositoryDir, "checkout", headCommit);
         return repositoryDir;
     }
 
     private void runGit(Path repositoryDir, String... args) throws Exception {
+        String output = runGitAndReadOutput(repositoryDir, args);
+        if (output.startsWith("fatal:")) {
+            throw new IOException("Git command failed: " + output);
+        }
+    }
+
+    private String runGitAndReadOutput(Path repositoryDir, String... args) throws Exception {
         String[] command = new String[args.length + 3];
         command[0] = "git";
         command[1] = "-C";
@@ -137,6 +205,7 @@ class EnterpriseServicesTest {
         if (exitCode != 0) {
             throw new IOException("Git command failed: " + output);
         }
+        return output;
     }
 
     private String escapeJson(String value) {

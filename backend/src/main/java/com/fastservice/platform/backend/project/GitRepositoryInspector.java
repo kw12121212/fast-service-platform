@@ -4,14 +4,50 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 final class GitRepositoryInspector {
 
     private static final long GIT_TIMEOUT_SECONDS = 10;
+    private static final int RECENT_COMMIT_LIMIT = 5;
 
     ProjectRepositorySummary inspect(String repositoryPath) {
+        Path repositoryRootPath = resolveRepositoryRoot(repositoryPath);
+        return inspectResolvedRepositoryRoot(repositoryRootPath);
+    }
+
+    String switchBranch(String repositoryPath, String branchName) {
+        if (branchName == null || branchName.isBlank()) {
+            throw new IllegalArgumentException("Branch name is required");
+        }
+
+        Path repositoryRootPath = resolveRepositoryRoot(repositoryPath);
+        ProjectRepositorySummary repositorySummary = inspectResolvedRepositoryRoot(repositoryRootPath);
+
+        if (repositorySummary.headState() == ProjectGitHeadState.DETACHED) {
+            throw new IllegalStateException("Cannot switch branches while repository is in detached HEAD state");
+        }
+
+        if (repositorySummary.dirty()) {
+            throw new IllegalStateException("Cannot switch branches while working tree is dirty");
+        }
+
+        if (!repositorySummary.availableBranches().contains(branchName)) {
+            throw new IllegalArgumentException("Branch does not exist locally: " + branchName);
+        }
+
+        if (branchName.equals(repositorySummary.branch())) {
+            return branchName;
+        }
+
+        runGitCommand(repositoryRootPath, false, "checkout", branchName);
+        ProjectRepositorySummary updatedRepository = inspectResolvedRepositoryRoot(repositoryRootPath);
+        return updatedRepository.branch();
+    }
+
+    private Path resolveRepositoryRoot(String repositoryPath) {
         if (repositoryPath == null || repositoryPath.isBlank()) {
             throw new IllegalArgumentException("Repository path is required");
         }
@@ -22,15 +58,31 @@ final class GitRepositoryInspector {
         }
 
         String repositoryRoot = runGitCommand(requestedPath, false, "rev-parse", "--show-toplevel");
-        Path repositoryRootPath = Path.of(repositoryRoot).normalize().toAbsolutePath();
-        String branch = runGitCommand(repositoryRootPath, false, "rev-parse", "--abbrev-ref", "HEAD");
+        return Path.of(repositoryRoot).normalize().toAbsolutePath();
+    }
+
+    private ProjectRepositorySummary inspectResolvedRepositoryRoot(Path repositoryRootPath) {
+        String symbolicBranch = runGitCommand(repositoryRootPath, true, "symbolic-ref", "--quiet", "--short", "HEAD");
+        ProjectGitHeadState headState = symbolicBranch.isBlank() ? ProjectGitHeadState.DETACHED : ProjectGitHeadState.BRANCH;
+        String branch = symbolicBranch.isBlank() ? null : symbolicBranch;
         boolean dirty = !runGitCommand(repositoryRootPath, false, "status", "--porcelain").isBlank();
-        String latestCommitSummary = runGitCommand(repositoryRootPath, true, "log", "-1", "--pretty=format:%h %s");
+        List<String> availableBranches = splitNonBlankLines(
+                runGitCommand(repositoryRootPath, false, "for-each-ref", "--format=%(refname:short)", "refs/heads"));
+        List<ProjectGitCommitSummary> recentCommits = readRecentCommits(repositoryRootPath);
+        String latestCommitSummary = recentCommits.isEmpty() ? "No commits yet"
+                : recentCommits.getFirst().hash() + " " + recentCommits.getFirst().summary();
         if (latestCommitSummary.isBlank()) {
             latestCommitSummary = "No commits yet";
         }
 
-        return new ProjectRepositorySummary(repositoryRootPath.toString(), branch, dirty, latestCommitSummary);
+        return new ProjectRepositorySummary(
+                repositoryRootPath.toString(),
+                headState,
+                branch,
+                dirty,
+                latestCommitSummary,
+                availableBranches,
+                recentCommits);
     }
 
     private String runGitCommand(Path workingPath, boolean allowFailure, String... args) {
@@ -71,5 +123,45 @@ final class GitRepositoryInspector {
         }
 
         return output;
+    }
+
+    private List<ProjectGitCommitSummary> readRecentCommits(Path repositoryRootPath) {
+        String output = runGitCommand(
+                repositoryRootPath,
+                true,
+                "log",
+                "-n",
+                Integer.toString(RECENT_COMMIT_LIMIT),
+                "--pretty=format:%h\t%s");
+        if (output.isBlank()) {
+            return List.of();
+        }
+
+        List<ProjectGitCommitSummary> commits = new ArrayList<>();
+        for (String line : splitNonBlankLines(output)) {
+            int separatorIndex = line.indexOf('\t');
+            if (separatorIndex < 0) {
+                commits.add(new ProjectGitCommitSummary(line, ""));
+                continue;
+            }
+            commits.add(new ProjectGitCommitSummary(
+                    line.substring(0, separatorIndex),
+                    line.substring(separatorIndex + 1)));
+        }
+        return Collections.unmodifiableList(commits);
+    }
+
+    private List<String> splitNonBlankLines(String output) {
+        if (output.isBlank()) {
+            return List.of();
+        }
+
+        List<String> values = new ArrayList<>();
+        for (String line : output.split("\\R")) {
+            if (!line.isBlank()) {
+                values.add(line);
+            }
+        }
+        return Collections.unmodifiableList(values);
     }
 }
