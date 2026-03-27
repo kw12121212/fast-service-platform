@@ -24,6 +24,12 @@ public class ProjectServiceExecutor implements ServiceExecutor {
                     methodArgs[2].getString());
             yield result == null ? ValueNull.INSTANCE : ValueLong.get(result);
         }
+        case "BINDPROJECTREPOSITORY" -> {
+            String result = service.bindprojectrepository(
+                    methodArgs[0].getLong(),
+                    methodArgs[1].getString());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
         case "LISTPROJECTS" -> {
             String result = service.listprojects();
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
@@ -39,6 +45,9 @@ public class ProjectServiceExecutor implements ServiceExecutor {
                 toString("PROJECTKEY", methodArgs),
                 toString("PROJECTNAME", methodArgs),
                 toString("DESCRIPTION", methodArgs));
+        case "BINDPROJECTREPOSITORY" -> service.bindprojectrepository(
+                toLong("PROJECTID", methodArgs),
+                toString("REPOSITORYPATH", methodArgs));
         case "LISTPROJECTS" -> service.listprojects();
         default -> throw noMethodException(methodName);
         };
@@ -50,6 +59,10 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "CREATEPROJECT" -> {
             JsonArray ja = new JsonArray(json);
             yield service.createproject(ja.getString(0), ja.getString(1), ja.getString(2));
+        }
+        case "BINDPROJECTREPOSITORY" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.bindprojectrepository(ja.getLong(0), ja.getString(1));
         }
         case "LISTPROJECTS" -> service.listprojects();
         default -> throw noMethodException(methodName);

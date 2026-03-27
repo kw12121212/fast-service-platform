@@ -17,6 +17,12 @@ type MockProject = {
   key: string
   name: string
   active: boolean
+  repository: {
+    rootPath: string
+    branch: string
+    workingTreeState: 'CLEAN' | 'DIRTY'
+    latestCommitSummary: string
+  } | null
 }
 
 type MockRole = {
@@ -66,6 +72,7 @@ function createBackendState() {
       key: 'FSP',
       name: 'Fast Service Platform',
       active: true,
+      repository: null,
     },
   ]
 
@@ -185,8 +192,24 @@ function installBackendMock() {
         key: url.searchParams.get('projectKey') ?? '',
         name: url.searchParams.get('projectName') ?? '',
         active: true,
+        repository: null,
       })
       return jsonResponse(nextId)
+    }
+
+    if (path === '/service/project_service/bindProjectRepository') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const repositoryPath = url.searchParams.get('repositoryPath') ?? ''
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (project) {
+        project.repository = {
+          rootPath: repositoryPath,
+          branch: 'repo-test',
+          workingTreeState: 'CLEAN',
+          latestCommitSummary: 'a1b2c3d Initial platform repo',
+        }
+      }
+      return jsonResponse(repositoryPath)
     }
 
     if (path === '/service/kanban_service/listKanbansByProject') {
@@ -397,6 +420,30 @@ describe('admin write workflows', () => {
     expect(await screen.findByText('OPS')).toBeInTheDocument()
   })
 
+  it('binds a repository from the projects page', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+    expect(await screen.findByText(/No repository bound\./)).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(
+      await screen.findByText(
+        'Repository bound and the project list has been refreshed.',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText('/workspace/fast-service-platform'),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('repo-test')).toBeInTheDocument()
+    expect(await screen.findByText('a1b2c3d Initial platform repo')).toBeInTheDocument()
+  })
+
   it('creates a kanban board from the kanban page', async () => {
     renderRoute('/kanban')
 
@@ -515,6 +562,6 @@ describe('admin write workflows', () => {
       await screen.findByText('User role assignments have been refreshed.'),
     ).toBeInTheDocument()
     const userRoleList = screen.getByTestId('selected-user-role-list')
-    expect(within(userRoleList).getByText('PROJECT_ADMIN')).toBeInTheDocument()
+    expect(await within(userRoleList).findByText('PROJECT_ADMIN')).toBeInTheDocument()
   })
 })

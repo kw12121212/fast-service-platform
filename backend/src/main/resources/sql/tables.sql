@@ -40,6 +40,11 @@ create table if not exists software_project (
   active boolean
 ) package @packageName generate code @modelSrcDir;
 
+create table if not exists project_repository_binding (
+  project_id long primary key,
+  repository_root_path varchar
+) package @packageName generate code @modelSrcDir;
+
 create table if not exists kanban_board (
   id long auto_increment primary key,
   project_id long,

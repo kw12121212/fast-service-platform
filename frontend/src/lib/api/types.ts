@@ -49,11 +49,19 @@ export type AccessPermission = {
 
 export type RolePermission = AccessPermission
 
+export type ProjectRepositorySummary = {
+  rootPath: string
+  branch: string
+  workingTreeState: 'CLEAN' | 'DIRTY' | string
+  latestCommitSummary: string
+}
+
 export type SoftwareProject = {
   id: number
   key: string
   name: string
   active: boolean
+  repository: ProjectRepositorySummary | null
 }
 
 export type KanbanBoard = {

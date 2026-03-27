@@ -315,6 +315,15 @@ export function useCreateProjectAction() {
   })
 }
 
+export function useBindProjectRepositoryAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+      repositoryPath: string
+    }) => invokeService<string>('project_service/bindProjectRepository', args),
+  })
+}
+
 export function useCreateRoleAction() {
   return useBackendMutation({
     run: (args: {

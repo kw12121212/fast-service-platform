@@ -1,7 +1,13 @@
 package com.fastservice.platform.backend.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,5 +84,62 @@ class EnterpriseServicesTest {
                 () -> tickets.createTicket(projectId, 99999L, "REL-404", "Missing board", "Should fail", userId));
         assertThrows(IllegalArgumentException.class,
                 () -> tickets.createTicket(otherProjectId, boardId, "OTH-1", "Wrong board", "Should fail", userId));
+    }
+
+    @Test
+    void bindsProjectToLocalRepositoryAndListsRepositorySummary() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("GIT", "Git Binding", "Repository binding test");
+        Path repositoryDir = createGitRepository();
+
+        String boundRepositoryPath = projects.bindProjectRepository(projectId, repositoryDir.toString());
+        String payload = projects.listProjects();
+
+        assertEquals(repositoryDir.toString(), boundRepositoryPath);
+        assertTrue(payload.contains("\"rootPath\":\"" + escapeJson(repositoryDir.toString()) + "\""));
+        assertTrue(payload.contains("\"branch\":\"repo-test\""));
+        assertTrue(payload.contains("\"workingTreeState\":\"CLEAN\""));
+        assertTrue(payload.contains("Initial platform repo"));
+    }
+
+    @Test
+    void rejectsRelativeRepositoryPathAndKeepsProjectUnbound() {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("PATH", "Path Validation", "Repository path validation");
+
+        assertThrows(IllegalArgumentException.class, () -> projects.bindProjectRepository(projectId, "relative/repository"));
+        assertTrue(projects.listProjects().contains("\"repository\":null"));
+    }
+
+    private Path createGitRepository() throws Exception {
+        Path repositoryDir = Files.createTempDirectory("fsp-project-repository-");
+        runGit(repositoryDir, "init");
+        runGit(repositoryDir, "config", "user.name", "Fast Service Tests");
+        runGit(repositoryDir, "config", "user.email", "tests@fastservice.local");
+        runGit(repositoryDir, "checkout", "-b", "repo-test");
+        Files.writeString(repositoryDir.resolve("README.md"), "repository binding test\n", StandardCharsets.UTF_8);
+        runGit(repositoryDir, "add", "README.md");
+        runGit(repositoryDir, "commit", "-m", "Initial platform repo");
+        return repositoryDir;
+    }
+
+    private void runGit(Path repositoryDir, String... args) throws Exception {
+        String[] command = new String[args.length + 3];
+        command[0] = "git";
+        command[1] = "-C";
+        command[2] = repositoryDir.toString();
+        System.arraycopy(args, 0, command, 3, args.length);
+        Process process = new ProcessBuilder(command)
+                .redirectErrorStream(true)
+                .start();
+        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new IOException("Git command failed: " + output);
+        }
+    }
+
+    private String escapeJson(String value) {
+        return value.replace("\\", "\\\\");
     }
 }

@@ -9,7 +9,154 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useCreateProjectAction, useProjectsResource } from '@/lib/api/hooks'
+import {
+  useBindProjectRepositoryAction,
+  useCreateProjectAction,
+  useProjectsResource,
+} from '@/lib/api/hooks'
+import type { SoftwareProject } from '@/lib/api/types'
+
+function repositoryStateTone(workingTreeState: string) {
+  if (workingTreeState === 'DIRTY') {
+    return 'bg-amber-500/14 text-amber-700'
+  }
+
+  return 'bg-emerald-500/12 text-emerald-700'
+}
+
+type ProjectRepositoryCardProps = {
+  project: SoftwareProject
+  onRepositoryBound: () => void
+}
+
+function ProjectRepositoryCard({
+  project,
+  onRepositoryBound,
+}: ProjectRepositoryCardProps) {
+  const bindProjectRepository = useBindProjectRepositoryAction()
+  const [repositoryPath, setRepositoryPath] = useState(
+    project.repository?.rootPath ?? '',
+  )
+
+  async function handleBindRepository(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    try {
+      const boundRootPath = await bindProjectRepository.submit({
+        projectId: project.id,
+        repositoryPath: repositoryPath.trim(),
+      })
+      setRepositoryPath(boundRootPath)
+      onRepositoryBound()
+    } catch {
+      return
+    }
+  }
+
+  return (
+    <Card className="overflow-hidden border-border/70 bg-[linear-gradient(155deg,rgba(255,255,255,0.96),rgba(246,245,238,0.92))]">
+      <CardContent className="space-y-6 p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+              Project key
+            </div>
+            <div className="mt-2 text-2xl font-semibold tracking-tight">
+              {project.key}
+            </div>
+            <div className="mt-1 text-base text-muted-foreground">
+              {project.name}
+            </div>
+          </div>
+          <Badge
+            className={
+              project.active
+                ? 'bg-primary/12 text-primary'
+                : 'bg-muted text-muted-foreground'
+            }
+          >
+            {project.active ? 'Active' : 'Inactive'}
+          </Badge>
+        </div>
+
+        <div className="rounded-[22px] border border-border/60 bg-muted/35 p-4 text-sm leading-6 text-muted-foreground">
+          Project id <span className="font-semibold text-foreground">{project.id}</span>{' '}
+          is used by the current ticket and kanban endpoints as the project scope
+          boundary.
+        </div>
+
+        {project.repository ? (
+          <div className="rounded-[22px] border border-border/60 bg-background/80 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  Bound repository
+                </div>
+                <div className="mt-2 text-sm font-medium text-foreground">
+                  {project.repository.rootPath}
+                </div>
+              </div>
+              <Badge
+                className={repositoryStateTone(project.repository.workingTreeState)}
+              >
+                {project.repository.workingTreeState}
+              </Badge>
+            </div>
+
+            <div className="mt-4 grid gap-3 text-sm text-muted-foreground">
+              <div>
+                Branch{' '}
+                <span className="font-medium text-foreground">
+                  {project.repository.branch}
+                </span>
+              </div>
+              <div>
+                Latest commit{' '}
+                <span className="font-medium text-foreground">
+                  {project.repository.latestCommitSummary}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-[22px] border border-dashed border-border/70 bg-background/55 p-4 text-sm leading-6 text-muted-foreground">
+            No repository bound. Connect an absolute local Git repository path to
+            link this project to a real engineering workspace.
+          </div>
+        )}
+
+        <form className="space-y-4" onSubmit={handleBindRepository}>
+          <div className="space-y-2">
+            <Label htmlFor={`bind-project-repository-${project.id}`}>
+              Repository path
+            </Label>
+            <Input
+              id={`bind-project-repository-${project.id}`}
+              value={repositoryPath}
+              onChange={(event) => setRepositoryPath(event.target.value)}
+              placeholder="/absolute/path/to/repository"
+              required
+            />
+          </div>
+
+          <MutationStatus
+            status={bindProjectRepository.status}
+            error={bindProjectRepository.error}
+            submittingMessage="Binding project repository through the backend project service..."
+            successMessage="Repository bound and the project list has been refreshed."
+          />
+
+          <Button
+            type="submit"
+            disabled={bindProjectRepository.status === 'submitting'}
+          >
+            Bind repository
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
 
 export function ProjectsPage() {
   const projects = useProjectsResource()
@@ -115,39 +262,11 @@ export function ProjectsPage() {
         >
           <div className="grid gap-4 xl:grid-cols-2">
             {projects.data.map((project) => (
-              <Card
-                key={project.id}
-                className="overflow-hidden border-border/70 bg-[linear-gradient(155deg,rgba(255,255,255,0.96),rgba(246,245,238,0.92))]"
-              >
-                <CardContent className="p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                        Project key
-                      </div>
-                      <div className="mt-2 text-2xl font-semibold tracking-tight">
-                        {project.key}
-                      </div>
-                      <div className="mt-1 text-base text-muted-foreground">
-                        {project.name}
-                      </div>
-                    </div>
-                    <Badge
-                      className={
-                        project.active
-                          ? 'bg-primary/12 text-primary'
-                          : 'bg-muted text-muted-foreground'
-                      }
-                    >
-                      {project.active ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                  <div className="mt-6 rounded-[22px] border border-border/60 bg-muted/35 p-4 text-sm leading-6 text-muted-foreground">
-                    Project id <span className="font-semibold text-foreground">{project.id}</span>{' '}
-                    is used by the current ticket and kanban endpoints as the project scope boundary.
-                  </div>
-                </CardContent>
-              </Card>
+              <ProjectRepositoryCard
+                key={`${project.id}:${project.repository?.rootPath ?? 'unbound'}`}
+                project={project}
+                onRepositoryBound={projects.reload}
+              />
             ))}
           </div>
         </ResourceState>
