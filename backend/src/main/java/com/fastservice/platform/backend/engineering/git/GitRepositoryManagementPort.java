@@ -1,4 +1,4 @@
-package com.fastservice.platform.backend.devops.git;
+package com.fastservice.platform.backend.engineering.git;
 
 public interface GitRepositoryManagementPort {
 

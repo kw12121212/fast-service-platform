@@ -1,4 +1,4 @@
-package com.fastservice.platform.backend.devops.sandbox;
+package com.fastservice.platform.backend.engineering.sandbox;
 
 public interface SandboxEnvironmentPort {
 

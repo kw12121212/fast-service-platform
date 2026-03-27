@@ -2,11 +2,12 @@ import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react'
 
 import { getJson, invokeService } from '@/lib/api/client'
 import type {
+  AccessPermission,
+  AppRole,
   BackendMutation,
   AppUser,
   BackendResource,
   KanbanBoard,
-  RolePermission,
   SoftwareProject,
   Ticket,
 } from '@/lib/api/types'
@@ -52,7 +53,8 @@ type ResourceAction<T> =
     }
 
 const EMPTY_USERS: AppUser[] = []
-const EMPTY_PERMISSIONS: RolePermission[] = []
+const EMPTY_ROLES: AppRole[] = []
+const EMPTY_PERMISSIONS: AccessPermission[] = []
 const EMPTY_PROJECTS: SoftwareProject[] = []
 const EMPTY_KANBANS: KanbanBoard[] = []
 const EMPTY_TICKETS: Ticket[] = []
@@ -228,14 +230,43 @@ export function useProjectsResource() {
   })
 }
 
+export function useRolesResource() {
+  return useBackendResource({
+    key: 'roles',
+    initialData: EMPTY_ROLES,
+    load: () => getJson<AppRole[]>('access_control_service/listRoles'),
+  })
+}
+
+export function usePermissionsResource() {
+  return useBackendResource({
+    key: 'permissions',
+    initialData: EMPTY_PERMISSIONS,
+    load: () =>
+      getJson<AccessPermission[]>('access_control_service/listPermissions'),
+  })
+}
+
 export function useRolePermissionsResource(roleId: number | null) {
   return useBackendResource({
     key: `role-permissions:${roleId ?? 'none'}`,
     enabled: roleId !== null,
     initialData: EMPTY_PERMISSIONS,
     load: () =>
-      getJson<RolePermission[]>('access_control_service/listPermissionsForRole', {
+      getJson<AccessPermission[]>('access_control_service/listPermissionsForRole', {
         roleId: roleId ?? undefined,
+      }),
+  })
+}
+
+export function useRolesForUserResource(userId: number | null) {
+  return useBackendResource({
+    key: `roles-for-user:${userId ?? 'none'}`,
+    enabled: userId !== null,
+    initialData: EMPTY_ROLES,
+    load: () =>
+      getJson<AppRole[]>('access_control_service/listRolesForUser', {
+        userId: userId ?? undefined,
       }),
   })
 }
@@ -281,6 +312,44 @@ export function useCreateProjectAction() {
       projectName: string
       description: string
     }) => invokeService<number>('project_service/createProject', args),
+  })
+}
+
+export function useCreateRoleAction() {
+  return useBackendMutation({
+    run: (args: {
+      roleCode: string
+      roleName: string
+    }) => invokeService<number>('access_control_service/createRole', args),
+  })
+}
+
+export function useCreatePermissionAction() {
+  return useBackendMutation({
+    run: (args: {
+      permissionCode: string
+      permissionName: string
+      scope: AccessPermission['scope']
+    }) => invokeService<number>('access_control_service/createPermission', args),
+  })
+}
+
+export function useAssignPermissionToRoleAction() {
+  return useBackendMutation({
+    run: (args: {
+      roleId: number
+      permissionId: number
+    }) =>
+      invokeService<void>('access_control_service/assignPermissionToRole', args),
+  })
+}
+
+export function useAssignRoleToUserAction() {
+  return useBackendMutation({
+    run: (args: {
+      userId: number
+      roleId: number
+    }) => invokeService<void>('access_control_service/assignRoleToUser', args),
   })
 }
 

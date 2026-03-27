@@ -19,6 +19,19 @@ type MockProject = {
   active: boolean
 }
 
+type MockRole = {
+  id: number
+  code: string
+  name: string
+}
+
+type MockPermission = {
+  id: number
+  code: string
+  name: string
+  scope: 'MENU' | 'FUNCTION'
+}
+
 type MockKanban = {
   id: number
   projectId: number
@@ -56,6 +69,26 @@ function createBackendState() {
     },
   ]
 
+  const roles: MockRole[] = [
+    {
+      id: 200,
+      code: 'ADMIN',
+      name: 'Administrator',
+    },
+  ]
+
+  const permissions: MockPermission[] = [
+    {
+      id: 300,
+      code: 'dashboard:view',
+      name: 'View Dashboard',
+      scope: 'MENU',
+    },
+  ]
+
+  const userRoles = [{ userId: 100, roleId: 200 }]
+  const rolePermissions = [{ roleId: 200, permissionId: 300 }]
+
   const kanbans: MockKanban[] = [
     {
       id: 10,
@@ -77,7 +110,16 @@ function createBackendState() {
     },
   ]
 
-  return { users, projects, kanbans, tickets }
+  return {
+    users,
+    roles,
+    permissions,
+    userRoles,
+    rolePermissions,
+    projects,
+    kanbans,
+    tickets,
+  }
 }
 
 function jsonResponse(body: unknown) {
@@ -212,8 +254,77 @@ function installBackendMock() {
       return textResponse(targetState)
     }
 
+    if (path === '/service/access_control_service/listRoles') {
+      return jsonResponse(state.roles)
+    }
+
+    if (path === '/service/access_control_service/listPermissions') {
+      return jsonResponse(state.permissions)
+    }
+
+    if (path === '/service/access_control_service/createRole') {
+      const nextId =
+        state.roles.length > 0 ? state.roles[state.roles.length - 1]!.id + 1 : 200
+      state.roles.push({
+        id: nextId,
+        code: url.searchParams.get('roleCode') ?? '',
+        name: url.searchParams.get('roleName') ?? '',
+      })
+      return jsonResponse(nextId)
+    }
+
+    if (path === '/service/access_control_service/createPermission') {
+      const nextId =
+        state.permissions.length > 0
+          ? state.permissions[state.permissions.length - 1]!.id + 1
+          : 300
+      state.permissions.push({
+        id: nextId,
+        code: url.searchParams.get('permissionCode') ?? '',
+        name: url.searchParams.get('permissionName') ?? '',
+        scope: (url.searchParams.get('scope') as MockPermission['scope']) ?? 'MENU',
+      })
+      return jsonResponse(nextId)
+    }
+
+    if (path === '/service/access_control_service/assignPermissionToRole') {
+      state.rolePermissions.push({
+        roleId: Number(url.searchParams.get('roleId')),
+        permissionId: Number(url.searchParams.get('permissionId')),
+      })
+      return textResponse('')
+    }
+
+    if (path === '/service/access_control_service/assignRoleToUser') {
+      state.userRoles.push({
+        userId: Number(url.searchParams.get('userId')),
+        roleId: Number(url.searchParams.get('roleId')),
+      })
+      return textResponse('')
+    }
+
+    if (path === '/service/access_control_service/listRolesForUser') {
+      const userId = Number(url.searchParams.get('userId'))
+      return jsonResponse(
+        state.userRoles
+          .filter((entry) => entry.userId === userId)
+          .map((entry) => state.roles.find((role) => role.id === entry.roleId))
+          .filter((role): role is MockRole => role !== undefined),
+      )
+    }
+
     if (path === '/service/access_control_service/listPermissionsForRole') {
-      return jsonResponse([])
+      const roleId = Number(url.searchParams.get('roleId'))
+      return jsonResponse(
+        state.rolePermissions
+          .filter((entry) => entry.roleId === roleId)
+          .map((entry) =>
+            state.permissions.find(
+              (permission) => permission.id === entry.permissionId,
+            ),
+          )
+          .filter((permission): permission is MockPermission => permission !== undefined),
+      )
     }
 
     return jsonResponse([])
@@ -339,8 +450,71 @@ describe('admin write workflows', () => {
     expect(
       await screen.findByText('Ticket state updated to IN_PROGRESS.'),
     ).toBeInTheDocument()
+    const refreshedTicketCell = await screen.findByText('FSP-9')
+    const refreshedTicketRow = refreshedTicketCell.closest('tr')
     expect(
-      within(ticketRow as HTMLElement).getByText('IN_PROGRESS'),
+      within(refreshedTicketRow as HTMLElement).getByText('IN_PROGRESS'),
     ).toBeInTheDocument()
+  })
+
+  it('manages the minimum RBAC workflows from the roles page', async () => {
+    renderRoute('/roles')
+
+    await screen.findByText('Role permission management')
+    await screen.findByText('Available roles')
+
+    fireEvent.change(screen.getByLabelText('Role code'), {
+      target: { value: 'PROJECT_ADMIN' },
+    })
+    fireEvent.change(screen.getByLabelText('Role name'), {
+      target: { value: 'Project Administrator' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create role' }))
+
+    expect(
+      await screen.findByText('Role created and the RBAC views have been refreshed.'),
+    ).toBeInTheDocument()
+    expect((await screen.findAllByText('Project Administrator')).length).toBeGreaterThan(0)
+
+    fireEvent.change(screen.getByLabelText('Permission code'), {
+      target: { value: 'project.manage' },
+    })
+    fireEvent.change(screen.getByLabelText('Permission name'), {
+      target: { value: 'Manage Project' },
+    })
+    fireEvent.change(screen.getByLabelText('Permission scope'), {
+      target: { value: 'FUNCTION' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create permission' }))
+
+    expect(
+      await screen.findByText(
+        'Permission created and the permission list has been refreshed.',
+      ),
+    ).toBeInTheDocument()
+    expect((await screen.findAllByText('Manage Project')).length).toBeGreaterThan(0)
+
+    fireEvent.change(screen.getByLabelText('Permission to grant'), {
+      target: { value: '301' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Grant permission' }))
+
+    expect(
+      await screen.findByText('Role permission assignments have been refreshed.'),
+    ).toBeInTheDocument()
+    expect((await screen.findAllByText('project.manage')).length).toBeGreaterThan(0)
+
+    fireEvent.change(screen.getByLabelText('Role to assign'), {
+      target: { value: '201' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Assign role' }))
+
+    expect(
+      await screen.findByText('User role assignments have been refreshed.'),
+    ).toBeInTheDocument()
+    const userRoleList = screen.getByTestId('selected-user-role-list')
+    expect(within(userRoleList).getByText('PROJECT_ADMIN')).toBeInTheDocument()
   })
 })

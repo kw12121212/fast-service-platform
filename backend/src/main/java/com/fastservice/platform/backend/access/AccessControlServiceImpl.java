@@ -28,6 +28,18 @@ public class AccessControlServiceImpl {
         assignRoleToUser(userId, roleId);
     }
 
+    public String listroles() {
+        return listRoles();
+    }
+
+    public String listpermissions() {
+        return listPermissions();
+    }
+
+    public String listrolesforuser(long userId) {
+        return listRolesForUser(userId);
+    }
+
     public String listpermissionsforrole(long roleId) {
         return listPermissionsForRole(roleId);
     }
@@ -84,9 +96,88 @@ public class AccessControlServiceImpl {
         executeLinkInsert(sql, userId, roleId, "role-to-user");
     }
 
+    public String listRoles() {
+        String sql = "SELECT id, role_code, role_name FROM app_role ORDER BY id";
+        try (Connection connection = JdbcSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet rs = statement.executeQuery()) {
+            StringBuilder builder = new StringBuilder("[");
+            boolean first = true;
+            while (rs.next()) {
+                if (!first) {
+                    builder.append(',');
+                }
+                first = false;
+                builder.append("{\"id\":").append(rs.getLong("id"));
+                builder.append(",\"code\":").append(JsonStrings.quote(rs.getString("role_code")));
+                builder.append(",\"name\":").append(JsonStrings.quote(rs.getString("role_name"))).append('}');
+            }
+            builder.append(']');
+            return builder.toString();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Unable to list roles", e);
+        }
+    }
+
+    public String listPermissions() {
+        String sql = "SELECT id, permission_code, permission_name, scope FROM app_permission ORDER BY id";
+        try (Connection connection = JdbcSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet rs = statement.executeQuery()) {
+            StringBuilder builder = new StringBuilder("[");
+            boolean first = true;
+            while (rs.next()) {
+                if (!first) {
+                    builder.append(',');
+                }
+                first = false;
+                builder.append("{\"id\":").append(rs.getLong("id"));
+                builder.append(",\"code\":").append(JsonStrings.quote(rs.getString("permission_code")));
+                builder.append(",\"name\":").append(JsonStrings.quote(rs.getString("permission_name")));
+                builder.append(",\"scope\":").append(JsonStrings.quote(rs.getString("scope"))).append('}');
+            }
+            builder.append(']');
+            return builder.toString();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Unable to list permissions", e);
+        }
+    }
+
+    public String listRolesForUser(long userId) {
+        EntityExistence.requireExists("app_user", userId, "User");
+        String sql = """
+                SELECT r.id, r.role_code, r.role_name
+                FROM app_role r
+                JOIN app_user_role ur ON ur.role_id = r.id
+                WHERE ur.user_id = ?
+                ORDER BY r.id
+                """;
+        try (Connection connection = JdbcSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, userId);
+            try (ResultSet rs = statement.executeQuery()) {
+                StringBuilder builder = new StringBuilder("[");
+                boolean first = true;
+                while (rs.next()) {
+                    if (!first) {
+                        builder.append(',');
+                    }
+                    first = false;
+                    builder.append("{\"id\":").append(rs.getLong("id"));
+                    builder.append(",\"code\":").append(JsonStrings.quote(rs.getString("role_code")));
+                    builder.append(",\"name\":").append(JsonStrings.quote(rs.getString("role_name"))).append('}');
+                }
+                builder.append(']');
+                return builder.toString();
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Unable to list roles for user", e);
+        }
+    }
+
     public String listPermissionsForRole(long roleId) {
         String sql = """
-                SELECT p.permission_code, p.permission_name, p.scope
+                SELECT p.id, p.permission_code, p.permission_name, p.scope
                 FROM app_permission p
                 JOIN app_role_permission rp ON rp.permission_id = p.id
                 WHERE rp.role_id = ?
@@ -103,7 +194,8 @@ public class AccessControlServiceImpl {
                         builder.append(',');
                     }
                     first = false;
-                    builder.append("{\"code\":").append(JsonStrings.quote(rs.getString("permission_code")));
+                    builder.append("{\"id\":").append(rs.getLong("id"));
+                    builder.append(",\"code\":").append(JsonStrings.quote(rs.getString("permission_code")));
                     builder.append(",\"name\":").append(JsonStrings.quote(rs.getString("permission_name")));
                     builder.append(",\"scope\":").append(JsonStrings.quote(rs.getString("scope"))).append('}');
                 }

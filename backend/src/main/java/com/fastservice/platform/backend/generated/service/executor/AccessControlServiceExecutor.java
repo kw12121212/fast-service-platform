@@ -36,6 +36,18 @@ public class AccessControlServiceExecutor implements ServiceExecutor {
             service.assignroletouser(methodArgs[0].getLong(), methodArgs[1].getLong());
             yield ValueNull.INSTANCE;
         }
+        case "LISTROLES" -> {
+            String result = service.listroles();
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "LISTPERMISSIONS" -> {
+            String result = service.listpermissions();
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "LISTROLESFORUSER" -> {
+            String result = service.listrolesforuser(methodArgs[0].getLong());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
         case "LISTPERMISSIONSFORROLE" -> {
             String result = service.listpermissionsforrole(methodArgs[0].getLong());
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
@@ -66,6 +78,9 @@ public class AccessControlServiceExecutor implements ServiceExecutor {
                     toLong("ROLEID", methodArgs));
             yield NO_RETURN_VALUE;
         }
+        case "LISTROLES" -> service.listroles();
+        case "LISTPERMISSIONS" -> service.listpermissions();
+        case "LISTROLESFORUSER" -> service.listrolesforuser(toLong("USERID", methodArgs));
         case "LISTPERMISSIONSFORROLE" -> service.listpermissionsforrole(toLong("ROLEID", methodArgs));
         default -> throw noMethodException(methodName);
         };
@@ -95,6 +110,12 @@ public class AccessControlServiceExecutor implements ServiceExecutor {
                     Long.valueOf(ja.getValue(0).toString()),
                     Long.valueOf(ja.getValue(1).toString()));
             yield NO_RETURN_VALUE;
+        }
+        case "LISTROLES" -> service.listroles();
+        case "LISTPERMISSIONS" -> service.listpermissions();
+        case "LISTROLESFORUSER" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.listrolesforuser(Long.valueOf(ja.getValue(0).toString()));
         }
         case "LISTPERMISSIONSFORROLE" -> {
             JsonArray ja = new JsonArray(json);

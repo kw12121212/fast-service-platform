@@ -34,11 +34,20 @@ export type AppUser = {
   enabled: boolean
 }
 
-export type RolePermission = {
+export type AppRole = {
+  id: number
+  code: string
+  name: string
+}
+
+export type AccessPermission = {
+  id: number
   code: string
   name: string
   scope: 'MENU' | 'FUNCTION' | string
 }
+
+export type RolePermission = AccessPermission
 
 export type SoftwareProject = {
   id: number

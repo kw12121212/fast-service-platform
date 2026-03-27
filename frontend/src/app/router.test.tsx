@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -7,7 +7,8 @@ import { adminRoutes } from '@/app/router'
 const defaultResponses = new Map<string, unknown>([
   ['/service/user_service/listUsers', []],
   ['/service/project_service/listProjects', []],
-  ['/service/access_control_service/listPermissionsForRole?roleId=200', []],
+  ['/service/access_control_service/listRoles', []],
+  ['/service/access_control_service/listPermissions', []],
   ['/service/kanban_service/listKanbansByProject?projectId=1', []],
   ['/service/ticket_service/listTicketsByProject?projectId=1', []],
 ])
@@ -58,21 +59,15 @@ describe('admin router', () => {
     expect(await screen.findByText(heading)).toBeInTheDocument()
   })
 
-  it('shows a non-loading empty state when role input is invalid', async () => {
+  it('shows manageable empty RBAC state instead of a manual role-id lookup', async () => {
     const router = createMemoryRouter(adminRoutes, {
       initialEntries: ['/roles'],
     })
 
     render(<RouterProvider router={router} />)
 
-    const roleInput = await screen.findByLabelText('Role id')
-    await screen.findByText('No permissions returned')
-
-    fireEvent.change(roleInput, {
-      target: { value: 'abc' },
-    })
-
-    expect(await screen.findByText('No permissions returned')).toBeInTheDocument()
+    expect(await screen.findByText('No roles available')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Role id')).not.toBeInTheDocument()
     expect(screen.queryByText('Refreshing backend data')).not.toBeInTheDocument()
   })
 })

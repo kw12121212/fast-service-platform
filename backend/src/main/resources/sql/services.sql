@@ -14,6 +14,9 @@ create service if not exists access_control_service (
   createPermission(permissionCode varchar, permissionName varchar, scope varchar) long,
   assignPermissionToRole(roleId long, permissionId long) void,
   assignRoleToUser(userId long, roleId long) void,
+  listRoles() varchar,
+  listPermissions() varchar,
+  listRolesForUser(userId long) varchar,
   listPermissionsForRole(roleId long) varchar
 )
 package @packageName

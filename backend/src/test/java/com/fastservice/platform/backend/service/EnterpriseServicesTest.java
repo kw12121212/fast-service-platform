@@ -40,7 +40,10 @@ class EnterpriseServicesTest {
         String movedState = tickets.moveTicket(ticketId, "IN_PROGRESS");
 
         assertTrue(users.listUsers().contains("service-user"));
-        assertTrue(access.listPermissionsForRole(roleId).contains("project:view"));
+        assertTrue(access.listRoles().contains("\"code\":\"DEV\""));
+        assertTrue(access.listPermissions().contains("\"code\":\"project:view\""));
+        assertTrue(access.listRolesForUser(userId).contains("\"code\":\"DEV\""));
+        assertTrue(access.listPermissionsForRole(roleId).contains("\"code\":\"project:view\""));
         assertTrue(projects.listProjects().contains("Service Test"));
         assertTrue(kanbans.listKanbansByProject(projectId).contains("Sprint Board"));
         assertTrue(tickets.listTicketsByProject(projectId).contains("SVT-1"));

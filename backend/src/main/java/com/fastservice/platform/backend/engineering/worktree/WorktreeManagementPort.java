@@ -1,4 +1,4 @@
-package com.fastservice.platform.backend.devops.worktree;
+package com.fastservice.platform.backend.engineering.worktree;
 
 public interface WorktreeManagementPort {
 

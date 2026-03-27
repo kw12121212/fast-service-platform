@@ -1,4 +1,4 @@
-package com.fastservice.platform.backend.devops.merge;
+package com.fastservice.platform.backend.engineering.merge;
 
 public interface MergeSupportPort {
 

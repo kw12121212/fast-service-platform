@@ -8,10 +8,10 @@ The system MUST provide user management, role-based permission management, softw
 - WHEN they identify the minimum built-in components
 - THEN they find user management, role-based permission management, software project management, ticket management, and kanban management in the baseline set
 
-### Requirement: Software Development Management Components
-The system MUST treat Git repository management, worktree management, code merge support, and sandbox environments as platform-provided components.
+### Requirement: Engineering Support Components
+The system MUST treat Git repository management, worktree management, code merge support, and sandbox environments as engineering-support components provided by the platform.
 
-#### Scenario: A contributor checks development-management capabilities
-- GIVEN a contributor reviews whether development-management abilities belong inside the platform
+#### Scenario: A contributor checks engineering-support capabilities
+- GIVEN a contributor reviews whether engineering-support abilities belong inside the platform
 - WHEN they inspect the component definition
 - THEN they see Git repository management, worktree management, code merge support, and sandbox environments defined as platform components
