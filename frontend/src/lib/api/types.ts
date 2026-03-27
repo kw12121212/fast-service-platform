@@ -1,0 +1,63 @@
+export type BackendQueryStatus =
+  | 'idle'
+  | 'loading'
+  | 'refreshing'
+  | 'success'
+  | 'error'
+
+export type BackendMutationStatus =
+  | 'idle'
+  | 'submitting'
+  | 'success'
+  | 'error'
+
+export type BackendResource<T> = {
+  status: BackendQueryStatus
+  data: T
+  error: string | null
+  reload: () => void
+}
+
+export type BackendMutation<TArgs, TResult> = {
+  status: BackendMutationStatus
+  data: TResult | null
+  error: string | null
+  submit: (args: TArgs) => Promise<TResult>
+  reset: () => void
+}
+
+export type AppUser = {
+  id: number
+  username: string
+  displayName: string
+  email: string
+  enabled: boolean
+}
+
+export type RolePermission = {
+  code: string
+  name: string
+  scope: 'MENU' | 'FUNCTION' | string
+}
+
+export type SoftwareProject = {
+  id: number
+  key: string
+  name: string
+  active: boolean
+}
+
+export type KanbanBoard = {
+  id: number
+  name: string
+}
+
+export type TicketState = 'TODO' | 'IN_PROGRESS' | 'DONE' | string
+
+export type Ticket = {
+  id: number
+  key: string
+  title: string
+  state: TicketState
+  kanbanId: number
+}
