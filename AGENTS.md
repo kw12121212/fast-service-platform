@@ -5,6 +5,7 @@
 ## Start Here
 
 - 先读 `README.md`、`RTK.md`、`.spec-driven/config.yaml` 和 `.spec-driven/specs/INDEX.md`。
+- 如果要实际实施改动，再读 `docs/ai/quickstart.md` 和 `docs/ai/context.yaml`。
 - 把 `.spec-driven/` 视为范围和任务的事实来源；不要跳过 proposal 就扩展需求。
 - 如果改动影响前后端协作方式、目录结构、平台边界或 AI 使用方式，先补 spec 再动手。
 
@@ -78,3 +79,4 @@
 - backend 至少跑：`mvn -q test`
 - frontend 至少跑：`bun run test`、`bun run build`、`bun run lint`
 - 涉及前后端联调的改动，尽量验证 `/service/*` 路径而不是只看本地 mock
+- 优先复用仓库验证入口：`scripts/verify-backend.sh`、`scripts/verify-frontend.sh`、`scripts/verify-fullstack.sh`

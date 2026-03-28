@@ -9,6 +9,7 @@
 - `backend/testing-and-demo-data.md` - Required automated backend test coverage and optional demo-data validation behavior.
 - `component/ai-consumption-context.md` - External AI workflow context boundary and dependency contract for consuming the platform components.
 - `component/minimum-platform-baseline.md` - Minimum reusable enterprise component baseline and baseline management workflow contract.
+- `core/ai-repository-readiness.md` - AI-first quickstart, machine-readable context, change playbooks, automated validation entrypoints, and troubleshooting guidance for repository contribution.
 - `core/project-foundation.md` - Repository bootstrap documentation, agent rules, and reserved full-stack workspace layout.
 - `frontend/admin-shell.md` - Runnable PC admin frontend workspace and coherent V1 admin shell behavior.
 - `frontend/data-access.md` - Consistent frontend data-access convention for backend-connected admin pages.

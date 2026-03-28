@@ -1,14 +1,10 @@
-# AI Consumption Context
+# AI Consumption Context Delta
 
-### Requirement: External AI Input Context Is Out Of Repository Runtime Scope
-The system MUST treat natural-language requirements, prototype images, and UI reference websites as external AI workflow context rather than repository-native interaction surfaces.
-
-#### Scenario: A contributor checks AI input expectations
-- GIVEN a contributor inspects how this repository relates to AI usage
-- WHEN they determine whether the repository implements direct AI interaction
-- THEN they see that such inputs may exist in an external AI workflow but are not a runtime feature of this repository
+## MODIFIED Requirements
 
 ### Requirement: Component Platform Preserves Dependency Boundary
+Previously: The system MUST define its reusable component baseline so that AI consuming the platform does not require additional external software libraries beyond Lealone-Platform and dependencies already present in this project.
+
 The system MUST define its reusable component baseline so that AI consuming the platform does not require additional external software libraries beyond Lealone-Platform and dependencies already present in this project.
 The repository's AI-readiness documentation, manifests, playbooks, and verification entrypoints MUST preserve that same dependency boundary.
 

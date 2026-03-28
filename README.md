@@ -160,6 +160,20 @@ V1 平台基线至少必须提供：
 - 主规则先看 `AGENTS.md`
 - 技术背景先看 `RTK.md`
 - 当前主规格索引见 `.spec-driven/specs/INDEX.md`
+- AI 接手仓库的统一入口见 `docs/ai/quickstart.md`
+- 机器可读上下文见 `docs/ai/context.yaml`
+
+## AI Ready 入口
+
+如果目标是让 AI 代理在当前仓库里安全实施改动，优先使用这些仓库内置入口：
+
+- `docs/ai/quickstart.md`
+- `docs/ai/context.yaml`
+- `docs/ai/playbooks/`
+- `docs/ai/troubleshooting.md`
+- `scripts/verify-backend.sh`
+- `scripts/verify-frontend.sh`
+- `scripts/verify-fullstack.sh`
 
 ## 当前状态
 

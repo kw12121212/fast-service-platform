@@ -1,0 +1,99 @@
+schema: fast-service-platform-ai-context/v1
+project:
+  name: Fast Service Platform
+  type: ai-oriented-enterprise-component-platform
+  v1_target:
+    domain: enterprise-internal-management
+    application_shape: monolith
+  runtime_ai_features_in_repo: false
+
+required_reading:
+  bootstrap:
+    - README.md
+    - RTK.md
+    - AGENTS.md
+    - .spec-driven/config.yaml
+    - .spec-driven/specs/INDEX.md
+  change_specific:
+    - relevant-main-spec-files
+    - docs/ai/playbooks/*.md
+
+repository_constraints:
+  dependency_boundary:
+    allowed:
+      - Lealone-Platform
+      - repository-internal-dependencies
+    forbidden:
+      - additional-external-software-libraries-without-spec
+  workflow:
+    - non-trivial-changes-must-start-in-spec-driven
+    - do-not-expand-scope-without-updating-proposal
+  product_boundary:
+    - do-not-add-in-repo-ai-chat-or-prompt-intake
+    - keep-v1-scope-on-enterprise-management
+    - keep-v1-shape-monolithic
+
+toolchain:
+  java:
+    version: 25
+    default_home: $HOME/.sdkman/candidates/java/25.0.2-tem
+  maven:
+    version: 3.9.x
+    default_bin: $HOME/.sdkman/candidates/maven/current/bin/mvn
+  node:
+    version: 24
+    manager: nvm
+  bun:
+    role:
+      - frontend-package-manager
+      - frontend-script-runner
+
+workspaces:
+  backend:
+    path: backend
+    responsibility: runnable-single-module-maven-backend
+    key_paths:
+      service_sql: backend/src/main/resources/sql/services.sql
+      table_sql: backend/src/main/resources/sql/tables.sql
+      java_impl_root: backend/src/main/java/com/fastservice/platform/backend
+      tests_root: backend/src/test/java/com/fastservice/platform/backend
+      demo_sql: backend/src/main/resources/sql/demo.sql
+      demo_support: backend/src/main/java/com/fastservice/platform/backend/demo/DemoDataSupport.java
+  frontend:
+    path: frontend
+    responsibility: runnable-pc-admin-console
+    key_paths:
+      app_shell: frontend/src/app
+      features: frontend/src/features
+      admin_components: frontend/src/components/admin
+      ui_components: frontend/src/components/ui
+      api_access: frontend/src/lib/api
+      tests: frontend/src/app
+
+high_frequency_change_playbooks:
+  - docs/ai/playbooks/backend-domain-change.md
+  - docs/ai/playbooks/frontend-admin-change.md
+  - docs/ai/playbooks/integration-demo-and-smoke.md
+
+validation_entrypoints:
+  backend: ./scripts/verify-backend.sh
+  frontend: ./scripts/verify-frontend.sh
+  fullstack: ./scripts/verify-fullstack.sh
+
+smoke_path:
+  route_prefix: /service
+  proxy_owner: frontend/vite-dev-server
+  backend_target: http://127.0.0.1:8080
+  expected_checks:
+    - proxy-reaches-user-service-list-endpoint
+    - proxy-reaches-project-service-list-endpoint
+    - responses-are-json-arrays
+
+local_dependencies:
+  required_source_repositories:
+    - vendor/lealone
+    - vendor/lealone-platform
+  install_script: ./scripts/install-lealone-source-deps.sh
+
+troubleshooting:
+  primary_doc: docs/ai/troubleshooting.md
