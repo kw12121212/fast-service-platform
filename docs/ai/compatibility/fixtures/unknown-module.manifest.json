@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "broken-unknown-module",
+    "name": "Broken Unknown Module",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management",
+    "imaginary-module"
+  ]
+}

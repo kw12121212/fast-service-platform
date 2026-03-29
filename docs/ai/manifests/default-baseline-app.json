@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "fast-service-platform-enterprise-admin",
+    "name": "Fast Service Platform Enterprise Admin",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management",
+    "software-project-management",
+    "kanban-management",
+    "ticket-management"
+  ]
+}

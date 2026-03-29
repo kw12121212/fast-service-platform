@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "broken-missing-core",
+    "name": "Broken Missing Core",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management"
+  ]
+}

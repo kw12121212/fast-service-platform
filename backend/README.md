@@ -11,6 +11,8 @@
 - 可选 demo 数据
 - 为后续 Git/worktree/merge/sandbox 组件预留扩展位
 
+当前仓库默认 baseline 仍包含项目 / 工单 / 看板，但在新的 app assembly 路径里，它们可以作为可选业务模块装配到派生应用中。
+
 本地依赖策略：
 
 - `vendor/lealone`

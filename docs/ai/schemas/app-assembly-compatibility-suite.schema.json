@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/app-assembly-compatibility-suite.schema.json",
+  "title": "Fast Service Platform App Assembly Compatibility Suite",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "fixtures",
+    "validation",
+    "compatibleImplementations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-app-assembly-compatibility-suite/v1"
+    },
+    "fixtures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "valid",
+        "invalid"
+      ],
+      "properties": {
+        "valid": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/validFixture"
+          },
+          "minItems": 1
+        },
+        "invalid": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/invalidFixture"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generatedAppVerificationContract",
+        "generatedOutputChecks",
+        "mustValidateObservableBehaviorOnly"
+      ],
+      "properties": {
+        "generatedAppVerificationContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generatedOutputChecks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "mustValidateObservableBehaviorOnly": {
+          "type": "boolean"
+        }
+      }
+    },
+    "compatibleImplementations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/compatibleImplementation"
+      },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "compatibleImplementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "scaffoldCommand",
+        "generatedAppVerifier"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scaffoldCommand": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generatedAppVerifier": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "validFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "manifestPath",
+        "expectedProfile",
+        "expectedSelectedModules"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifestPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedProfile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedSelectedModules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "invalidFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "manifestPath",
+        "expectedErrorIncludes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifestPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedErrorIncludes": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

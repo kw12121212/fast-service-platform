@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/generated-app-verification-contract.schema.json",
+  "title": "Fast Service Platform Generated App Verification Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "normativeInputs",
+    "checks",
+    "resultShape",
+    "referenceVerifiers"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-generated-app-verification-contract/v1"
+    },
+    "normativeInputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applicationManifest",
+        "moduleRegistry",
+        "assemblyContract",
+        "verificationContract",
+        "generatedContext",
+        "frontendRoutes",
+        "frontendNavigation",
+        "backendServices",
+        "backendTables"
+      ],
+      "properties": {
+        "applicationManifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "moduleRegistry": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assemblyContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verificationContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generatedContext": {
+          "type": "string",
+          "minLength": 1
+        },
+        "frontendRoutes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "frontendNavigation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "backendServices": {
+          "type": "string",
+          "minLength": 1
+        },
+        "backendTables": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "resultShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ok",
+        "issues",
+        "selectedModules",
+        "contractVersion",
+        "verifierId"
+      ],
+      "properties": {
+        "ok": {
+          "const": "boolean"
+        },
+        "issues": {
+          "const": "string[]"
+        },
+        "selectedModules": {
+          "const": "string[]"
+        },
+        "contractVersion": {
+          "const": "string"
+        },
+        "verifierId": {
+          "const": "string"
+        }
+      }
+    },
+    "referenceVerifiers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/referenceVerifier"
+      },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "referenceVerifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "entrypoint",
+        "wrapper"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "reference-verifier"
+        },
+        "entrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "wrapper": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

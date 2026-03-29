@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "fsp-module-registry/v1",
+  "defaultAssemblyProfile": "baseline-v1",
+  "profiles": {
+    "baseline-v1": {
+      "description": "Matches the current runnable repository baseline application.",
+      "modules": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "software-project-management",
+        "kanban-management",
+        "ticket-management"
+      ]
+    },
+    "core-admin": {
+      "description": "Keeps the core admin shell, users, and RBAC only.",
+      "modules": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management"
+      ]
+    }
+  },
+  "modules": [
+    {
+      "id": "admin-shell",
+      "role": "required-core",
+      "description": "PC admin shell, dashboard entry, shared navigation, and frontend shell layout.",
+      "dependsOn": [],
+      "frontend": {
+        "routes": [
+          "/dashboard"
+        ]
+      }
+    },
+    {
+      "id": "user-management",
+      "role": "required-core",
+      "description": "User entity management and backend user service.",
+      "dependsOn": [
+        "admin-shell"
+      ],
+      "backend": {
+        "tables": [
+          "app_user"
+        ],
+        "services": [
+          "user_service"
+        ]
+      },
+      "frontend": {
+        "routes": [
+          "/users"
+        ]
+      }
+    },
+    {
+      "id": "role-permission-management",
+      "role": "required-core",
+      "description": "Role, permission, and user-role assignment workflows.",
+      "dependsOn": [
+        "admin-shell",
+        "user-management"
+      ],
+      "backend": {
+        "tables": [
+          "app_role",
+          "app_permission",
+          "app_user_role",
+          "app_role_permission"
+        ],
+        "services": [
+          "access_control_service"
+        ]
+      },
+      "frontend": {
+        "routes": [
+          "/roles"
+        ]
+      }
+    },
+    {
+      "id": "software-project-management",
+      "role": "optional-business-module",
+      "description": "Software project management and repository-binding workflows.",
+      "dependsOn": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management"
+      ],
+      "backend": {
+        "tables": [
+          "software_project",
+          "project_repository_binding"
+        ],
+        "services": [
+          "project_service"
+        ]
+      },
+      "frontend": {
+        "routes": [
+          "/projects"
+        ]
+      }
+    },
+    {
+      "id": "kanban-management",
+      "role": "optional-business-module",
+      "description": "Kanban board management scoped to software projects.",
+      "dependsOn": [
+        "software-project-management"
+      ],
+      "backend": {
+        "tables": [
+          "kanban_board"
+        ],
+        "services": [
+          "kanban_service"
+        ]
+      },
+      "frontend": {
+        "routes": [
+          "/kanban"
+        ]
+      }
+    },
+    {
+      "id": "ticket-management",
+      "role": "optional-business-module",
+      "description": "Ticket workflows and minimal kanban state progression.",
+      "dependsOn": [
+        "software-project-management",
+        "kanban-management",
+        "user-management"
+      ],
+      "backend": {
+        "tables": [
+          "ticket"
+        ],
+        "services": [
+          "ticket_service"
+        ]
+      },
+      "frontend": {
+        "routes": [
+          "/tickets"
+        ]
+      }
+    },
+    {
+      "id": "project-git-management",
+      "role": "engineering-support-component",
+      "description": "Repository binding and branch-switch support exposed through project management."
+    },
+    {
+      "id": "worktree-management",
+      "role": "engineering-support-component",
+      "description": "Future worktree management component reserved by the platform."
+    },
+    {
+      "id": "merge-support",
+      "role": "engineering-support-component",
+      "description": "Future merge support component reserved by the platform."
+    },
+    {
+      "id": "sandbox-environment",
+      "role": "engineering-support-component",
+      "description": "Future sandbox component reserved by the platform."
+    }
+  ]
+}

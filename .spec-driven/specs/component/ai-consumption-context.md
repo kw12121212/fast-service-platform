@@ -17,3 +17,31 @@ The repository's AI-readiness documentation, manifests, playbooks, and verificat
 - WHEN they inspect the component-platform contract
 - THEN they see that the expected capability base comes from Lealone-Platform and project-internal dependencies instead of new external software libraries
 - AND they can confirm that the AI-readiness path is built on repository-native assets rather than additional external tooling
+
+### Requirement: External AI Can Derive An Independent Application From Repository-Owned Assets
+The system MUST treat independent application derivation as an external AI workflow that consumes repository-owned assembly assets rather than in-repository AI runtime features.
+The derivation workflow MUST stay within the platform dependency boundary of Lealone-Platform and repository-internal dependencies.
+
+#### Scenario: An AI agent determines whether it can create a new app from the platform
+- GIVEN an AI agent needs to create a new enterprise-management application from this repository
+- WHEN it checks the repository's AI consumption contract
+- THEN it can identify a repository-owned derivation path for generating an independent application skeleton
+- AND it can confirm that no in-repository AI chat or prompt-intake runtime feature is required
+- AND it can confirm that the derivation path does not require additional external software libraries beyond the platform boundary
+
+### Requirement: AI Receives Layered Machine-Readable Indexes
+The system MUST provide machine-readable indexes that distinguish repository entry guidance, platform module facts, and application assembly facts.
+
+#### Scenario: An AI agent loads repository facts before deriving an application
+- GIVEN an AI agent can consume structured assets
+- WHEN it inspects the repository-owned AI indexes
+- THEN it can distinguish repository contribution and environment-entry facts from platform core and optional module facts
+- AND it can distinguish those facts from the application assembly inputs, outputs, and validation expectations
+
+### Requirement: AI Can Target The Standard Without Depending On A Single Runtime Implementation
+The system MUST let AI contributors consume the assembly standard through normative machine-readable assets and compatibility expectations rather than depending on the internal structure of a single implementation runtime.
+
+#### Scenario: An AI contributor plans a compatible assembly implementation
+- GIVEN an AI contributor wants to implement or validate app assembly behavior
+- WHEN it reads the repository-owned assembly assets
+- THEN it can target the platform standard without reverse-engineering the current Node implementation

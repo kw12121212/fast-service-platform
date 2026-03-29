@@ -35,6 +35,8 @@
 - 后端支持 `可选 demo 数据`
 - 前端已直接联调当前 backend，而不是只靠静态 mock
 
+当前默认运行形态仍然是完整 baseline 应用；但从“AI 派生新应用”的角度看，`项目管理 / 工单管理 / 看板管理` 已经开始被视为可选装配模块，而不是所有派生应用都必须包含的硬性业务域。
+
 ## 技术基线
 
 | 领域 | 基线 | 说明 |
@@ -121,13 +123,21 @@ bun run lint
 
 ## V1 最小能力
 
-V1 的最小企业组件集包括：
+当前默认 baseline 应用包含：
 
 - 用户管理
 - 基于角色的权限管理
 - 软件项目管理
 - 工单管理
 - 看板管理
+
+从派生应用角度，V1 的必选核心更偏向：
+
+- 管理后台首页 / admin shell
+- 用户管理
+- 基于角色的权限管理
+
+而 `软件项目管理 / 工单管理 / 看板管理` 可以作为可选内置模块按需装配。
 
 V1 平台基线至少必须提供：
 
@@ -169,11 +179,23 @@ V1 平台基线至少必须提供：
 
 - `docs/ai/quickstart.md`
 - `docs/ai/context.yaml`
+- `docs/ai/schemas/`
+- `docs/ai/module-registry.json`
+- `docs/ai/app-assembly-contract.json`
+- `docs/ai/compatibility/app-assembly-suite.json`
 - `docs/ai/playbooks/`
 - `docs/ai/troubleshooting.md`
+- `scripts/scaffold-derived-app.mjs`
+- `scripts/verify-app-assembly-compatibility.mjs`
+- `scripts/verify-app-assembly.sh`
 - `scripts/verify-backend.sh`
 - `scripts/verify-frontend.sh`
 - `scripts/verify-fullstack.sh`
+
+说明：
+
+- `contract + schemas + compatibility suite` 是语言无关的装配标准
+- `scripts/scaffold-derived-app.mjs` 是当前的 `Node` 参考实现
 
 ## 当前状态
 

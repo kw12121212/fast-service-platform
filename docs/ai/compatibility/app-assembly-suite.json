@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "fsp-app-assembly-compatibility-suite/v1",
+  "fixtures": {
+    "valid": [
+      {
+        "id": "default-baseline",
+        "manifestPath": "docs/ai/manifests/default-baseline-app.json",
+        "expectedProfile": "baseline-v1",
+        "expectedSelectedModules": [
+          "admin-shell",
+          "user-management",
+          "role-permission-management",
+          "software-project-management",
+          "kanban-management",
+          "ticket-management"
+        ]
+      },
+      {
+        "id": "core-admin",
+        "manifestPath": "docs/ai/manifests/core-admin-app.json",
+        "expectedProfile": "core-admin",
+        "expectedSelectedModules": [
+          "admin-shell",
+          "user-management",
+          "role-permission-management"
+        ]
+      }
+    ],
+    "invalid": [
+      {
+        "id": "missing-required-core",
+        "manifestPath": "docs/ai/compatibility/fixtures/missing-required-core.manifest.json",
+        "expectedErrorIncludes": "required core module"
+      },
+      {
+        "id": "unknown-module",
+        "manifestPath": "docs/ai/compatibility/fixtures/unknown-module.manifest.json",
+        "expectedErrorIncludes": "Unknown module"
+      },
+      {
+        "id": "missing-dependency",
+        "manifestPath": "docs/ai/compatibility/fixtures/missing-dependency.manifest.json",
+        "expectedErrorIncludes": "requires dependency"
+      }
+    ]
+  },
+  "validation": {
+    "generatedAppVerificationContract": "docs/ai/generated-app-verification-contract.json",
+    "generatedOutputChecks": [
+      "required-files-present",
+      "verification-inputs-present",
+      "module-selected-routes-match-registry",
+      "module-selected-backend-services-match-registry",
+      "module-selected-backend-tables-match-registry",
+      "generated-context-selected-modules-match-manifest"
+    ],
+    "mustValidateObservableBehaviorOnly": true
+  },
+  "compatibleImplementations": [
+    {
+      "id": "node-scaffolder",
+      "scaffoldCommand": "node scripts/scaffold-derived-app.mjs --manifest <manifest-path> --output <absolute-output-dir>",
+      "generatedAppVerifier": "node scripts/verify-derived-app.mjs <generated-app-dir>"
+    },
+    {
+      "id": "java-cli",
+      "scaffoldCommand": "./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>",
+      "generatedAppVerifier": "node scripts/verify-derived-app.mjs <generated-app-dir>"
+    }
+  ]
+}

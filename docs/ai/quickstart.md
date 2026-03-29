@@ -104,3 +104,61 @@
 - backend 运行时 classpath 没准备好
 - `8080` 或 `4173` 端口冲突
 - `/service/*` 代理路径没有真正打到 backend
+
+## 如果目标是派生一个新应用
+
+先读这些机器可读资产：
+
+- `docs/ai/schemas/app-manifest.schema.json`
+- `docs/ai/schemas/module-registry.schema.json`
+- `docs/ai/generated-app-verification-contract.json`
+- `docs/ai/schemas/generated-app-verification-contract.schema.json`
+- `docs/ai/compatibility/app-assembly-suite.json`
+- `docs/ai/module-registry.json`
+- `docs/ai/app-assembly-contract.json`
+- `docs/ai/manifests/default-baseline-app.json`
+- `docs/ai/manifests/core-admin-app.json`
+
+注意：
+
+- `docs/ai/app-assembly-contract.json`、schema 和 compatibility suite 才是规范事实来源
+- `docs/ai/generated-app-verification-contract.json` 定义生成后验证的标准输入、检查项和结果语义
+- `scripts/scaffold-derived-app.mjs` 是当前的 `Node` 参考实现，不应被当成唯一标准
+- `tools/java-assembly-cli/` 提供第二个兼容实现；它要通过同一套 compatibility suite，而不是复用 Node 内部逻辑
+- `scripts/verify-derived-app.mjs` 是当前的 `Node` reference verifier，不是 generated-app verification contract 本身
+
+再执行：
+
+```bash
+node scripts/scaffold-derived-app.mjs \
+  --manifest docs/ai/manifests/core-admin-app.json \
+  --output ../core-admin-console
+```
+
+或者走 Java CLI 路径：
+
+```bash
+./scripts/scaffold-derived-app-java.sh \
+  docs/ai/manifests/core-admin-app.json \
+  ../core-admin-console
+```
+
+验证装配系统本身：
+
+```bash
+./scripts/verify-app-assembly.sh
+```
+
+它现在验证的是“compatibility suite + Node/Java 两个兼容实现”，不是仅仅检查某一个脚本还能否跑通。
+
+验证某个已生成应用骨架：
+
+```bash
+./scripts/verify-derived-app.sh ../core-admin-console
+```
+
+如果你要看当前 reference verifier 的直接入口：
+
+```bash
+node scripts/verify-derived-app.mjs ../core-admin-console
+```

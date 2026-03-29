@@ -1,0 +1,158 @@
+import assert from 'node:assert/strict'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+import test from 'node:test'
+
+import {
+  REPO_ROOT,
+  loadAssemblyContract,
+  loadCompatibilitySuite,
+  loadGeneratedAppVerificationContract,
+  loadModuleRegistry,
+  readJson,
+  runCompatibilitySuite,
+  scaffoldDerivedApp,
+  validateManifest,
+  verifyDerivedApp
+} from './app-assembly-lib.mjs'
+
+test('validateManifest rejects missing required core modules', async () => {
+  const registry = await loadModuleRegistry()
+  const contract = await loadAssemblyContract()
+  const manifest = {
+    schemaVersion: 'fsp-app-manifest/v1',
+    application: {
+      id: 'broken-app',
+      name: 'Broken App',
+      packagePrefix: 'com.fastservice.platform.derived'
+    },
+    modules: ['admin-shell', 'user-management']
+  }
+
+  assert.throws(() => validateManifest(manifest, registry, contract), /required core module/)
+})
+
+test('scaffoldDerivedApp generates a core-only app without delivery routes', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-core-admin-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const verification = await verifyDerivedApp(outputDir)
+    assert.equal(verification.ok, true)
+
+    const router = await readFile(path.join(outputDir, 'frontend/src/app/router.tsx'), 'utf8')
+    assert.equal(router.includes("path: 'projects'"), false)
+    assert.equal(router.includes("path: 'tickets'"), false)
+    assert.equal(router.includes("path: 'kanban'"), false)
+
+    const servicesSql = await readFile(
+      path.join(outputDir, 'backend/src/main/resources/sql/services.sql'),
+      'utf8'
+    )
+    assert.equal(servicesSql.includes('project_service'), false)
+    assert.equal(servicesSql.includes('ticket_service'), false)
+    assert.equal(servicesSql.includes('kanban_service'), false)
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('compatibility suite fixtures match module registry profiles', async () => {
+  const registry = await loadModuleRegistry()
+  const suite = await loadCompatibilitySuite()
+
+  for (const fixture of suite.fixtures.valid) {
+    assert.deepEqual(
+      registry.profiles[fixture.expectedProfile].modules,
+      fixture.expectedSelectedModules
+    )
+  }
+})
+
+test('generated app verification contract is exposed as a normative asset', async () => {
+  const assemblyContract = await loadAssemblyContract()
+  const verificationContract = await loadGeneratedAppVerificationContract()
+
+  assert.equal(
+    assemblyContract.normativeAssets.generatedAppVerificationContract,
+    'docs/ai/generated-app-verification-contract.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.generatedAppVerificationContractSchema,
+    'docs/ai/schemas/generated-app-verification-contract.schema.json'
+  )
+  assert.deepEqual(verificationContract.checks, [
+    'required-files-present',
+    'verification-inputs-present',
+    'generated-context-selected-modules-match-manifest',
+    'module-selected-routes-match-registry',
+    'module-selected-backend-services-match-registry',
+    'module-selected-backend-tables-match-registry'
+  ])
+})
+
+test('compatibility suite passes for the node reference implementation', async () => {
+  const result = await runCompatibilitySuite()
+  assert.equal(result.ok, true)
+  assert.deepEqual(
+    result.implementations.map((implementation) => implementation.id),
+    ['node-scaffolder', 'java-cli']
+  )
+  assert.deepEqual(
+    result.implementations.map((implementation) => implementation.validFixtures),
+    [
+      ['default-baseline', 'core-admin'],
+      ['default-baseline', 'core-admin']
+    ]
+  )
+  assert.deepEqual(
+    result.implementations.map((implementation) => implementation.invalidFixtures),
+    [
+      ['missing-required-core', 'unknown-module', 'missing-dependency'],
+      ['missing-required-core', 'unknown-module', 'missing-dependency']
+    ]
+  )
+})
+
+test('generated output includes contract schemas required by the standardized invariants', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-schema-output-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const contract = await readJson(path.join(outputDir, 'docs/ai/app-assembly-contract.json'))
+    for (const relativePath of contract.outputInvariants.requiredFiles) {
+      const absolutePath = path.join(outputDir, relativePath)
+      const contents = await readFile(absolutePath, 'utf8')
+      assert.ok(contents.length > 0, `Expected non-empty generated file: ${relativePath}`)
+    }
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('verifyDerivedApp returns standardized verifier metadata', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-verifier-metadata-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const result = await verifyDerivedApp(outputDir)
+    assert.equal(result.ok, true)
+    assert.equal(result.contractVersion, 'fsp-generated-app-verification-contract/v1')
+    assert.equal(result.verifierId, 'node-generated-app-verifier')
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})

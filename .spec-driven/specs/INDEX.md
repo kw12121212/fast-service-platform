@@ -7,9 +7,12 @@
 - `backend/project-repository-binding.md` - Optional project-to-local-repository binding, repository summary behavior, and unbound-project handling.
 - `backend/runtime-bootstrap.md` - Runnable backend bootstrap behavior, local schema/service definition inputs, and optional demo-data startup behavior.
 - `backend/testing-and-demo-data.md` - Required automated backend test coverage and optional demo-data validation behavior.
+- `component/ai-app-assembly-contract.md` - Machine-readable application manifest, module registry, repository-owned scaffolding, and validation guidance for derived applications.
 - `component/ai-consumption-context.md` - External AI workflow context boundary and dependency contract for consuming the platform components.
 - `component/minimum-platform-baseline.md` - Minimum reusable enterprise component baseline and baseline management workflow contract.
+- `core/app-assembly-compatibility-suite.md` - Compatibility fixtures and observable output validation rules for language-neutral app assembly implementations.
 - `core/ai-repository-readiness.md` - AI-first quickstart, machine-readable context, change playbooks, automated validation entrypoints, and troubleshooting guidance for repository contribution.
+- `core/generated-app-verification-contract.md` - Machine-readable verifier inputs, observable checks, result semantics, and reference-verifier role for generated applications.
 - `core/project-foundation.md` - Repository bootstrap documentation, agent rules, and reserved full-stack workspace layout.
 - `frontend/admin-shell.md` - Runnable PC admin frontend workspace and coherent V1 admin shell behavior.
 - `frontend/data-access.md` - Consistent frontend data-access convention for backend-connected admin pages.

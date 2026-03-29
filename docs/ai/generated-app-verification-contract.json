@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "fsp-generated-app-verification-contract/v1",
+  "normativeInputs": {
+    "applicationManifest": "app-manifest.json",
+    "moduleRegistry": "docs/ai/module-registry.json",
+    "assemblyContract": "docs/ai/app-assembly-contract.json",
+    "verificationContract": "docs/ai/generated-app-verification-contract.json",
+    "generatedContext": "docs/ai/context.json",
+    "frontendRoutes": "frontend/src/app/router.tsx",
+    "frontendNavigation": "frontend/src/app/navigation.ts",
+    "backendServices": "backend/src/main/resources/sql/services.sql",
+    "backendTables": "backend/src/main/resources/sql/tables.sql"
+  },
+  "checks": [
+    "required-files-present",
+    "verification-inputs-present",
+    "generated-context-selected-modules-match-manifest",
+    "module-selected-routes-match-registry",
+    "module-selected-backend-services-match-registry",
+    "module-selected-backend-tables-match-registry"
+  ],
+  "resultShape": {
+    "ok": "boolean",
+    "issues": "string[]",
+    "selectedModules": "string[]",
+    "contractVersion": "string",
+    "verifierId": "string"
+  },
+  "referenceVerifiers": [
+    {
+      "id": "node-generated-app-verifier",
+      "type": "reference-verifier",
+      "entrypoint": "scripts/verify-derived-app.mjs",
+      "wrapper": "scripts/verify-derived-app.sh"
+    }
+  ]
+}

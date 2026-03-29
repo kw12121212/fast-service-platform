@@ -1,0 +1,1530 @@
+import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { chmod, cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
+export const REPO_ROOT = path.resolve(SCRIPT_DIR, '..')
+
+const ROUTE_MODULES = [
+  {
+    id: 'admin-shell',
+    route: '/dashboard',
+    importName: 'DashboardPage',
+    importPath: '@/features/dashboard/dashboard-page',
+    nav: {
+      label: 'Dashboard',
+      eyebrow: 'Operations',
+      icon: 'LayoutDashboard',
+      title: 'Assembly Dashboard',
+      description:
+        'Inspect the selected module baseline for this derived admin application.'
+    }
+  },
+  {
+    id: 'user-management',
+    route: '/users',
+    importName: 'UsersPage',
+    importPath: '@/features/users/users-page',
+    nav: {
+      label: 'Users',
+      eyebrow: 'Identity',
+      icon: 'Users',
+      title: 'User Management',
+      description:
+        'Manage application users through the backend user service.'
+    }
+  },
+  {
+    id: 'role-permission-management',
+    route: '/roles',
+    importName: 'RolePermissionsPage',
+    importPath: '@/features/roles/role-permissions-page',
+    nav: {
+      label: 'Roles & Permissions',
+      eyebrow: 'Identity',
+      icon: 'ShieldCheck',
+      title: 'Role Permission Management',
+      description:
+        'Manage roles, permissions, and user-role assignments.'
+    }
+  },
+  {
+    id: 'software-project-management',
+    route: '/projects',
+    importName: 'ProjectsPage',
+    importPath: '@/features/projects/projects-page',
+    nav: {
+      label: 'Projects',
+      eyebrow: 'Delivery',
+      icon: 'FolderKanban',
+      title: 'Software Project Management',
+      description:
+        'Manage software projects and repository binding workflows.'
+    }
+  },
+  {
+    id: 'ticket-management',
+    route: '/tickets',
+    importName: 'TicketsPage',
+    importPath: '@/features/tickets/tickets-page',
+    nav: {
+      label: 'Tickets',
+      eyebrow: 'Delivery',
+      icon: 'Ticket',
+      title: 'Ticket Management',
+      description:
+        'Manage tickets and minimal state progression.'
+    }
+  },
+  {
+    id: 'kanban-management',
+    route: '/kanban',
+    importName: 'KanbanPage',
+    importPath: '@/features/kanban/kanban-page',
+    nav: {
+      label: 'Kanban',
+      eyebrow: 'Delivery',
+      icon: 'KanbanSquare',
+      title: 'Kanban Management',
+      description:
+        'Manage boards scoped to the selected project baseline.'
+    }
+  }
+]
+
+const BACKEND_TABLES = [
+  {
+    module: 'user-management',
+    sql: `create table if not exists app_user (
+  id long auto_increment primary key,
+  username varchar,
+  display_name varchar,
+  email varchar,
+  enabled boolean
+) package @packageName generate code @modelSrcDir;`
+  },
+  {
+    module: 'role-permission-management',
+    sql: `create table if not exists app_role (
+  id long auto_increment primary key,
+  role_code varchar,
+  role_name varchar
+) package @packageName generate code @modelSrcDir;
+
+create table if not exists app_permission (
+  id long auto_increment primary key,
+  permission_code varchar,
+  permission_name varchar,
+  scope varchar
+) package @packageName generate code @modelSrcDir;
+
+create table if not exists app_user_role (
+  user_id long,
+  role_id long
+) package @packageName generate code @modelSrcDir;
+
+create table if not exists app_role_permission (
+  role_id long,
+  permission_id long
+) package @packageName generate code @modelSrcDir;`
+  },
+  {
+    module: 'software-project-management',
+    sql: `create table if not exists software_project (
+  id long auto_increment primary key,
+  project_key varchar,
+  project_name varchar,
+  project_description varchar,
+  active boolean
+) package @packageName generate code @modelSrcDir;
+
+create table if not exists project_repository_binding (
+  project_id long primary key,
+  repository_root_path varchar
+) package @packageName generate code @modelSrcDir;`
+  },
+  {
+    module: 'kanban-management',
+    sql: `create table if not exists kanban_board (
+  id long auto_increment primary key,
+  project_id long,
+  board_name varchar
+) package @packageName generate code @modelSrcDir;`
+  },
+  {
+    module: 'ticket-management',
+    sql: `create table if not exists ticket (
+  id long auto_increment primary key,
+  project_id long,
+  kanban_id long,
+  ticket_key varchar,
+  title varchar,
+  description varchar,
+  state varchar,
+  assignee_user_id long
+) package @packageName generate code @modelSrcDir;`
+  }
+]
+
+const BACKEND_SERVICES = [
+  {
+    module: 'user-management',
+    sql: `create service if not exists user_service (
+  createUser(username varchar, displayName varchar, email varchar) long,
+  listUsers() varchar
+)
+package @packageName
+implement by 'com.fastservice.platform.backend.user.UserServiceImpl'
+generate code @serviceSrcDir;`
+  },
+  {
+    module: 'role-permission-management',
+    sql: `create service if not exists access_control_service (
+  createRole(roleCode varchar, roleName varchar) long,
+  createPermission(permissionCode varchar, permissionName varchar, scope varchar) long,
+  assignPermissionToRole(roleId long, permissionId long) void,
+  assignRoleToUser(userId long, roleId long) void,
+  listRoles() varchar,
+  listPermissions() varchar,
+  listRolesForUser(userId long) varchar,
+  listPermissionsForRole(roleId long) varchar
+)
+package @packageName
+implement by 'com.fastservice.platform.backend.access.AccessControlServiceImpl'
+generate code @serviceSrcDir;`
+  },
+  {
+    module: 'software-project-management',
+    sql: `create service if not exists project_service (
+  createProject(projectKey varchar, projectName varchar, description varchar) long,
+  bindProjectRepository(projectId long, repositoryPath varchar) varchar,
+  switchProjectBranch(projectId long, branchName varchar) varchar,
+  listProjects() varchar
+)
+package @packageName
+implement by 'com.fastservice.platform.backend.project.ProjectServiceImpl'
+generate code @serviceSrcDir;`
+  },
+  {
+    module: 'kanban-management',
+    sql: `create service if not exists kanban_service (
+  createKanban(projectId long, boardName varchar) long,
+  listKanbansByProject(projectId long) varchar
+)
+package @packageName
+implement by 'com.fastservice.platform.backend.kanban.KanbanServiceImpl'
+generate code @serviceSrcDir;`
+  },
+  {
+    module: 'ticket-management',
+    sql: `create service if not exists ticket_service (
+  createTicket(projectId long, kanbanId long, ticketKey varchar, title varchar, description varchar, assigneeUserId long) long,
+  moveTicket(ticketId long, targetState varchar) varchar,
+  listTicketsByProject(projectId long) varchar
+)
+package @packageName
+implement by 'com.fastservice.platform.backend.ticket.TicketServiceImpl'
+generate code @serviceSrcDir;`
+  }
+]
+
+const DEMO_SQL_BY_MODULE = [
+  {
+    module: 'user-management',
+    sql: `insert into app_user(id, username, display_name, email, enabled)
+values(100, 'admin', 'Administrator', 'admin@fastservice.local', true);`
+  },
+  {
+    module: 'role-permission-management',
+    sql: `insert into app_role(id, role_code, role_name)
+values(200, 'ADMIN', 'Administrator');
+
+insert into app_permission(id, permission_code, permission_name, scope)
+values(300, 'dashboard:view', 'View Dashboard', 'MENU');
+
+insert into app_user_role(user_id, role_id)
+values(100, 200);
+
+insert into app_role_permission(role_id, permission_id)
+values(200, 300);`
+  },
+  {
+    module: 'software-project-management',
+    sql: `insert into app_permission(id, permission_code, permission_name, scope)
+values(301, 'project:manage', 'Manage Projects', 'FUNCTION');
+
+insert into app_role_permission(role_id, permission_id)
+values(200, 301);`
+  },
+  {
+    module: 'ticket-management',
+    sql: `insert into app_permission(id, permission_code, permission_name, scope)
+values(302, 'ticket:manage', 'Manage Tickets', 'FUNCTION');
+
+insert into app_role_permission(role_id, permission_id)
+values(200, 302);`
+  },
+  {
+    module: 'kanban-management',
+    sql: `insert into app_permission(id, permission_code, permission_name, scope)
+values(303, 'kanban:view', 'View Kanban', 'MENU');
+
+insert into app_role_permission(role_id, permission_id)
+values(200, 303);`
+  }
+]
+
+const FRONTEND_SHARED_PATHS = [
+  'frontend/bun.lock',
+  'frontend/components.json',
+  'frontend/eslint.config.js',
+  'frontend/index.html',
+  'frontend/package.json',
+  'frontend/public',
+  'frontend/README.md',
+  'frontend/src/App.tsx',
+  'frontend/src/app/admin-shell.tsx',
+  'frontend/src/components/admin',
+  'frontend/src/components/ui',
+  'frontend/src/index.css',
+  'frontend/src/lib/api',
+  'frontend/src/lib/utils.ts',
+  'frontend/src/main.tsx',
+  'frontend/tsconfig.app.json',
+  'frontend/tsconfig.json',
+  'frontend/tsconfig.node.json',
+  'frontend/vite.config.ts'
+]
+
+const FRONTEND_OPTIONAL_FEATURES = {
+  'software-project-management': 'frontend/src/features/projects',
+  'ticket-management': 'frontend/src/features/tickets',
+  'kanban-management': 'frontend/src/features/kanban'
+}
+
+const BACKEND_SHARED_PATHS = [
+  'backend/pom.xml',
+  'backend/README.md',
+  'backend/src/main/java/com/fastservice/platform/backend/BackendApplication.java',
+  'backend/src/main/java/com/fastservice/platform/backend/bootstrap',
+  'backend/src/main/java/com/fastservice/platform/backend/common',
+  'backend/src/main/java/com/fastservice/platform/backend/engineering'
+]
+
+const BACKEND_ALWAYS_DOMAIN_PATHS = [
+  'backend/src/main/java/com/fastservice/platform/backend/access',
+  'backend/src/main/java/com/fastservice/platform/backend/user',
+  'backend/src/main/java/com/fastservice/platform/backend/generated/service/executor/AccessControlServiceExecutor.java',
+  'backend/src/main/java/com/fastservice/platform/backend/generated/service/executor/UserServiceExecutor.java'
+]
+
+const BACKEND_OPTIONAL_PATHS = {
+  'software-project-management': [
+    'backend/src/main/java/com/fastservice/platform/backend/project',
+    'backend/src/main/java/com/fastservice/platform/backend/generated/service/executor/ProjectServiceExecutor.java'
+  ],
+  'kanban-management': [
+    'backend/src/main/java/com/fastservice/platform/backend/kanban',
+    'backend/src/main/java/com/fastservice/platform/backend/generated/service/executor/KanbanServiceExecutor.java'
+  ],
+  'ticket-management': [
+    'backend/src/main/java/com/fastservice/platform/backend/ticket',
+    'backend/src/main/java/com/fastservice/platform/backend/generated/service/executor/TicketServiceExecutor.java'
+  ]
+}
+
+function moduleMap(registry) {
+  return new Map(registry.modules.map((module) => [module.id, module]))
+}
+
+export async function readJson(filePath) {
+  return JSON.parse(await readFile(filePath, 'utf8'))
+}
+
+export async function loadModuleRegistry(rootDir = REPO_ROOT) {
+  return readJson(path.join(rootDir, 'docs', 'ai', 'module-registry.json'))
+}
+
+export async function loadAssemblyContract(rootDir = REPO_ROOT) {
+  return readJson(path.join(rootDir, 'docs', 'ai', 'app-assembly-contract.json'))
+}
+
+export async function loadGeneratedAppVerificationContract(rootDir = REPO_ROOT) {
+  return readJson(path.join(rootDir, 'docs', 'ai', 'generated-app-verification-contract.json'))
+}
+
+export async function loadCompatibilitySuite(rootDir = REPO_ROOT) {
+  return readJson(path.join(rootDir, 'docs', 'ai', 'compatibility', 'app-assembly-suite.json'))
+}
+
+function getNormativeAssetPaths(contract) {
+  return Object.values(contract.normativeAssets ?? {})
+}
+
+function getRequiredGeneratedFiles(contract) {
+  return contract.outputInvariants?.requiredFiles ?? []
+}
+
+function getGeneratedContractAssetPaths(contract) {
+  return getRequiredGeneratedFiles(contract).filter(
+    (relativePath) =>
+      relativePath.startsWith('docs/ai/') &&
+      relativePath !== 'docs/ai/context.json'
+  )
+}
+
+function getModuleIdsByRole(registry, role) {
+  return registry.modules
+    .filter((module) => module.role === role)
+    .map((module) => module.id)
+}
+
+function getFrontendRoutesByModule(registry) {
+  return new Map(
+    registry.modules
+      .filter((module) => Array.isArray(module.frontend?.routes))
+      .map((module) => [module.id, module.frontend.routes])
+  )
+}
+
+function getBackendServicesByModule(registry) {
+  return new Map(
+    registry.modules
+      .filter((module) => Array.isArray(module.backend?.services))
+      .map((module) => [module.id, module.backend.services])
+  )
+}
+
+function getBackendTablesByModule(registry) {
+  return new Map(
+    registry.modules
+      .filter((module) => Array.isArray(module.backend?.tables))
+      .map((module) => [module.id, module.backend.tables])
+  )
+}
+
+function getGeneratedAppCheckIds(verificationContract) {
+  return new Set(verificationContract.checks ?? [])
+}
+
+function resolveVerificationInputPath(targetDir, verificationContract, inputKey, issues) {
+  const relativePath = verificationContract.normativeInputs?.[inputKey]
+  if (typeof relativePath !== 'string' || relativePath.length === 0) {
+    issues.push(`Missing verification contract input path: ${inputKey}`)
+    return null
+  }
+
+  return path.join(targetDir, relativePath)
+}
+
+export function validateManifest(manifest, registry, contract = null) {
+  assert.equal(manifest.schemaVersion, 'fsp-app-manifest/v1', 'Unsupported manifest schemaVersion')
+  assert.ok(manifest.application, 'Manifest must include application')
+  assert.match(manifest.application.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'application.id must be kebab-case')
+  assert.ok(manifest.application.name, 'application.name is required')
+  assert.match(
+    manifest.application.packagePrefix,
+    /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/,
+    'application.packagePrefix must be a dotted Java package prefix'
+  )
+  assert.ok(Array.isArray(manifest.modules), 'modules must be an array')
+
+  const registryById = moduleMap(registry)
+  const selectedModules = [...new Set(manifest.modules)]
+  assert.equal(selectedModules.length, manifest.modules.length, 'modules must not contain duplicates')
+
+  for (const moduleId of selectedModules) {
+    assert.ok(registryById.has(moduleId), `Unknown module: ${moduleId}`)
+  }
+
+  const requiredCore = getModuleIdsByRole(registry, 'required-core')
+
+  for (const requiredModuleId of requiredCore) {
+    assert.ok(
+      selectedModules.includes(requiredModuleId),
+      `Manifest must include required core module: ${requiredModuleId}`
+    )
+  }
+
+  for (const moduleId of selectedModules) {
+    const module = registryById.get(moduleId)
+    for (const dependency of module.dependsOn ?? []) {
+      assert.ok(
+        selectedModules.includes(dependency),
+        `Module ${moduleId} requires dependency ${dependency}`
+      )
+    }
+  }
+
+  if (contract !== null) {
+    const requiredFields = contract.requiredManifestFields ?? []
+    for (const field of requiredFields) {
+      if (field === 'schemaVersion') {
+        assert.ok(manifest.schemaVersion, 'Manifest must include schemaVersion')
+        continue
+      }
+
+      let current = manifest
+      for (const part of field.split('.')) {
+        current = current?.[part]
+      }
+      assert.ok(current !== undefined && current !== null, `Manifest must include ${field}`)
+    }
+  }
+
+  return {
+    selectedModules,
+    registryById
+  }
+}
+
+function ensureOutsideRepository(outputDir) {
+  const relative = path.relative(REPO_ROOT, outputDir)
+  const isInsideRepo = relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))
+  assert.ok(!isInsideRepo, `Output path must be outside repository workspace: ${outputDir}`)
+}
+
+async function copyRelativePath(relativePath, outputDir) {
+  const sourcePath = path.join(REPO_ROOT, relativePath)
+  const targetPath = path.join(outputDir, relativePath)
+  await mkdir(path.dirname(targetPath), { recursive: true })
+  await cp(sourcePath, targetPath, { recursive: true })
+}
+
+async function copyNormativeAssets(contract, outputDir) {
+  for (const relativePath of getGeneratedContractAssetPaths(contract)) {
+    await copyRelativePath(relativePath, outputDir)
+  }
+}
+
+function buildTablesSql(selectedModules) {
+  const selected = new Set(selectedModules)
+  const body = BACKEND_TABLES
+    .filter((entry) => selected.has(entry.module))
+    .map((entry) => entry.sql)
+    .join('\n\n')
+
+  return `set @packageName 'com.fastservice.platform.backend.generated.model';
+set @modelSrcDir './target/generated-sources/lealone-model';
+
+${body}
+`
+}
+
+function buildServicesSql(selectedModules) {
+  const selected = new Set(selectedModules)
+  const body = BACKEND_SERVICES
+    .filter((entry) => selected.has(entry.module))
+    .map((entry) => entry.sql)
+    .join('\n\n')
+
+  return `set @packageName 'com.fastservice.platform.backend.generated.service';
+set @serviceSrcDir './target/generated-sources/lealone-service';
+
+${body}
+`
+}
+
+function buildDemoSql(selectedModules) {
+  const selected = new Set(selectedModules)
+  return `${DEMO_SQL_BY_MODULE
+    .filter((entry) => selected.has(entry.module))
+    .map((entry) => entry.sql)
+    .join('\n\n')}
+`
+}
+
+function buildDemoDataSupport(selectedModules) {
+  const selected = new Set(selectedModules)
+  const hasProjects = selected.has('software-project-management')
+  const hasKanban = selected.has('kanban-management')
+  const hasTickets = selected.has('ticket-management')
+
+  const imports = [
+    "import java.sql.Connection;",
+    "import java.sql.PreparedStatement;",
+    "import java.sql.ResultSet;",
+    "import java.sql.SQLException;",
+    "",
+    "import com.fastservice.platform.backend.common.db.JdbcSupport;",
+    "import com.fastservice.platform.backend.common.sql.SqlScriptExecutor;"
+  ]
+
+  if (hasProjects) {
+    imports.push("import com.fastservice.platform.backend.project.ProjectServiceImpl;")
+  }
+  if (hasKanban) {
+    imports.push("import com.fastservice.platform.backend.kanban.KanbanServiceImpl;")
+  }
+  if (hasTickets) {
+    imports.push("import com.fastservice.platform.backend.ticket.TicketServiceImpl;")
+  }
+
+  const moduleBody = []
+  if (hasProjects) {
+    moduleBody.push(
+      "",
+      `        ProjectServiceImpl projectService = new ProjectServiceImpl();
+        long projectId = ensureProject(projectService);`
+    )
+  }
+  if (hasKanban) {
+    moduleBody.push(
+      `        KanbanServiceImpl kanbanService = new KanbanServiceImpl();
+        long boardId = ensureBoard(projectId, kanbanService);`
+    )
+  }
+  if (hasTickets) {
+    moduleBody.push(
+      `        TicketServiceImpl ticketService = new TicketServiceImpl();
+        ensureTicket(projectId, boardId, "FSP-1", "Bootstrap backend core",
+                "Establish the first backend core", "TODO", ticketService);
+        ensureTicket(projectId, boardId, "FSP-2", "Verify demo workflow",
+                "Exercise minimal kanban state flow", "IN_PROGRESS", ticketService);`
+    )
+  }
+
+  const helperMethods = []
+  if (hasProjects) {
+    helperMethods.push(`
+    private static long ensureProject(ProjectServiceImpl projectService) {
+        Long existingProjectId = findId("SELECT id FROM software_project WHERE project_key = ?", "FSP");
+        if (existingProjectId != null) {
+            return existingProjectId;
+        }
+        return projectService.createProject("FSP", "Fast Service Platform", "Backend core demonstration project");
+    }`)
+  }
+  if (hasKanban) {
+    helperMethods.push(`
+    private static long ensureBoard(long projectId, KanbanServiceImpl kanbanService) {
+        Long existingBoardId = findId(
+                "SELECT id FROM kanban_board WHERE project_id = ? AND board_name = ?",
+                projectId,
+                "Delivery Board");
+        if (existingBoardId != null) {
+            return existingBoardId;
+        }
+        return kanbanService.createKanban(projectId, "Delivery Board");
+    }`)
+  }
+  if (hasTickets) {
+    helperMethods.push(`
+    private static void ensureTicket(long projectId, long boardId, String ticketKey, String title,
+            String description, String targetState, TicketServiceImpl ticketService) {
+        Long existingTicketId = findId("SELECT id FROM ticket WHERE ticket_key = ?", ticketKey);
+        long ticketId = existingTicketId != null
+                ? existingTicketId
+                : ticketService.createTicket(projectId, boardId, ticketKey, title, description, 100L);
+
+        if (!targetState.equals(findTicketState(ticketId))) {
+            ticketService.moveTicket(ticketId, targetState);
+        }
+    }
+
+    private static String findTicketState(long ticketId) {
+        try (Connection connection = JdbcSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement("SELECT state FROM ticket WHERE id = ?")) {
+            statement.setLong(1, ticketId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    throw new IllegalArgumentException("Ticket not found: " + ticketId);
+                }
+                return rs.getString(1);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Unable to read demo ticket state", e);
+        }
+    }`)
+  }
+
+  return `package com.fastservice.platform.backend.demo;
+
+${imports.join('\n')}
+
+public final class DemoDataSupport {
+
+    private DemoDataSupport() {
+    }
+
+    public static void load(String databaseName) {
+        try (Connection connection = JdbcSupport.getConnection(databaseName)) {
+            connection.setAutoCommit(false);
+            try {
+                if (!hasDemoUser(connection)) {
+                    SqlScriptExecutor.executeClasspathResource(connection, "/sql/demo.sql");
+                }
+                connection.commit();
+            } catch (Exception e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to load demo data", e);
+        }${moduleBody.join('\n')}
+    }
+
+    private static boolean hasDemoUser(Connection connection) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM app_user WHERE username = ?")) {
+            statement.setString(1, "admin");
+            try (ResultSet rs = statement.executeQuery()) {
+                rs.next();
+                return rs.getLong(1) > 0;
+            }
+        }
+    }
+${helperMethods.join('\n')}
+
+    private static Long findId(String sql, Object... parameters) {
+        try (Connection connection = JdbcSupport.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            for (int i = 0; i < parameters.length; i++) {
+                Object value = parameters[i];
+                if (value instanceof Long longValue) {
+                    statement.setLong(i + 1, longValue);
+                } else {
+                    statement.setString(i + 1, String.valueOf(value));
+                }
+            }
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                return rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Unable to look up demo data", e);
+        }
+    }
+}
+`
+}
+
+function buildRouterTsx(selectedModules) {
+  const selected = new Set(selectedModules)
+  const routeModules = ROUTE_MODULES.filter((module) => selected.has(module.id))
+  const imports = routeModules
+    .map((module) => `import { ${module.importName} } from '${module.importPath}'`)
+    .join('\n')
+  const routes = routeModules
+    .map((module) => `      {
+        path: '${module.route.slice(1)}',
+        element: <${module.importName} />,
+      },`)
+    .join('\n')
+
+  return `import { createBrowserRouter, Navigate } from 'react-router-dom'
+import type { RouteObject } from 'react-router-dom'
+
+import AdminShell from '@/app/admin-shell'
+${imports}
+
+function MissingRoutePage() {
+  return <Navigate replace to="/dashboard" />
+}
+
+export const adminRoutes: RouteObject[] = [
+  {
+    path: '/',
+    element: <AdminShell />,
+    children: [
+      {
+        index: true,
+        element: <Navigate replace to="/dashboard" />,
+      },
+${routes}
+      {
+        path: '*',
+        element: <MissingRoutePage />,
+      },
+    ],
+  },
+]
+
+export const router = createBrowserRouter(adminRoutes)
+`
+}
+
+function buildNavigationTs(selectedModules) {
+  const selected = new Set(selectedModules)
+  const routeModules = ROUTE_MODULES.filter((module) => selected.has(module.id))
+  const iconImports = [...new Set(routeModules.map((module) => module.nav.icon))].join(',\n  ')
+  const items = routeModules
+    .map((module) => `  {
+    to: '${module.route}',
+    label: '${module.nav.label}',
+    eyebrow: '${module.nav.eyebrow}',
+    icon: ${module.nav.icon},
+    meta: {
+      title: '${module.nav.title}',
+      description:
+        '${module.nav.description}',
+    },
+  },`)
+    .join('\n')
+
+  return `import {
+  ${iconImports},
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+
+export type AdminRouteMeta = {
+  title: string
+  description: string
+}
+
+export type AdminNavigationItem = {
+  to: string
+  label: string
+  eyebrow: string
+  icon: LucideIcon
+  meta: AdminRouteMeta
+}
+
+export const adminNavigation: AdminNavigationItem[] = [
+${items}
+]
+
+export function findNavigationItem(pathname: string) {
+  return adminNavigation.find((item) => pathname === item.to)
+}
+`
+}
+
+function buildDashboardPage(selectedModules) {
+  const selected = new Set(selectedModules)
+  const imports = [
+    "import { ShieldCheck, Users",
+    selected.has('software-project-management') ? ', FolderKanban' : '',
+    selected.has('ticket-management') ? ', Ticket' : '',
+    selected.has('kanban-management') ? ', Activity' : '',
+    " } from 'lucide-react'",
+    "",
+    "import { PageHeader } from '@/components/admin/page-header'",
+    "import { ResourceState } from '@/components/admin/resource-state'",
+    "import { StatCard } from '@/components/admin/stat-card'",
+    "import { Badge } from '@/components/ui/badge'",
+    "import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'",
+    "import {",
+    "  useRolePermissionsResource,",
+    selected.has('software-project-management') ? "  useProjectsResource," : '',
+    selected.has('kanban-management') ? "  useKanbansResource," : '',
+    selected.has('ticket-management') ? "  useTicketsResource," : '',
+    "  useUsersResource,",
+    "} from '@/lib/api/hooks'"
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  const selectedModuleBadges = selectedModules
+    .filter((moduleId) => moduleId !== 'admin-shell')
+    .map(
+      (moduleId) =>
+        `                <Badge key="${moduleId}" variant="outline" className="rounded-full">
+                  ${moduleId}
+                </Badge>`
+    )
+    .join('\n')
+
+  const stats = [
+    `        <StatCard
+          label="Users"
+          value={String(users.data.length)}
+          detail="Live users returned by the backend user service."
+          icon={<Users className="size-3.5" />}
+        />`,
+    `        <StatCard
+          label="Role permissions"
+          value={String(permissions.data.length)}
+          detail="Permissions exposed for the default admin role."
+          icon={<ShieldCheck className="size-3.5" />}
+        />`
+  ]
+  if (selected.has('software-project-management')) {
+    stats.push(`        <StatCard
+          label="Projects"
+          value={String(projects.data.length)}
+          detail="Projects enabled by the selected module set."
+          tone="accent"
+          icon={<FolderKanban className="size-3.5" />}
+        />`)
+  }
+  if (selected.has('ticket-management')) {
+    stats.push(`        <StatCard
+          label="Tickets"
+          value={String(tickets.data.length)}
+          detail="Tickets returned for the active project."
+          icon={<Ticket className="size-3.5" />}
+        />`)
+  }
+  if (selected.has('kanban-management')) {
+    stats.push(`        <StatCard
+          label="Kanban boards"
+          value={String(kanbans.data.length)}
+          detail="Boards enabled by the current assembly."
+          icon={<Activity className="size-3.5" />}
+        />`)
+  }
+
+  return `${imports}
+
+export function DashboardPage() {
+  const users = useUsersResource()
+  const permissions = useRolePermissionsResource(200)
+${selected.has('software-project-management') ? '  const projects = useProjectsResource()\n  const selectedProject = projects.data[0] ?? null' : ''}
+${selected.has('kanban-management') ? "  const kanbans = useKanbansResource(selectedProject?.id ?? null)" : ''}
+${selected.has('ticket-management') ? "  const tickets = useTicketsResource(selectedProject?.id ?? null)" : ''}
+
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="Overview"
+        title="Assembly dashboard"
+        description="This dashboard reflects the currently selected module assembly rather than assuming the full default baseline application."
+      />
+
+      <div className="grid gap-4 xl:grid-cols-${Math.max(2, stats.length)}">
+${stats.join('\n')}
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+        <Card className="bg-card/95">
+          <CardHeader>
+            <CardTitle className="text-lg">Selected modules</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+${selectedModuleBadges}
+            </div>
+            <p className="text-sm leading-6 text-muted-foreground">
+              This derived app keeps the platform core and wires only the selected business modules into the generated frontend navigation and backend SQL contract.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/95">
+          <CardHeader>
+            <CardTitle className="text-lg">Core backend signal</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResourceState
+              status={users.status}
+              error={users.error}
+              empty={users.data.length === 0}
+              emptyTitle="No users available"
+              emptyMessage="Enable demo data or create users to populate the derived application."
+              onRetry={users.reload}
+              skeletonCount={2}
+            >
+              <div className="space-y-4">
+                <div className="rounded-[22px] border border-border/60 bg-background/70 p-4">
+                  <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                    Default role view
+                  </div>
+                  <div className="mt-2 text-xl font-semibold">200 · ADMIN</div>
+                </div>
+
+                <div className="rounded-[22px] border border-border/60 bg-muted/35 p-4">
+                  <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                    Permission count
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold">
+                    {permissions.data.length}
+                  </div>
+                </div>
+${selected.has('software-project-management') ? `
+                <div className="rounded-[22px] border border-border/60 bg-muted/35 p-4">
+                  <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                    Active project focus
+                  </div>
+                  <div className="mt-2 text-xl font-semibold">
+                    {selectedProject ? \`\${selectedProject.key} · \${selectedProject.name}\` : 'No active project'}
+                  </div>
+                </div>` : ''}
+              </div>
+            </ResourceState>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+`
+}
+
+function buildRootReadme(manifest, selectedModules) {
+  return `# ${manifest.application.name}
+
+This application skeleton was derived from Fast Service Platform.
+
+## Selected Modules
+
+${selectedModules.map((moduleId) => `- \`${moduleId}\``).join('\n')}
+
+## Validation
+
+Run inside this generated application:
+
+\`\`\`bash
+./scripts/verify-derived-app.sh
+\`\`\`
+
+Or from the source platform repository:
+
+\`\`\`bash
+./scripts/verify-derived-app.sh /absolute/path/to/${manifest.application.id}
+\`\`\`
+`
+}
+
+function buildAgentsFile() {
+  return `# AGENTS
+
+## Start Here
+
+- Read \`README.md\`
+- Read \`app-manifest.json\`
+- Read \`docs/ai/context.json\`
+- Read \`docs/ai/module-registry.json\`
+- Run \`./scripts/verify-derived-app.sh\` before expanding the generated skeleton
+
+## Scope
+
+- This generated app is a derived skeleton from Fast Service Platform
+- Keep the selected module set in sync with \`app-manifest.json\`
+- Do not silently widen the dependency boundary
+`
+}
+
+function buildGeneratedContext(manifest, selectedModules, registry) {
+  return JSON.stringify(
+    {
+      schemaVersion: 'fsp-derived-app-context/v1',
+      sourcePlatform: 'Fast Service Platform',
+      application: manifest.application,
+      selectedModules,
+      requiredCoreModules: registry.modules
+        .filter((module) => module.role === 'required-core')
+        .map((module) => module.id),
+      contractInputs: {
+        manifest: 'app-manifest.json',
+        moduleRegistry: 'docs/ai/module-registry.json',
+        assemblyContract: 'docs/ai/app-assembly-contract.json',
+        generatedAppVerificationContract: 'docs/ai/generated-app-verification-contract.json'
+      },
+      validation: {
+        local: './scripts/verify-derived-app.sh',
+        repositoryOwned: './scripts/verify-derived-app.sh <generated-app-dir>',
+        referenceVerifier: 'node ./scripts/verify-derived-app.mjs <generated-app-dir>'
+      }
+    },
+    null,
+    2
+  )
+}
+
+function buildLocalVerifyScript() {
+  return `#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)"
+TARGET_DIR="\${1:-$ROOT_DIR}"
+
+node "$ROOT_DIR/scripts/verify-derived-app.mjs" "$TARGET_DIR"
+`
+}
+
+async function writeGeneratedApp(outputDir, manifest, registry, contract, selectedModules) {
+  await writeFile(path.join(outputDir, 'README.md'), buildRootReadme(manifest, selectedModules))
+  await writeFile(path.join(outputDir, 'AGENTS.md'), buildAgentsFile())
+  await writeFile(path.join(outputDir, 'app-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+  await writeFile(path.join(outputDir, 'docs/ai/context.json'), `${buildGeneratedContext(manifest, selectedModules, registry)}\n`)
+  await copyNormativeAssets(contract, outputDir)
+  await writeFile(
+    path.join(outputDir, 'backend/src/main/resources/sql/tables.sql'),
+    buildTablesSql(selectedModules)
+  )
+  await writeFile(
+    path.join(outputDir, 'backend/src/main/resources/sql/services.sql'),
+    buildServicesSql(selectedModules)
+  )
+  await writeFile(
+    path.join(outputDir, 'backend/src/main/resources/sql/demo.sql'),
+    buildDemoSql(selectedModules)
+  )
+  await writeFile(
+    path.join(outputDir, 'backend/src/main/java/com/fastservice/platform/backend/demo/DemoDataSupport.java'),
+    buildDemoDataSupport(selectedModules)
+  )
+  await writeFile(path.join(outputDir, 'frontend/src/app/router.tsx'), buildRouterTsx(selectedModules))
+  await writeFile(path.join(outputDir, 'frontend/src/app/navigation.ts'), buildNavigationTs(selectedModules))
+  await writeFile(
+    path.join(outputDir, 'frontend/src/features/dashboard/dashboard-page.tsx'),
+    buildDashboardPage(selectedModules)
+  )
+  await copyRelativePath('scripts/app-assembly-lib.mjs', outputDir)
+  await copyRelativePath('scripts/verify-derived-app.mjs', outputDir)
+  await writeFile(path.join(outputDir, 'scripts/verify-derived-app.sh'), buildLocalVerifyScript())
+  await chmod(path.join(outputDir, 'scripts/verify-derived-app.sh'), 0o755)
+}
+
+async function rewriteWorkspaceMetadata(outputDir, manifest) {
+  const frontendPackagePath = path.join(outputDir, 'frontend/package.json')
+  const frontendPackage = await readJson(frontendPackagePath)
+  frontendPackage.name = `${manifest.application.id}-frontend`
+  await writeFile(frontendPackagePath, `${JSON.stringify(frontendPackage, null, 2)}\n`)
+
+  const backendPomPath = path.join(outputDir, 'backend/pom.xml')
+  const backendPom = await readFile(backendPomPath, 'utf8')
+  const updatedPom = backendPom
+    .replace('<groupId>com.fastservice.platform</groupId>', `<groupId>${manifest.application.packagePrefix}</groupId>`)
+    .replace(
+      '<artifactId>fast-service-platform-backend</artifactId>',
+      `<artifactId>${manifest.application.id}-backend</artifactId>`
+    )
+    .replace(
+      '<name>fast-service-platform-backend</name>',
+      `<name>${manifest.application.id}-backend</name>`
+    )
+    .replace(
+      '<description>Enterprise component core backend for Fast Service Platform</description>',
+      `<description>Derived backend skeleton for ${manifest.application.name}</description>`
+    )
+  await writeFile(backendPomPath, updatedPom)
+}
+
+export async function scaffoldDerivedApp({ manifestPath, outputDir }) {
+  const resolvedManifestPath = path.resolve(manifestPath)
+  const resolvedOutputDir = path.resolve(outputDir)
+  const registry = await loadModuleRegistry()
+  const contract = await loadAssemblyContract()
+  const manifest = await readJson(resolvedManifestPath)
+  const { selectedModules } = validateManifest(manifest, registry, contract)
+
+  ensureOutsideRepository(resolvedOutputDir)
+  await rm(resolvedOutputDir, { recursive: true, force: true })
+  await mkdir(resolvedOutputDir, { recursive: true })
+
+  for (const relativePath of FRONTEND_SHARED_PATHS) {
+    await copyRelativePath(relativePath, resolvedOutputDir)
+  }
+  for (const relativePath of BACKEND_SHARED_PATHS) {
+    await copyRelativePath(relativePath, resolvedOutputDir)
+  }
+  for (const relativePath of BACKEND_ALWAYS_DOMAIN_PATHS) {
+    await copyRelativePath(relativePath, resolvedOutputDir)
+  }
+  await copyRelativePath('frontend/src/features/users', resolvedOutputDir)
+  await copyRelativePath('frontend/src/features/roles', resolvedOutputDir)
+
+  for (const [moduleId, relativePath] of Object.entries(FRONTEND_OPTIONAL_FEATURES)) {
+    if (selectedModules.includes(moduleId)) {
+      await copyRelativePath(relativePath, resolvedOutputDir)
+    }
+  }
+
+  for (const [moduleId, relativePaths] of Object.entries(BACKEND_OPTIONAL_PATHS)) {
+    if (!selectedModules.includes(moduleId)) {
+      continue
+    }
+    for (const relativePath of relativePaths) {
+      await copyRelativePath(relativePath, resolvedOutputDir)
+    }
+  }
+
+  await mkdir(path.join(resolvedOutputDir, 'docs/ai'), { recursive: true })
+  await mkdir(path.join(resolvedOutputDir, 'scripts'), { recursive: true })
+  await mkdir(path.join(resolvedOutputDir, 'backend/src/main/resources/sql'), { recursive: true })
+  await mkdir(
+    path.join(resolvedOutputDir, 'backend/src/main/java/com/fastservice/platform/backend/demo'),
+    { recursive: true }
+  )
+  await mkdir(path.join(resolvedOutputDir, 'frontend/src/app'), { recursive: true })
+  await mkdir(path.join(resolvedOutputDir, 'frontend/src/features/dashboard'), { recursive: true })
+
+  await writeGeneratedApp(resolvedOutputDir, manifest, registry, contract, selectedModules)
+  await rewriteWorkspaceMetadata(resolvedOutputDir, manifest)
+
+  return {
+    outputDir: resolvedOutputDir,
+    selectedModules
+  }
+}
+
+export async function verifyDerivedApp(targetDir) {
+  const resolvedTargetDir = path.resolve(targetDir)
+  const issues = []
+  let verificationContract
+
+  try {
+    verificationContract = await readJson(
+      path.join(resolvedTargetDir, 'docs/ai/generated-app-verification-contract.json')
+    )
+  } catch {
+    return {
+      ok: false,
+      issues: ['Missing required file: docs/ai/generated-app-verification-contract.json'],
+      selectedModules: [],
+      contractVersion: 'unavailable',
+      verifierId: 'node-generated-app-verifier'
+    }
+  }
+  const checkIds = getGeneratedAppCheckIds(verificationContract)
+  const verifierId =
+    verificationContract.referenceVerifiers?.[0]?.id ?? 'node-generated-app-verifier'
+
+  const contractPath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'assemblyContract',
+    issues
+  )
+  const manifestPath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'applicationManifest',
+    issues
+  )
+  const registryPath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'moduleRegistry',
+    issues
+  )
+  const contextPath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'generatedContext',
+    issues
+  )
+  const routesPath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'frontendRoutes',
+    issues
+  )
+  const navigationPath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'frontendNavigation',
+    issues
+  )
+  const servicesPath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'backendServices',
+    issues
+  )
+  const tablesPath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'backendTables',
+    issues
+  )
+
+  if (checkIds.has('verification-inputs-present')) {
+    for (const [inputKey, relativePath] of Object.entries(verificationContract.normativeInputs ?? {})) {
+      try {
+        await readFile(path.join(resolvedTargetDir, relativePath), 'utf8')
+      } catch {
+        issues.push(`Missing verification input file: ${inputKey}`)
+      }
+    }
+  }
+
+  if (
+    issues.length > 0 ||
+    !contractPath ||
+    !manifestPath ||
+    !registryPath ||
+    !contextPath ||
+    !routesPath ||
+    !navigationPath ||
+    !servicesPath ||
+    !tablesPath
+  ) {
+    return {
+      ok: false,
+      issues,
+      selectedModules: [],
+      contractVersion: verificationContract.schemaVersion,
+      verifierId
+    }
+  }
+
+  const contract = await readJson(contractPath)
+
+  if (checkIds.has('required-files-present')) {
+    for (const relativePath of getRequiredGeneratedFiles(contract)) {
+      try {
+        await readFile(path.join(resolvedTargetDir, relativePath), 'utf8')
+      } catch {
+        issues.push(`Missing required file: ${relativePath}`)
+      }
+    }
+  }
+
+  const manifest = await readJson(manifestPath)
+  const registry = await readJson(registryPath)
+  const { selectedModules } = validateManifest(manifest, registry, contract)
+  const selected = new Set(selectedModules)
+
+  const servicesSql = await readFile(servicesPath, 'utf8')
+  const tablesSql = await readFile(tablesPath, 'utf8')
+  const routerTsx = await readFile(routesPath, 'utf8')
+  const navigationTs = await readFile(navigationPath, 'utf8')
+  const context = await readJson(contextPath)
+
+  if (checkIds.has('module-selected-routes-match-registry')) {
+    for (const [moduleId, routes] of getFrontendRoutesByModule(registry)) {
+      const shouldExist = selected.has(moduleId)
+      for (const route of routes) {
+        if (shouldExist && !routerTsx.includes(route.slice(1))) {
+          issues.push(`Missing route wiring for selected module: ${moduleId}`)
+        }
+        if (!shouldExist && routerTsx.includes(route)) {
+          issues.push(`Unexpected route wiring for unselected module: ${moduleId}`)
+        }
+        if (shouldExist && !navigationTs.includes(route)) {
+          issues.push(`Missing navigation entry for selected module: ${moduleId}`)
+        }
+        if (!shouldExist && navigationTs.includes(route)) {
+          issues.push(`Unexpected navigation entry for unselected module: ${moduleId}`)
+        }
+      }
+    }
+  }
+
+  if (checkIds.has('module-selected-backend-services-match-registry')) {
+    for (const [moduleId, services] of getBackendServicesByModule(registry)) {
+      for (const serviceName of services) {
+        const marker = `create service if not exists ${serviceName}`
+        if (selected.has(moduleId) && !servicesSql.includes(marker)) {
+          issues.push(`Missing backend service contract for selected module: ${moduleId}`)
+        }
+        if (!selected.has(moduleId) && servicesSql.includes(marker)) {
+          issues.push(`Unexpected backend service contract for unselected module: ${moduleId}`)
+        }
+      }
+    }
+  }
+
+  if (checkIds.has('module-selected-backend-tables-match-registry')) {
+    for (const [moduleId, tables] of getBackendTablesByModule(registry)) {
+      for (const tableName of tables) {
+        const marker = `create table if not exists ${tableName}`
+        if (selected.has(moduleId) && !tablesSql.includes(marker)) {
+          issues.push(`Missing backend table contract for selected module: ${moduleId}`)
+        }
+        if (!selected.has(moduleId) && tablesSql.includes(marker)) {
+          issues.push(`Unexpected backend table contract for unselected module: ${moduleId}`)
+        }
+      }
+    }
+  }
+
+  if (
+    checkIds.has('generated-context-selected-modules-match-manifest') &&
+    JSON.stringify(context.selectedModules) !== JSON.stringify(selectedModules)
+  ) {
+    issues.push('docs/ai/context.json does not match app-manifest.json selectedModules')
+  }
+
+  return {
+    ok: issues.length === 0,
+    issues,
+    selectedModules,
+    contractVersion: verificationContract.schemaVersion,
+    verifierId
+  }
+}
+
+export async function runCompatibilitySuite(rootDir = REPO_ROOT) {
+  const resolvedRootDir = path.resolve(rootDir)
+  const issues = []
+  const registry = await loadModuleRegistry(resolvedRootDir)
+  const contract = await loadAssemblyContract(resolvedRootDir)
+  const suite = await loadCompatibilitySuite(resolvedRootDir)
+  const implementations = contract.referenceImplementations ?? []
+
+  for (const relativePath of getNormativeAssetPaths(contract)) {
+    try {
+      await readFile(path.join(resolvedRootDir, relativePath), 'utf8')
+    } catch {
+      issues.push(`Missing normative asset referenced by contract: ${relativePath}`)
+    }
+  }
+
+  const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'fsp-assembly-compatibility-'))
+  const implementationResults = []
+
+  try {
+    for (const implementation of implementations) {
+      const validFixtures = []
+      const invalidFixtures = []
+      const javaRuntime = implementation.language === 'java-cli'
+        ? prepareJavaCliRuntime(resolvedRootDir, implementation)
+        : null
+
+      for (const fixture of suite.fixtures.invalid) {
+        const manifest = await readJson(path.join(resolvedRootDir, fixture.manifestPath))
+
+        if (implementation.id === 'node-scaffolder') {
+          try {
+            validateManifest(manifest, registry, contract)
+            issues.push(`Invalid fixture unexpectedly passed for ${implementation.id}: ${fixture.id}`)
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error)
+            if (!message.includes(fixture.expectedErrorIncludes)) {
+              issues.push(
+                `Invalid fixture ${fixture.id} failed with unexpected error for ${implementation.id}: ${message}`
+              )
+            }
+          }
+        } else if (implementation.id === 'java-cli') {
+          const outputDir = path.join(tempRoot, implementation.id, `invalid-${fixture.id}`)
+          const result = runJavaCli(resolvedRootDir, javaRuntime, fixture.manifestPath, outputDir)
+          if (result.status === 0) {
+            issues.push(`Invalid fixture unexpectedly passed for ${implementation.id}: ${fixture.id}`)
+          } else if (!result.output.includes(fixture.expectedErrorIncludes)) {
+            issues.push(
+              `Invalid fixture ${fixture.id} failed with unexpected error for ${implementation.id}: ${result.output}`
+            )
+          }
+        } else {
+          issues.push(`Unsupported implementation in compatibility suite: ${implementation.id}`)
+        }
+        invalidFixtures.push(fixture.id)
+      }
+
+      for (const fixture of suite.fixtures.valid) {
+        const manifestPath = path.join(resolvedRootDir, fixture.manifestPath)
+        const outputDir = path.join(tempRoot, implementation.id, fixture.id)
+
+        let selectedModules = []
+        if (implementation.id === 'node-scaffolder') {
+          const result = await scaffoldDerivedApp({
+            manifestPath,
+            outputDir
+          })
+          selectedModules = result.selectedModules
+        } else if (implementation.id === 'java-cli') {
+          const result = runJavaCli(resolvedRootDir, javaRuntime, fixture.manifestPath, outputDir)
+          if (result.status !== 0) {
+            issues.push(`Valid fixture failed for ${implementation.id}: ${fixture.id}\n${result.output}`)
+            validFixtures.push(fixture.id)
+            continue
+          }
+          const manifest = await readJson(path.join(outputDir, 'app-manifest.json'))
+          selectedModules = manifest.modules
+        } else {
+          issues.push(`Unsupported implementation in compatibility suite: ${implementation.id}`)
+          validFixtures.push(fixture.id)
+          continue
+        }
+
+        if (JSON.stringify(selectedModules) !== JSON.stringify(fixture.expectedSelectedModules)) {
+          issues.push(
+            `Valid fixture ${fixture.id} selectedModules did not match compatibility expectation for ${implementation.id}`
+          )
+        }
+
+        const profileModules = registry.profiles?.[fixture.expectedProfile]?.modules ?? []
+        if (JSON.stringify(profileModules) !== JSON.stringify(fixture.expectedSelectedModules)) {
+          issues.push(`Valid fixture ${fixture.id} did not match registry profile ${fixture.expectedProfile}`)
+        }
+
+        const verification = await verifyDerivedApp(outputDir)
+        if (!verification.ok) {
+          issues.push(
+            ...verification.issues.map((issue) => `${implementation.id}/${fixture.id}: ${issue}`)
+          )
+        }
+
+        validFixtures.push(fixture.id)
+      }
+
+      implementationResults.push({
+        id: implementation.id,
+        validFixtures,
+        invalidFixtures
+      })
+    }
+  } finally {
+    await rm(tempRoot, { recursive: true, force: true })
+  }
+
+  return {
+    ok: issues.length === 0,
+    issues,
+    implementations: implementationResults
+  }
+}
+
+function defaultMvnBin() {
+  return process.env.MVN_BIN || path.join(process.env.HOME ?? '', '.sdkman/candidates/maven/current/bin/mvn')
+}
+
+function prepareJavaCliRuntime(rootDir, implementation) {
+  const workspace = path.join(rootDir, implementation.workspace)
+  const runtimeClasspathFile = path.join(workspace, 'target', 'runtime-classpath.txt')
+  const mvnBin = defaultMvnBin()
+  const build = spawnSync(
+    mvnBin,
+    [
+      '-q',
+      '-DskipTests',
+      'package',
+      'dependency:build-classpath',
+      '-Dmdep.outputFile=target/runtime-classpath.txt',
+      '-DincludeScope=runtime'
+    ],
+    {
+      cwd: workspace,
+      encoding: 'utf8'
+    }
+  )
+
+  if (build.status !== 0) {
+    throw new Error(`Unable to prepare Java CLI runtime: ${build.stdout}\n${build.stderr}`)
+  }
+
+  return {
+    workspace,
+    mainClass: implementation.mainClass,
+    runtimeClasspathFile
+  }
+}
+
+function runJavaCli(rootDir, runtime, manifestPath, outputDir) {
+  const classpath = [`target/classes`, readFileSync(runtime.runtimeClasspathFile, 'utf8').trim()]
+    .filter(Boolean)
+    .join(path.delimiter)
+  const result = spawnSync(
+    'java',
+    [
+      '-cp',
+      classpath,
+      runtime.mainClass,
+      '--repo-root',
+      rootDir,
+      '--manifest',
+      path.join(rootDir, manifestPath),
+      '--output',
+      outputDir
+    ],
+    {
+      cwd: runtime.workspace,
+      encoding: 'utf8'
+    }
+  )
+
+  return {
+    status: result.status ?? 1,
+    output: `${result.stdout ?? ''}\n${result.stderr ?? ''}`.trim()
+  }
+}
