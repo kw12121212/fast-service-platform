@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 final class GeneratedAppVerifier {
 
-    static final String VERIFIER_ID = "java-generated-app-verifier";
+    static final String VERIFIER_ID = "java-generated-app-verifier-cli";
     private static final Pattern APP_ID_PATTERN = Pattern.compile("^[a-z0-9]+(?:-[a-z0-9]+)*$");
     private static final Pattern PACKAGE_PREFIX_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$");
 

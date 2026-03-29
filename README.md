@@ -189,8 +189,8 @@ V1 平台基线至少必须提供：
 - `docs/ai/playbooks/`
 - `docs/ai/troubleshooting.md`
 - `scripts/platform-tool.sh`
-- `scripts/scaffold-derived-app.mjs`
-- `scripts/verify-app-assembly-compatibility.mjs`
+- `scripts/scaffold-derived-app-java.sh`
+- `scripts/VerifyDerivedApp.java`
 - `scripts/verify-app-assembly.sh`
 - `scripts/verify-backend.sh`
 - `scripts/verify-frontend.sh`
@@ -201,7 +201,7 @@ V1 平台基线至少必须提供：
 - `contract + schemas + compatibility suite` 是语言无关的装配标准
 - `docs/ai/ai-tool-orchestration-contract.json` 规定 AI 应优先编排仓库工具，而不是直接重做已支持 workflow
 - `scripts/platform-tool.sh` 是统一的 repository-owned tooling façade
-- `scripts/scaffold-derived-app.mjs` 是当前的 `Node` 参考实现
+- repository-owned platform tooling 当前统一收敛到 `Java`；前端仍然保留 `Node/bun`
 
 ## 当前状态
 

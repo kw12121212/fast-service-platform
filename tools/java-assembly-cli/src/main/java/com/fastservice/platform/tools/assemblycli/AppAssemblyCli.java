@@ -21,7 +21,7 @@ public final class AppAssemblyCli {
                 "implementation", "java-cli",
                 "outputDir", result.outputDir().toString(),
                 "selectedModules", result.selectedModules(),
-                "verifiedBy", "scripts/verify-derived-app.mjs")));
+                "verifiedBy", "scripts/verify-derived-app.sh")));
     }
 
     static Map<String, String> parseArgs(String[] args) {

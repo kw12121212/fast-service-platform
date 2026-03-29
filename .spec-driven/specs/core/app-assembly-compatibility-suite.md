@@ -29,15 +29,15 @@ The repository MUST define a compatibility suite that checks observable assembly
 - THEN it checks the observable presence and coherence of the contract-governed generated assets without depending on one implementation's internal file-generation flow
 
 ### Requirement: Compatibility Suite Can Be Targeted By Multiple Implementations
-The repository MUST define the compatibility suite so multiple implementations can target the same fixtures and validation expectations.
+The repository MUST define the compatibility suite so multiple implementations can target the same fixtures and validation expectations, even when the repository itself only ships Java as the repository-owned platform tooling implementation runtime.
 
 #### Scenario: Two implementations target the same platform standard
 - GIVEN two compatible implementations exist
 - WHEN both are validated against the repository-owned compatibility suite
 - THEN both can be judged against the same conformance target without special-case rules for one implementation language
 
-#### Scenario: A contributor validates both Node and Java implementations
-- GIVEN the repository has both Node and Java assembly implementations
-- WHEN a contributor runs the compatibility validation path
-- THEN they can validate each implementation against the same fixture set and observable contract expectations
-- AND the result does not depend on comparing one implementation's internal structure to the other
+#### Scenario: A contributor validates the repository-owned implementation after tooling consolidation
+- GIVEN the repository has consolidated platform tooling on Java
+- WHEN a contributor runs the repository-owned compatibility validation path
+- THEN the compatibility suite still validates the same observable contract behavior
+- AND the repository-owned conformance target is the Java implementation path

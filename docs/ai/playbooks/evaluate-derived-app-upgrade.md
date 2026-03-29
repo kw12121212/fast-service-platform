@@ -46,12 +46,6 @@
 ./scripts/platform-tool.sh upgrade targets /absolute/path/to/derived-app
 ```
 
-或者直接执行 Node 入口：
-
-```bash
-node scripts/evaluate-derived-app-upgrade.mjs /absolute/path/to/derived-app
-```
-
 查看当前平台发布的 advisory：
 
 ```bash

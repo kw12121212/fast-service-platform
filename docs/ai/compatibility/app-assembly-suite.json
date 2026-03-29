@@ -114,14 +114,9 @@
   },
   "compatibleImplementations": [
     {
-      "id": "node-scaffolder",
-      "scaffoldCommand": "node scripts/scaffold-derived-app.mjs --manifest <manifest-path> --output <absolute-output-dir>",
-      "generatedAppVerifier": "node scripts/verify-derived-app.mjs <generated-app-dir>"
-    },
-    {
       "id": "java-cli",
       "scaffoldCommand": "./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>",
-      "generatedAppVerifier": "node scripts/verify-derived-app.mjs <generated-app-dir>"
+      "generatedAppVerifier": "./scripts/verify-derived-app.sh <generated-app-dir>"
     }
   ]
 }

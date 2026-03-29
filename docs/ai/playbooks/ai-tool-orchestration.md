@@ -30,13 +30,7 @@
 2. 执行：
 
 ```bash
-./scripts/platform-tool.sh assembly scaffold node <manifest-path> <absolute-output-dir>
-```
-
-或在明确需要 Java 兼容实现时执行：
-
-```bash
-./scripts/platform-tool.sh assembly scaffold java <manifest-path> <absolute-output-dir>
+./scripts/platform-tool.sh assembly scaffold <manifest-path> <absolute-output-dir>
 ```
 
 3. 生成后立即执行：
@@ -82,7 +76,7 @@
 ## 允许 fallback 的情况
 
 - `platform-tool.sh` 在当前环境不可用，但对应 wrapper 仍存在且 orchestration contract 明确允许。
-- 需要明确选择 `reference verifier` 或 `Java verifier` 这类具体兼容路径。
+- 需要明确选择兼容 Java verifier 这类具体兼容路径。
 - 需要执行 façade 尚未暴露、但仓库 contract 已正式保留的兼容 wrapper。
 
 ## 应该停止并上报的情况

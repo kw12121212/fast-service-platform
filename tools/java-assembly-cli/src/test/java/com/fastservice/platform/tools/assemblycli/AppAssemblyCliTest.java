@@ -71,8 +71,7 @@ public class AppAssemblyCliTest {
             assertTrue(context.contains("\"repositoryOwned\":\"./scripts/platform-tool.sh generated-app verify <generated-app-dir>\""));
             assertTrue(readme.contains("## AI Tooling"));
             assertTrue(readme.contains("docs/ai/ai-tool-orchestration-contract.json"));
-            assertTrue(Files.exists(outputDir.resolve("scripts/app-assembly-lib.mjs")));
-            assertTrue(Files.exists(outputDir.resolve("scripts/verify-derived-app.mjs")));
+            assertTrue(Files.exists(outputDir.resolve("scripts/VerifyDerivedApp.java")));
             assertTrue(Files.exists(outputDir.resolve("scripts/verify-derived-app.sh")));
             assertTrue(Files.exists(outputDir.resolve("docs/ai/platform-release-history.json")));
         } finally {

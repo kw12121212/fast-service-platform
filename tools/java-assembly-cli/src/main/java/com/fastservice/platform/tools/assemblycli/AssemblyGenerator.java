@@ -472,8 +472,7 @@ final class AssemblyGenerator {
                     buildProjectsPage(selectedModules.contains("project-repository-management")));
         }
 
-        copyRelativePath("scripts/app-assembly-lib.mjs", outputDir);
-        copyRelativePath("scripts/verify-derived-app.mjs", outputDir);
+        copyRelativePath("scripts/VerifyDerivedApp.java", outputDir);
         writeString(outputDir.resolve("scripts/verify-derived-app.sh"), buildLocalVerifyScript());
         outputDir.resolve("scripts/verify-derived-app.sh").toFile().setExecutable(true, false);
     }
@@ -527,8 +526,6 @@ final class AssemblyGenerator {
                 .append("```bash\n./scripts/verify-derived-app.sh\n```\n\n")
                 .append("Or from the source platform repository:\n\n")
                 .append("```bash\n./scripts/platform-tool.sh generated-app verify /absolute/path/to/").append(appId).append("\n```\n\n")
-                .append("Or through the repository-owned Java verifier path:\n\n")
-                .append("```bash\n./scripts/platform-tool.sh generated-app verify-java /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("## Upgrade Evaluation\n\n")
                 .append("Evaluate this derived application against the current platform release from the source repository:\n\n")
                 .append("```bash\n./scripts/platform-tool.sh upgrade evaluate /absolute/path/to/").append(appId).append("\n```\n\n")
@@ -598,8 +595,7 @@ final class AssemblyGenerator {
         Map<String, Object> validation = new LinkedHashMap<>();
         validation.put("local", "./scripts/verify-derived-app.sh");
         validation.put("repositoryOwned", "./scripts/platform-tool.sh generated-app verify <generated-app-dir>");
-        validation.put("referenceVerifier", "./scripts/platform-tool.sh generated-app verify-reference <generated-app-dir>");
-        validation.put("compatibleVerifier", "./scripts/platform-tool.sh generated-app verify-java <generated-app-dir>");
+        validation.put("referenceVerifier", "./scripts/platform-tool.sh generated-app verify <generated-app-dir>");
         context.put("validation", validation);
 
         Map<String, Object> lifecycle = new LinkedHashMap<>();
@@ -674,7 +670,7 @@ final class AssemblyGenerator {
                 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
                 TARGET_DIR="${1:-$ROOT_DIR}"
 
-                node "$ROOT_DIR/scripts/verify-derived-app.mjs" "$TARGET_DIR"
+                java "$ROOT_DIR/scripts/VerifyDerivedApp.java" "$TARGET_DIR"
                 """;
     }
 

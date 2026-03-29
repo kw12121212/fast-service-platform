@@ -33,17 +33,17 @@
   },
   "referenceVerifiers": [
     {
-      "id": "node-generated-app-verifier",
+      "id": "java-generated-app-verifier",
       "type": "reference-verifier",
-      "language": "node-esm",
-      "defaultFacade": "scripts/platform-tool.sh generated-app verify-reference <generated-app-dir>",
-      "entrypoint": "scripts/verify-derived-app.mjs",
+      "language": "java-source",
+      "defaultFacade": "scripts/platform-tool.sh generated-app verify <generated-app-dir>",
+      "entrypoint": "scripts/VerifyDerivedApp.java",
       "wrapper": "scripts/verify-derived-app.sh"
     }
   ],
   "compatibleVerifiers": [
     {
-      "id": "java-generated-app-verifier",
+      "id": "java-generated-app-verifier-cli",
       "type": "compatible-verifier",
       "language": "java-cli",
       "workspace": "tools/java-generated-app-verifier",

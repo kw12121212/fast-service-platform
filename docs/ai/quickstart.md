@@ -145,24 +145,16 @@
 - `docs/ai/generated-app-verification-contract.json` 定义生成后验证的标准输入、检查项和结果语义
 - `docs/ai/derived-app-lifecycle-contract.json`、`docs/ai/derived-app-upgrade-execution-contract.json`、`docs/ai/platform-release.json`、`docs/ai/platform-release-history.json` 和 `docs/ai/platform-release-advisory.json` 定义生成后生命周期、升级目标选择、升级评估、升级执行和当前发布差异说明的事实来源
 - `docs/ai/compatibility/app-assembly-suite.json` 现在覆盖的不只是最小 baseline，还包括代表性的模块组合和无效边界样例
-- `scripts/scaffold-derived-app.mjs` 是当前的 `Node` 参考实现，不应被当成唯一标准
+- repository-owned platform tooling 现在统一走 Java 主路径；前端仍然保留 `Node/bun`
 - `./scripts/platform-tool.sh` 是 AI 调用这些 workflow 的默认 façade；只有 contract 明确允许时才回退到 wrapper
-- `tools/java-assembly-cli/` 提供第二个兼容实现；它要通过同一套 compatibility suite，而不是复用 Node 内部逻辑
-- `scripts/verify-derived-app.mjs` 是当前的 `Node` reference verifier，不是 generated-app verification contract 本身
-- `tools/java-generated-app-verifier/` 提供第二个 compatible generated-app verifier；它读取生成应用自带资产，而不是读取 Node verifier 内部状态
+- `tools/java-assembly-cli/` 提供当前仓库拥有的 assembly 实现；它要通过同一套 compatibility suite
+- `scripts/VerifyDerivedApp.java` 是 generated-app repository-owned verifier 入口，不是 contract 本身
+- `tools/java-generated-app-verifier/` 保留为 compatible generated-app verifier；它读取生成应用自带资产，而不是读取 repository-owned verifier 内部状态
 
 再执行：
 
 ```bash
-./scripts/platform-tool.sh assembly scaffold node \
-  docs/ai/manifests/core-admin-app.json \
-  ../core-admin-console
-```
-
-或者走 Java CLI 路径：
-
-```bash
-./scripts/platform-tool.sh assembly scaffold java \
+./scripts/platform-tool.sh assembly scaffold \
   docs/ai/manifests/core-admin-app.json \
   ../core-admin-console
 ```
@@ -173,18 +165,12 @@
 ./scripts/platform-tool.sh assembly verify
 ```
 
-它现在验证的是“compatibility suite + Node/Java 两个兼容实现”，不是仅仅检查某一个脚本还能否跑通。
+它现在验证的是“compatibility suite + Java 仓库实现”，不是仅仅检查某一个旧脚本还能否跑通。
 
 验证某个已生成应用骨架：
 
 ```bash
 ./scripts/platform-tool.sh generated-app verify ../core-admin-console
-```
-
-如果你要看当前 reference verifier 的直接入口：
-
-```bash
-./scripts/platform-tool.sh generated-app verify-reference ../core-admin-console
 ```
 
 如果你要走 Java verifier 路径：

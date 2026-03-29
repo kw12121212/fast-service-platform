@@ -25,7 +25,7 @@ public class GeneratedAppVerifierTest {
             assertFalse(result.ok());
             assertEquals(List.of("Missing required file: docs/ai/generated-app-verification-contract.json"), result.issues());
             assertEquals("unavailable", result.contractVersion());
-            assertEquals("java-generated-app-verifier", result.verifierId());
+            assertEquals("java-generated-app-verifier-cli", result.verifierId());
         } finally {
             deleteRecursively(tempDir);
         }
@@ -43,7 +43,7 @@ public class GeneratedAppVerifierTest {
             assertTrue(result.ok());
             assertEquals(List.of("admin-shell", "user-management", "role-permission-management"), result.selectedModules());
             assertEquals("fsp-generated-app-verification-contract/v1", result.contractVersion());
-            assertEquals("java-generated-app-verifier", result.verifierId());
+            assertEquals("java-generated-app-verifier-cli", result.verifierId());
         } finally {
             deleteRecursively(outputDir);
         }
@@ -51,11 +51,8 @@ public class GeneratedAppVerifierTest {
 
     private void scaffoldCoreAdminApp(Path outputDir) throws IOException, InterruptedException {
         Process process = new ProcessBuilder(
-                "node",
-                repoRoot.resolve("scripts/scaffold-derived-app.mjs").toString(),
-                "--manifest",
+                repoRoot.resolve("scripts/scaffold-derived-app-java.sh").toString(),
                 repoRoot.resolve("docs/ai/manifests/core-admin-app.json").toString(),
-                "--output",
                 outputDir.toString())
                 .directory(repoRoot.toFile())
                 .redirectErrorStream(true)

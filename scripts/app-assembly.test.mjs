@@ -191,8 +191,12 @@ test('generated app verification contract is exposed as a normative asset', asyn
     'module-selected-backend-tables-match-registry'
   ])
   assert.deepEqual(
-    verificationContract.compatibleVerifiers.map((verifier) => verifier.id),
+    verificationContract.referenceVerifiers.map((verifier) => verifier.id),
     ['java-generated-app-verifier']
+  )
+  assert.deepEqual(
+    verificationContract.compatibleVerifiers.map((verifier) => verifier.id),
+    ['java-generated-app-verifier-cli']
   )
   assert.equal(
     verificationContract.aiToolingGuidance.orchestrationContract,
@@ -208,32 +212,20 @@ test('generated app verification contract is exposed as a normative asset', asyn
   )
 })
 
-test('compatibility suite passes for the node reference implementation', async () => {
+test('compatibility suite passes for the java reference implementation', async () => {
   const result = await runCompatibilitySuite()
   assert.equal(result.ok, true)
   assert.deepEqual(
     result.implementations.map((implementation) => implementation.id),
-    ['node-scaffolder', 'java-cli']
+    ['java-cli']
   )
   assert.deepEqual(
     result.implementations.map((implementation) => implementation.validFixtures),
-    [
-      ['default-baseline', 'core-admin', 'project-admin', 'project-repository', 'project-kanban'],
-      ['default-baseline', 'core-admin', 'project-admin', 'project-repository', 'project-kanban']
-    ]
+    [['default-baseline', 'core-admin', 'project-admin', 'project-repository', 'project-kanban']]
   )
   assert.deepEqual(
     result.implementations.map((implementation) => implementation.invalidFixtures),
     [
-      [
-        'missing-required-core',
-        'unknown-module',
-        'missing-dependency',
-        'duplicate-module',
-        'kanban-without-project',
-        'repository-without-project',
-        'invalid-package-prefix'
-      ],
       [
         'missing-required-core',
         'unknown-module',
@@ -448,7 +440,6 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
     assert.ok(readme.includes('docs/ai/ai-tool-orchestration-contract.json'))
     assert.ok(readme.includes('./scripts/platform-tool.sh'))
     assert.ok(readme.includes('./scripts/platform-tool.sh generated-app verify'))
-    assert.ok(readme.includes('./scripts/platform-tool.sh generated-app verify-java'))
     assert.ok(readme.includes('./scripts/platform-tool.sh upgrade evaluate'))
     assert.ok(readme.includes('./scripts/platform-tool.sh upgrade targets'))
     assert.ok(readme.includes('./scripts/platform-tool.sh upgrade advisory'))
@@ -470,7 +461,7 @@ test('verifyDerivedApp returns standardized verifier metadata', async () => {
     const result = await verifyDerivedApp(outputDir)
     assert.equal(result.ok, true)
     assert.equal(result.contractVersion, 'fsp-generated-app-verification-contract/v1')
-    assert.equal(result.verifierId, 'node-generated-app-verifier')
+    assert.equal(result.verifierId, 'java-generated-app-verifier')
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }
@@ -497,7 +488,7 @@ test('java generated-app verifier validates a generated app through repository-o
     assert.equal(result.status, 0, result.stderr || result.stdout)
     const payload = JSON.parse(result.stdout.trim().split('\n').at(-1))
     assert.equal(payload.contractVersion, 'fsp-generated-app-verification-contract/v1')
-    assert.equal(payload.verifierId, 'java-generated-app-verifier')
+    assert.equal(payload.verifierId, 'java-generated-app-verifier-cli')
     assert.deepEqual(payload.selectedModules, [
       'admin-shell',
       'user-management',
@@ -607,7 +598,7 @@ test('platform-tool façade verifies a generated app through the unified entrypo
     assert.equal(result.status, 0, result.stderr || result.stdout)
     const payload = JSON.parse(result.stdout.trim())
     assert.equal(payload.verified, true)
-    assert.equal(payload.verifierId, 'node-generated-app-verifier')
+    assert.equal(payload.verifierId, 'java-generated-app-verifier')
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }
@@ -625,10 +616,10 @@ test('platform-tool façade exposes assembly compatibility verification', () => 
 
   assert.equal(result.status, 0, result.stderr || result.stdout)
   const payload = JSON.parse(result.stdout.trim())
-  assert.equal(payload.verified, true)
+  assert.equal(payload.ok, true)
   assert.deepEqual(
     payload.implementations.map((implementation) => implementation.id),
-    ['node-scaffolder', 'java-cli']
+    ['java-cli']
   )
 })
 

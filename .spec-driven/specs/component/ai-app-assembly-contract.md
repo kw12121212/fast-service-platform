@@ -24,18 +24,13 @@ The system MUST provide a machine-readable module registry that exposes the avai
 - AND it can determine which of those units may be selected independently and which require declared dependencies
 
 ### Requirement: Repository Generates An Independent Application Skeleton
-The system MUST provide a repository-owned scaffolding and assembly path that generates an independent monolithic application skeleton from the application manifest and selected modules, and that generated output MUST expose the machine-readable lifecycle metadata needed for later upgrade evaluation.
+The system MUST provide a repository-owned scaffolding and assembly path that generates an independent monolithic application skeleton from the application manifest and selected modules, and that generated output MUST expose the machine-readable lifecycle metadata needed for later upgrade evaluation, with Java as the repository-owned tooling runtime for that platform workflow.
 
-#### Scenario: A contributor scaffolds a new application from the platform
+#### Scenario: A contributor scaffolds a new application through the repository-owned path
 - GIVEN a contributor has provided a valid application-assembly input
 - WHEN they run the repository-owned scaffolding and assembly path
-- THEN the repository generates an independent application skeleton outside the current baseline runtime workspace
-- AND the generated output reflects the selected modules instead of always copying the full default application
-
-#### Scenario: A contributor inspects the generated application's lifecycle metadata
-- GIVEN a contributor has generated an independent application from the platform
-- WHEN they inspect the generated output assets
-- THEN they can identify the machine-readable metadata that declares which platform release or lifecycle contract the derived application was produced from
+- THEN the platform workflow is executed through the repository's Java-owned tooling runtime
+- AND the generated output still reflects the selected modules instead of always copying the full default application
 
 ### Requirement: Scaffolded Output Includes Repository-Approved Validation Guidance
 The system MUST define scaffolded-application validation and lifecycle guidance through language-neutral contracts that may be satisfied by multiple compatible implementations rather than only through a single verifier script.
@@ -65,7 +60,7 @@ The system MUST define its app assembly contract independently from any single i
 - THEN they can identify the required machine-readable assets and observable behaviors without depending on Node-specific internal implementation details
 
 ### Requirement: Machine-Readable Contract Distinguishes Normative Inputs From Reference Implementations
-The system MUST identify which machine-readable assets are normative assembly and verification inputs and which repository scripts are reference implementations or verification tools.
+The system MUST identify which machine-readable assets are normative assembly and verification inputs and which repository-owned Java tooling paths implement those workflows, without treating Node implementation scripts as the repository-owned platform tooling runtime.
 
 #### Scenario: An AI or multi-language implementer reads the assembly assets
 - GIVEN a contributor wants to build a compatible implementation in another language

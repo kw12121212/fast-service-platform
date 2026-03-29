@@ -29,10 +29,10 @@
 - AI 默认先读 orchestration contract，再决定走 `platform-tool.sh` 的哪个 workflow
 - generated app 的验证标准事实来源是 `generated-app verification contract`
 - generated app 的生命周期和升级评估事实来源是 `derived-app lifecycle contract + platform release metadata`
-- `scripts/scaffold-derived-app.mjs` 是当前参考实现，不是唯一合法实现
-- `tools/java-assembly-cli/` 是仓库内的第二个兼容实现
-- `scripts/verify-derived-app.mjs` 是当前 reference verifier，不是 generated-app verification contract 本身
-- `tools/java-generated-app-verifier/` 是仓库内的 Java compatible verifier
+- repository-owned assembly tooling 默认走 `platform-tool.sh` 和 Java 主路径
+- `tools/java-assembly-cli/` 是当前仓库拥有的 assembly 实现工作区
+- `scripts/VerifyDerivedApp.java` 是 generated-app verification 的 repository-owned Java 入口
+- `tools/java-generated-app-verifier/` 保留为兼容 Java verifier 实现
 
 ## 标准派生路径
 
@@ -48,15 +48,7 @@ AI 编排顺序：
 从仓库根目录执行：
 
 ```bash
-./scripts/platform-tool.sh assembly scaffold node \
-  docs/ai/manifests/core-admin-app.json \
-  ../core-admin-console
-```
-
-或者执行 Java CLI 兼容实现：
-
-```bash
-./scripts/platform-tool.sh assembly scaffold java \
+./scripts/platform-tool.sh assembly scaffold \
   docs/ai/manifests/core-admin-app.json \
   ../core-admin-console
 ```
@@ -85,8 +77,8 @@ AI 编排顺序：
 ./scripts/platform-tool.sh assembly verify
 ```
 
-如果你要验证某个实现是否符合平台标准，优先看 compatibility suite，而不是看它是否和当前 Node 脚本有相同内部结构。
-当前仓库内置的兼容实现是 `Node` 和 `Java CLI` 两条路径。
+如果你要验证某个实现是否符合平台标准，优先看 compatibility suite，而不是看它是否和某个旧实现有相同内部结构。
+当前仓库内置的 repository-owned 路径是 `Java`；兼容实现保留 `Java CLI` / `Java verifier` 的专用 wrapper。
 
 验证某个已生成应用骨架：
 
@@ -94,7 +86,7 @@ AI 编排顺序：
 ./scripts/platform-tool.sh generated-app verify ../core-admin-console
 ```
 
-或者用 Java verifier：
+如果你要显式走兼容 Java verifier：
 
 ```bash
 ./scripts/platform-tool.sh generated-app verify-java ../core-admin-console
@@ -122,7 +114,7 @@ AI 编排顺序：
 ## 常见坑
 
 - 只看文档，不读 `module-registry.json`，导致模块依赖判断错误
-- 把 `Node` 参考实现误当成规范本身
+- 把某个旧的 `Node` 辅助脚本误当成规范本身
 - 输出目录放在仓库内，污染当前母体应用工作区
 - 以为“可选模块”意味着可以忽略依赖关系
 - 只生成 manifest，没有检查路由、SQL 合同和生成目录是否真的反映模块选择

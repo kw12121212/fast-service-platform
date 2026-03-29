@@ -35,32 +35,12 @@ The repository MUST define the machine-readable inputs used to evaluate whether 
 - THEN they can identify which target releases are declared as supported candidates instead of inferring upgrade eligibility from the current release alone
 
 ### Requirement: Repository Provides A Repository-Owned Upgrade Evaluation Path
-The repository MUST provide repository-owned entrypoints that evaluate derived-application upgrade compatibility, surface release advisory details for repository-declared target releases, provide release lookup guidance for selecting a supported target, and provide a controlled upgrade execution path.
+The repository MUST provide repository-owned entrypoints that evaluate derived-application upgrade compatibility, surface release advisory details for repository-declared target releases, provide release lookup guidance for selecting a supported target, and provide a controlled upgrade execution path, with Java as the repository-owned implementation runtime for those platform workflows.
 
-#### Scenario: A contributor runs the upgrade evaluation flow
-- GIVEN a contributor has a derived application and a target platform release
-- WHEN they run the documented repository-owned upgrade evaluation path
-- THEN they can determine whether the derived application satisfies the repository-defined upgrade contract for that target
-
-#### Scenario: A contributor reads the current platform advisory
-- GIVEN a contributor wants to understand the current platform release delta before upgrading a derived application
-- WHEN they run the documented repository-owned advisory entrypoint
-- THEN they can identify the changed contracts, impacted modules, compatibility posture, and recommended next actions for that release
-
-#### Scenario: A contributor performs a dry-run upgrade planning step
-- GIVEN a contributor wants to understand how the repository-owned upgrade path would change a derived application
-- WHEN they run the documented execution path in dry-run mode
-- THEN they can inspect a machine-readable upgrade plan that identifies auto-applied items and manual-intervention items before any upgrade changes are committed
-
-#### Scenario: A contributor executes a repository-owned upgrade path
-- GIVEN a contributor has accepted the repository-owned upgrade plan
-- WHEN they run the documented execution path
-- THEN the repository applies the supported upgrade actions, reports any remaining manual-intervention items, and identifies the required post-upgrade validation commands
-
-#### Scenario: A contributor selects a supported upgrade target
-- GIVEN a contributor has a derived application and needs to choose a valid platform target release
-- WHEN they run the documented repository-owned release lookup path
-- THEN they can identify the supported target releases and the declared path semantics before running upgrade evaluation or execution
+#### Scenario: A contributor invokes lifecycle tooling through the repository-owned path
+- GIVEN a contributor runs repository-owned advisory, target-selection, evaluation, or execution workflows
+- WHEN those platform workflows execute
+- THEN they run through the repository's Java-owned tooling implementation path instead of a Node-owned tooling path
 
 ### Requirement: Lifecycle And Upgrade Contracts Are Implementation-Independent
 The repository MUST define derived-app lifecycle, advisory, and upgrade execution semantics independently from any single implementation language or script structure.

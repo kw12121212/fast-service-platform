@@ -75,8 +75,7 @@
       "docs/ai/schemas/app-assembly-compatibility-suite.schema.json",
       "backend/pom.xml",
       "frontend/package.json",
-      "scripts/app-assembly-lib.mjs",
-      "scripts/verify-derived-app.mjs",
+      "scripts/VerifyDerivedApp.java",
       "scripts/verify-derived-app.sh"
     ],
     "moduleWiringSources": {
@@ -118,35 +117,22 @@
   },
   "referenceImplementations": [
     {
-      "id": "node-scaffolder",
-      "type": "reference-implementation",
-      "language": "node-esm",
-      "scaffoldEntrypoint": "scripts/scaffold-derived-app.mjs",
-      "generatedAppVerifier": "scripts/verify-derived-app.mjs",
-      "generatedAppVerifierRole": "reference-verifier"
-    },
-    {
       "id": "java-cli",
-      "type": "compatible-implementation",
+      "type": "reference-implementation",
       "language": "java-cli",
       "workspace": "tools/java-assembly-cli",
       "mainClass": "com.fastservice.platform.tools.assemblycli.AppAssemblyCli",
       "scaffoldEntrypoint": "scripts/scaffold-derived-app-java.sh",
-      "generatedAppVerifier": "scripts/verify-derived-app-java.sh",
-      "generatedAppVerifierRole": "compatible-verifier"
+      "generatedAppVerifier": "scripts/verify-derived-app.sh",
+      "generatedAppVerifierRole": "reference-verifier"
     }
   ],
   "commands": {
     "platformTool": "./scripts/platform-tool.sh <group> <command> [...]",
-    "scaffold": {
-      "node": "./scripts/platform-tool.sh assembly scaffold node <manifest-path> <absolute-output-dir>",
-      "java": "./scripts/platform-tool.sh assembly scaffold java <manifest-path> <absolute-output-dir>"
-    },
+    "scaffold": "./scripts/platform-tool.sh assembly scaffold <manifest-path> <absolute-output-dir>",
     "verifyCompatibility": "./scripts/platform-tool.sh assembly compatibility",
     "verifyRepositoryAssembly": "./scripts/platform-tool.sh assembly verify",
-    "referenceVerifyGeneratedApp": "./scripts/platform-tool.sh generated-app verify-reference <generated-app-dir>",
     "verifyGeneratedApp": "./scripts/platform-tool.sh generated-app verify <generated-app-dir>",
-    "verifyGeneratedAppJava": "./scripts/platform-tool.sh generated-app verify-java <generated-app-dir>",
     "evaluateDerivedAppUpgrade": "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>",
     "listPlatformUpgradeTargets": "./scripts/platform-tool.sh upgrade targets [generated-app-dir]",
     "showPlatformReleaseAdvisory": "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]",
@@ -158,9 +144,8 @@
     "orchestrationContract": "docs/ai/ai-tool-orchestration-contract.json"
   },
   "legacyCommands": {
-    "scaffoldNode": "node scripts/scaffold-derived-app.mjs --manifest <manifest-path> --output <absolute-output-dir>",
     "scaffoldJava": "./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>",
-    "verifyCompatibility": "node scripts/verify-app-assembly-compatibility.mjs",
+    "verifyCompatibility": "./scripts/verify-app-assembly.sh",
     "verifyRepositoryAssembly": "./scripts/verify-app-assembly.sh",
     "verifyGeneratedApp": "./scripts/verify-derived-app.sh <generated-app-dir>",
     "verifyGeneratedAppJava": "./scripts/verify-derived-app-java.sh <generated-app-dir>",

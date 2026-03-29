@@ -17,14 +17,10 @@ The generated-app verification contract MUST be based on observable assets prese
 - THEN the verifier can determine pass or fail from the generated output assets and documented contract inputs
 
 ### Requirement: Repository May Provide Reference Generated-App Verifiers
-The repository MAY provide one or more reference or compatible generated-app verifier implementations as long as they satisfy the same generated-app verification contract.
+The repository MAY provide one or more reference or compatible generated-app verifier implementations as long as they satisfy the same generated-app verification contract, and the repository-owned verifier path MUST be Java-owned after tooling consolidation.
 
-#### Scenario: A contributor evaluates the current Node verifier
-- GIVEN the repository currently ships a `Node` generated-app verifier
-- WHEN a contributor inspects its role in the platform
-- THEN they can identify it as a reference verifier for the generated-app verification contract rather than as the contract itself
-
-#### Scenario: A contributor evaluates the Java verifier
-- GIVEN the repository ships a Java generated-app verifier
-- WHEN a contributor inspects its role in the platform
-- THEN they can identify it as a compatible verifier implementation that targets the same generated-app verification contract used by the Node reference verifier
+#### Scenario: A contributor evaluates the repository-owned verifier path
+- GIVEN a contributor inspects the repository-owned generated-app verifier
+- WHEN they review the current implementation guidance
+- THEN they can identify a Java-owned verifier path as the repository-owned implementation runtime for generated-app verification
+- AND they do not need to depend on a Node-owned verifier implementation path

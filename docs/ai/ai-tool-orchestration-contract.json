@@ -25,9 +25,8 @@
         "docs/ai/module-registry.json",
         "docs/ai/compatibility/app-assembly-suite.json"
       ],
-      "defaultEntrypoint": "./scripts/platform-tool.sh assembly scaffold <node|java> <manifest-path> <absolute-output-dir>",
+      "defaultEntrypoint": "./scripts/platform-tool.sh assembly scaffold <manifest-path> <absolute-output-dir>",
       "compatibleFallbacks": [
-        "node scripts/scaffold-derived-app.mjs --manifest <manifest-path> --output <absolute-output-dir>",
         "./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>"
       ],
       "successSignals": [
@@ -46,7 +45,6 @@
       ],
       "defaultEntrypoint": "./scripts/platform-tool.sh generated-app verify <generated-app-dir>",
       "compatibleFallbacks": [
-        "./scripts/platform-tool.sh generated-app verify-reference <generated-app-dir>",
         "./scripts/platform-tool.sh generated-app verify-java <generated-app-dir>",
         "./scripts/verify-derived-app.sh <generated-app-dir>",
         "./scripts/verify-derived-app-java.sh <generated-app-dir>"
@@ -105,7 +103,6 @@
       ],
       "defaultEntrypoint": "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>",
       "compatibleFallbacks": [
-        "node scripts/evaluate-derived-app-upgrade.mjs <generated-app-dir>",
         "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>"
       ],
       "successSignals": [

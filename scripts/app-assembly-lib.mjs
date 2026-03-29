@@ -1348,12 +1348,6 @@ Or from the source platform repository:
 ./scripts/platform-tool.sh generated-app verify /absolute/path/to/${manifest.application.id}
 \`\`\`
 
-Or through the repository-owned Java verifier path:
-
-\`\`\`bash
-./scripts/platform-tool.sh generated-app verify-java /absolute/path/to/${manifest.application.id}
-\`\`\`
-
 ## Upgrade Evaluation
 
 Evaluate this derived application against the current platform release from the source repository:
@@ -1440,8 +1434,7 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
       validation: {
         local: './scripts/verify-derived-app.sh',
         repositoryOwned: './scripts/platform-tool.sh generated-app verify <generated-app-dir>',
-        referenceVerifier: './scripts/platform-tool.sh generated-app verify-reference <generated-app-dir>',
-        compatibleVerifier: './scripts/platform-tool.sh generated-app verify-java <generated-app-dir>'
+        referenceVerifier: './scripts/platform-tool.sh generated-app verify <generated-app-dir>'
       },
       lifecycle: {
         metadata: DERIVED_APP_LIFECYCLE_METADATA_PATH,
@@ -1507,7 +1500,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)"
 TARGET_DIR="\${1:-$ROOT_DIR}"
 
-node "$ROOT_DIR/scripts/verify-derived-app.mjs" "$TARGET_DIR"
+java "$ROOT_DIR/scripts/VerifyDerivedApp.java" "$TARGET_DIR"
 `
 }
 
@@ -1574,8 +1567,7 @@ async function writeGeneratedApp(outputDir, manifest, registry, contract, select
       buildProjectsPage(selectedModules.includes('project-repository-management'))
     )
   }
-  await copyRelativePath('scripts/app-assembly-lib.mjs', outputDir)
-  await copyRelativePath('scripts/verify-derived-app.mjs', outputDir)
+  await copyRelativePath('scripts/VerifyDerivedApp.java', outputDir)
   await writeFile(path.join(outputDir, 'scripts/verify-derived-app.sh'), buildLocalVerifyScript())
   await chmod(path.join(outputDir, 'scripts/verify-derived-app.sh'), 0o755)
 }
@@ -1678,12 +1670,12 @@ export async function verifyDerivedApp(targetDir) {
       issues: ['Missing required file: docs/ai/generated-app-verification-contract.json'],
       selectedModules: [],
       contractVersion: 'unavailable',
-      verifierId: 'node-generated-app-verifier'
+      verifierId: 'java-generated-app-verifier'
     }
   }
   const checkIds = getGeneratedAppCheckIds(verificationContract)
   const verifierId =
-    verificationContract.referenceVerifiers?.[0]?.id ?? 'node-generated-app-verifier'
+    verificationContract.referenceVerifiers?.[0]?.id ?? 'java-generated-app-verifier'
 
   const contractPath = resolveVerificationInputPath(
     resolvedTargetDir,
@@ -2112,9 +2104,8 @@ function getManagedUpgradeAssetPaths(assemblyContract) {
   return getRequiredGeneratedFiles(assemblyContract).filter(
     (relativePath) =>
       relativePath.startsWith('docs/ai/') ||
-      relativePath === 'scripts/app-assembly-lib.mjs' ||
+      relativePath === 'scripts/VerifyDerivedApp.java' ||
       relativePath === 'scripts/platform-tool.sh' ||
-      relativePath === 'scripts/verify-derived-app.mjs' ||
       relativePath === 'scripts/verify-derived-app.sh'
   )
 }
