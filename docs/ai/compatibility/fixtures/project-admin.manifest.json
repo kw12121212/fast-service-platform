@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "project-admin-console",
+    "name": "Project Admin Console",
+    "packagePrefix": "com.fastservice.platform.projectadmin"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management",
+    "software-project-management"
+  ]
+}

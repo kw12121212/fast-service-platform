@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "broken-duplicate-module",
+    "name": "Broken Duplicate Module",
+    "packagePrefix": "com.fastservice.platform.duplicatemodule"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management",
+    "software-project-management",
+    "software-project-management"
+  ]
+}

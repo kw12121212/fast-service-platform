@@ -102,12 +102,17 @@ The repository MUST provide machine-readable assets that describe the platform's
 - THEN it can identify required platform core, optional built-in modules, dependency relationships, default assembly behavior, and expected validation steps
 
 ### Requirement: Repository Exposes Compatibility Assets As First-Class AI Inputs
-The repository MUST expose the app assembly standard, schema assets, compatibility fixtures, validation entrypoints, and generated-app verification contract as first-class AI-readable inputs.
+The repository MUST expose the app assembly standard, schema assets, expanded compatibility fixtures, validation entrypoints, and generated-app verification contract as first-class AI-readable inputs.
 
 #### Scenario: An AI contributor prepares to implement against the assembly standard
 - GIVEN an AI contributor needs to understand how conformance is checked
 - WHEN it reads the repository's AI readiness path
 - THEN it can identify the normative assembly contract assets, the generated-app verification contract, the compatibility suite, and the validation commands before reading a specific implementation
+
+#### Scenario: An AI contributor inspects expanded compatibility coverage
+- GIVEN an AI contributor needs to understand how wide the repository-owned compatibility target is
+- WHEN it reads the repository's AI readiness path
+- THEN it can identify that the compatibility assets include multiple representative module combinations and invalid edge cases instead of only a minimal baseline
 
 ### Requirement: Validation Entrypoints Cover Contract Compatibility
 The repository MUST provide validation entrypoints that check contract compatibility for app assembly implementations in addition to validating the current reference implementation.

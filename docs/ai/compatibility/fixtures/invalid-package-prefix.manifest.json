@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "broken-invalid-package-prefix",
+    "name": "Broken Invalid Package Prefix",
+    "packagePrefix": "FastService.Platform.Invalid"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management"
+  ]
+}

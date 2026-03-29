@@ -134,6 +134,7 @@
 - `docs/ai/app-assembly-contract.json`、schema 和 compatibility suite 才是规范事实来源
 - `docs/ai/generated-app-verification-contract.json` 定义生成后验证的标准输入、检查项和结果语义
 - `docs/ai/derived-app-lifecycle-contract.json`、`docs/ai/derived-app-upgrade-execution-contract.json`、`docs/ai/platform-release.json`、`docs/ai/platform-release-history.json` 和 `docs/ai/platform-release-advisory.json` 定义生成后生命周期、升级目标选择、升级评估、升级执行和当前发布差异说明的事实来源
+- `docs/ai/compatibility/app-assembly-suite.json` 现在覆盖的不只是最小 baseline，还包括代表性的模块组合和无效边界样例
 - `scripts/scaffold-derived-app.mjs` 是当前的 `Node` 参考实现，不应被当成唯一标准
 - `tools/java-assembly-cli/` 提供第二个兼容实现；它要通过同一套 compatibility suite，而不是复用 Node 内部逻辑
 - `scripts/verify-derived-app.mjs` 是当前的 `Node` reference verifier，不是 generated-app verification contract 本身

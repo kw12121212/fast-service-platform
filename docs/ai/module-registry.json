@@ -20,6 +20,25 @@
         "user-management",
         "role-permission-management"
       ]
+    },
+    "project-admin": {
+      "description": "Extends the core admin profile with software project management only.",
+      "modules": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "software-project-management"
+      ]
+    },
+    "project-kanban": {
+      "description": "Covers project and kanban management without ticket workflows.",
+      "modules": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "software-project-management",
+        "kanban-management"
+      ]
     }
   },
   "modules": [

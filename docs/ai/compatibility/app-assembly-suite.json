@@ -24,6 +24,29 @@
           "user-management",
           "role-permission-management"
         ]
+      },
+      {
+        "id": "project-admin",
+        "manifestPath": "docs/ai/compatibility/fixtures/project-admin.manifest.json",
+        "expectedProfile": "project-admin",
+        "expectedSelectedModules": [
+          "admin-shell",
+          "user-management",
+          "role-permission-management",
+          "software-project-management"
+        ]
+      },
+      {
+        "id": "project-kanban",
+        "manifestPath": "docs/ai/compatibility/fixtures/project-kanban.manifest.json",
+        "expectedProfile": "project-kanban",
+        "expectedSelectedModules": [
+          "admin-shell",
+          "user-management",
+          "role-permission-management",
+          "software-project-management",
+          "kanban-management"
+        ]
       }
     ],
     "invalid": [
@@ -41,6 +64,21 @@
         "id": "missing-dependency",
         "manifestPath": "docs/ai/compatibility/fixtures/missing-dependency.manifest.json",
         "expectedErrorIncludes": "requires dependency"
+      },
+      {
+        "id": "duplicate-module",
+        "manifestPath": "docs/ai/compatibility/fixtures/duplicate-module.manifest.json",
+        "expectedErrorIncludes": "modules must not contain duplicates"
+      },
+      {
+        "id": "kanban-without-project",
+        "manifestPath": "docs/ai/compatibility/fixtures/kanban-without-project.manifest.json",
+        "expectedErrorIncludes": "requires dependency software-project-management"
+      },
+      {
+        "id": "invalid-package-prefix",
+        "manifestPath": "docs/ai/compatibility/fixtures/invalid-package-prefix.manifest.json",
+        "expectedErrorIncludes": "application.packagePrefix must be a dotted Java package prefix"
       }
     ]
   },

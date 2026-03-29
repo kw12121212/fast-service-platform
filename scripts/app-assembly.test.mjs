@@ -85,6 +85,26 @@ test('compatibility suite fixtures match module registry profiles', async () => 
   }
 })
 
+test('compatibility suite fixture coverage includes representative valid and invalid boundaries', async () => {
+  const suite = await loadCompatibilitySuite()
+
+  assert.deepEqual(
+    suite.fixtures.valid.map((fixture) => fixture.id),
+    ['default-baseline', 'core-admin', 'project-admin', 'project-kanban']
+  )
+  assert.deepEqual(
+    suite.fixtures.invalid.map((fixture) => fixture.id),
+    [
+      'missing-required-core',
+      'unknown-module',
+      'missing-dependency',
+      'duplicate-module',
+      'kanban-without-project',
+      'invalid-package-prefix'
+    ]
+  )
+})
+
 test('generated app verification contract is exposed as a normative asset', async () => {
   const assemblyContract = await loadAssemblyContract()
   const lifecycleContract = await loadDerivedAppLifecycleContract()
@@ -161,17 +181,83 @@ test('compatibility suite passes for the node reference implementation', async (
   assert.deepEqual(
     result.implementations.map((implementation) => implementation.validFixtures),
     [
-      ['default-baseline', 'core-admin'],
-      ['default-baseline', 'core-admin']
+      ['default-baseline', 'core-admin', 'project-admin', 'project-kanban'],
+      ['default-baseline', 'core-admin', 'project-admin', 'project-kanban']
     ]
   )
   assert.deepEqual(
     result.implementations.map((implementation) => implementation.invalidFixtures),
     [
-      ['missing-required-core', 'unknown-module', 'missing-dependency'],
-      ['missing-required-core', 'unknown-module', 'missing-dependency']
+      [
+        'missing-required-core',
+        'unknown-module',
+        'missing-dependency',
+        'duplicate-module',
+        'kanban-without-project',
+        'invalid-package-prefix'
+      ],
+      [
+        'missing-required-core',
+        'unknown-module',
+        'missing-dependency',
+        'duplicate-module',
+        'kanban-without-project',
+        'invalid-package-prefix'
+      ]
     ]
   )
+})
+
+test('project-admin compatibility fixture generates projects without kanban or ticket wiring', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-project-admin-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/compatibility/fixtures/project-admin.manifest.json'),
+      outputDir
+    })
+
+    const router = await readFile(path.join(outputDir, 'frontend/src/app/router.tsx'), 'utf8')
+    assert.equal(router.includes("path: 'projects'"), true)
+    assert.equal(router.includes("path: 'kanban'"), false)
+    assert.equal(router.includes("path: 'tickets'"), false)
+
+    const servicesSql = await readFile(
+      path.join(outputDir, 'backend/src/main/resources/sql/services.sql'),
+      'utf8'
+    )
+    assert.equal(servicesSql.includes('project_service'), true)
+    assert.equal(servicesSql.includes('kanban_service'), false)
+    assert.equal(servicesSql.includes('ticket_service'), false)
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('project-kanban compatibility fixture generates kanban without ticket wiring', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-project-kanban-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/compatibility/fixtures/project-kanban.manifest.json'),
+      outputDir
+    })
+
+    const router = await readFile(path.join(outputDir, 'frontend/src/app/router.tsx'), 'utf8')
+    assert.equal(router.includes("path: 'projects'"), true)
+    assert.equal(router.includes("path: 'kanban'"), true)
+    assert.equal(router.includes("path: 'tickets'"), false)
+
+    const servicesSql = await readFile(
+      path.join(outputDir, 'backend/src/main/resources/sql/services.sql'),
+      'utf8'
+    )
+    assert.equal(servicesSql.includes('project_service'), true)
+    assert.equal(servicesSql.includes('kanban_service'), true)
+    assert.equal(servicesSql.includes('ticket_service'), false)
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
 })
 
 test('generated output includes contract schemas required by the standardized invariants', async () => {

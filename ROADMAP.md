@@ -11,14 +11,29 @@
 - `Node` 与 `Java` 两条 app assembly 兼容实现
 - `Node` 与 `Java` 两条 generated-app verifier 路径
 - 语言无关的 `contract + schemas + compatibility suite`
+- machine-readable 的 derived-app lifecycle / upgrade evaluation / upgrade execution contract
+- machine-readable 的 platform release advisory、release history 和 version lineage
+- repository-owned 的 upgrade target lookup、upgrade evaluation、advisory 和 execution 入口
 
 下一阶段的重点不再只是“再增加一种实现语言”，而是继续提高平台的长期可演进性、兼容性可信度和 AI 可消费性。
+
+## 已完成的关键增量
+
+- [x] `add-ai-app-scaffolding-and-module-assembly`
+- [x] `standardize-app-assembly-spec-and-compatibility-suite`
+- [x] `add-java-cli-assembly-implementation`
+- [x] `standardize-generated-app-verification-contract`
+- [x] `add-java-generated-app-verifier-implementation`
+- [x] `define-derived-app-lifecycle-and-upgrade-contract`
+- [x] `add-platform-release-delta-and-upgrade-advisory`
+- [x] `add-derived-app-upgrade-execution-path`
+- [x] `standardize-platform-release-history-and-version-lineage`
 
 ## 建议优先级
 
 ### P0
 
-#### 1. 派生应用生命周期能力
+#### [x] 1. 派生应用生命周期能力
 
 - 方向：定义派生应用的升级、兼容、平台版本和回收平台变更的标准路径。
 - 价值：最高。解决“生成之后怎么升级、怎么持续演进”的核心问题。
@@ -27,21 +42,21 @@
 
 ### P1
 
-#### 2. 兼容性套件扩容
+#### [ ] 2. 兼容性套件扩容
 
 - 方向：增加更多 manifest、失败样例、模块组合、空模块边界和冲突依赖样例。
 - 价值：高。能快速提高标准可信度，减少边界遗漏。
 - 风险：测试资产会变多，维护成本会增加。
 - 建议 change name：`expand-app-assembly-compatibility-fixtures`
 
-#### 3. 统一工具入口
+#### [ ] 3. 统一工具入口
 
 - 方向：把分散的 `Node`、`Java`、`shell` 入口收敛成一致的仓库命令界面。
 - 价值：高。降低工具使用门槛，让文档和自动化入口更清晰。
 - 风险：如果设计过度，容易变成一层收益有限的包装。
 - 建议 change name：`unify-platform-tooling-entrypoints`
 
-#### 4. AI 直接装配与验证路径
+#### [ ] 4. AI 直接装配与验证路径
 
 - 方向：让 AI 不依赖现成 `Node/Java` 实现，只根据标准 contract 和 compatibility assets 直接完成装配或验证。
 - 价值：中高。能证明规范本身足够稳固，确实可被 AI 直接消费。
@@ -50,14 +65,14 @@
 
 ### P2
 
-#### 5. 模块边界继续下沉
+#### [ ] 5. 模块边界继续下沉
 
 - 方向：把可选业务模块进一步拆细，明确更稳定的模块边界、依赖声明和裁剪规则。
 - 价值：中高。会让平台更像真正可组合的基础库。
 - 风险：会触碰当前前后端耦合，改动面较大。
 - 建议 change name：`decompose-optional-business-modules`
 
-#### 6. 更结构化的 AI 输入层
+#### [ ] 6. 更结构化的 AI 输入层
 
 - 方向：从 `manifest` 驱动继续走向更结构化的需求输入、领域输入和 UI 输入映射。
 - 价值：中高。更接近“从需求直接到应用骨架”。
@@ -66,7 +81,7 @@
 
 ### P3
 
-#### 7. 生成模板系统升级
+#### [ ] 7. 生成模板系统升级
 
 - 方向：把当前受控拼装继续演进为更明确的模板层、slot 机制和覆盖点约定。
 - 价值：中。适合后续规模扩大时提效。
@@ -77,10 +92,10 @@
 
 建议按下面顺序推进：
 
-1. `define-derived-app-lifecycle-and-upgrade-contract`
-2. `expand-app-assembly-compatibility-fixtures`
-3. `unify-platform-tooling-entrypoints`
-4. `add-ai-direct-assembly-and-verification-path`
+1. [x] `define-derived-app-lifecycle-and-upgrade-contract`
+2. [ ] `expand-app-assembly-compatibility-fixtures`
+3. [ ] `unify-platform-tooling-entrypoints`
+4. [ ] `add-ai-direct-assembly-and-verification-path`
 
 原因：
 
