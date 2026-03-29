@@ -24,6 +24,8 @@
 - generated app 的验证标准事实来源是 `generated-app verification contract`
 - `scripts/scaffold-derived-app.mjs` 是当前参考实现，不是唯一合法实现
 - `tools/java-assembly-cli/` 是仓库内的第二个兼容实现
+- `scripts/verify-derived-app.mjs` 是当前 reference verifier，不是 generated-app verification contract 本身
+- `tools/java-generated-app-verifier/` 是仓库内的 Java compatible verifier
 
 ## 标准派生路径
 
@@ -75,8 +77,14 @@ node scripts/scaffold-derived-app.mjs \
 ./scripts/verify-derived-app.sh ../core-admin-console
 ```
 
-这条路径当前会调用仓库拥有的 `Node` reference verifier，但它应该满足的是
-`docs/ai/generated-app-verification-contract.json`，而不是把该脚本本身视为规范。
+或者用 Java verifier：
+
+```bash
+./scripts/verify-derived-app-java.sh ../core-admin-console
+```
+
+这些路径都应该满足 `docs/ai/generated-app-verification-contract.json`，
+而不是把某个具体脚本本身视为规范。
 
 或者在生成后的应用目录里执行：
 

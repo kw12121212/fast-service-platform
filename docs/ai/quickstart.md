@@ -126,6 +126,7 @@
 - `scripts/scaffold-derived-app.mjs` 是当前的 `Node` 参考实现，不应被当成唯一标准
 - `tools/java-assembly-cli/` 提供第二个兼容实现；它要通过同一套 compatibility suite，而不是复用 Node 内部逻辑
 - `scripts/verify-derived-app.mjs` 是当前的 `Node` reference verifier，不是 generated-app verification contract 本身
+- `tools/java-generated-app-verifier/` 提供第二个 compatible generated-app verifier；它读取生成应用自带资产，而不是读取 Node verifier 内部状态
 
 再执行：
 
@@ -161,4 +162,10 @@ node scripts/scaffold-derived-app.mjs \
 
 ```bash
 node scripts/verify-derived-app.mjs ../core-admin-console
+```
+
+如果你要走 Java verifier 路径：
+
+```bash
+./scripts/verify-derived-app-java.sh ../core-admin-console
 ```

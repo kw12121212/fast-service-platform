@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -94,6 +95,10 @@ test('generated app verification contract is exposed as a normative asset', asyn
     'module-selected-backend-services-match-registry',
     'module-selected-backend-tables-match-registry'
   ])
+  assert.deepEqual(
+    verificationContract.compatibleVerifiers.map((verifier) => verifier.id),
+    ['java-generated-app-verifier']
+  )
 })
 
 test('compatibility suite passes for the node reference implementation', async () => {
@@ -152,6 +157,38 @@ test('verifyDerivedApp returns standardized verifier metadata', async () => {
     assert.equal(result.ok, true)
     assert.equal(result.contractVersion, 'fsp-generated-app-verification-contract/v1')
     assert.equal(result.verifierId, 'node-generated-app-verifier')
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('java generated-app verifier validates a generated app through repository-owned wrapper', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-java-verifier-wrapper-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const result = spawnSync(
+      path.join(REPO_ROOT, 'scripts/verify-derived-app-java.sh'),
+      [outputDir],
+      {
+        cwd: REPO_ROOT,
+        encoding: 'utf8'
+      }
+    )
+
+    assert.equal(result.status, 0, result.stderr || result.stdout)
+    const payload = JSON.parse(result.stdout.trim().split('\n').at(-1))
+    assert.equal(payload.contractVersion, 'fsp-generated-app-verification-contract/v1')
+    assert.equal(payload.verifierId, 'java-generated-app-verifier')
+    assert.deepEqual(payload.selectedModules, [
+      'admin-shell',
+      'user-management',
+      'role-permission-management'
+    ])
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }

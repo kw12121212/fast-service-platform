@@ -78,15 +78,20 @@ The repository MUST provide validation entrypoints that check contract compatibi
 - THEN they can determine whether the implementation satisfies the standard's observable contract rather than only whether one repository script still works
 
 ### Requirement: Repository Documents Compatible Assembly Implementations
-The repository MUST identify the available compatible assembly implementations and how contributors can invoke them through repository-owned tooling.
+The repository MUST identify the available compatible assembly and generated-app verifier implementations and how contributors can invoke them through repository-owned tooling.
 
 #### Scenario: A contributor chooses an assembly implementation
 - GIVEN a contributor wants to derive an application from the platform
 - WHEN they read the repository's AI-ready assembly guidance
 - THEN they can identify the available compatible implementations and the repository-owned way to invoke each one
 
+#### Scenario: A contributor chooses a generated-app verifier implementation
+- GIVEN a contributor wants to validate a derived application
+- WHEN they read the repository's AI-ready assembly and verification guidance
+- THEN they can identify the available generated-app verifier implementations and the repository-owned way to invoke each one
+
 ### Requirement: Repository Provides Validation Paths For Each Compatible Implementation
-The repository MUST provide repository-owned validation paths that let contributors verify each compatible app assembly implementation and generated-app verifier path against the standard contract.
+The repository MUST provide repository-owned validation paths that let contributors verify each compatible app assembly implementation and generated-app verifier implementation against the standard contract.
 
 #### Scenario: A contributor validates the Java implementation
 - GIVEN a contributor has used the Java CLI assembly path
@@ -97,3 +102,8 @@ The repository MUST provide repository-owned validation paths that let contribut
 - GIVEN a contributor wants to understand whether a generated application passes repository-owned validation
 - WHEN they inspect the repository's validation guidance
 - THEN they can identify the current reference verifier path and the contract it is expected to satisfy
+
+#### Scenario: A contributor validates the Java generated-app verifier
+- GIVEN a contributor wants to validate a derived application through the Java verifier path
+- WHEN they run the documented repository-owned validation flow
+- THEN they can verify the generated application through the Java verifier against the same generated-app verification contract

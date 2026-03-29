@@ -111,6 +111,13 @@
         "$ref": "#/$defs/referenceVerifier"
       },
       "minItems": 1
+    },
+    "compatibleVerifiers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/compatibleVerifier"
+      },
+      "minItems": 1
     }
   },
   "$defs": {
@@ -120,6 +127,7 @@
       "required": [
         "id",
         "type",
+        "language",
         "entrypoint",
         "wrapper"
       ],
@@ -131,7 +139,48 @@
         "type": {
           "const": "reference-verifier"
         },
+        "language": {
+          "type": "string",
+          "minLength": 1
+        },
         "entrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "wrapper": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "compatibleVerifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "language",
+        "workspace",
+        "mainClass",
+        "wrapper"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "compatible-verifier"
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workspace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mainClass": {
           "type": "string",
           "minLength": 1
         },

@@ -93,6 +93,13 @@ workspaces:
       pom: tools/java-assembly-cli/pom.xml
       main_class: tools/java-assembly-cli/src/main/java/com/fastservice/platform/tools/assemblycli/AppAssemblyCli.java
       tests: tools/java-assembly-cli/src/test/java/com/fastservice/platform/tools/assemblycli
+  java_generated_app_verifier:
+    path: tools/java-generated-app-verifier
+    responsibility: compatible-java-generated-app-verifier
+    key_paths:
+      pom: tools/java-generated-app-verifier/pom.xml
+      main_class: tools/java-generated-app-verifier/src/main/java/com/fastservice/platform/tools/generatedappverifier/GeneratedAppVerifierCli.java
+      tests: tools/java-generated-app-verifier/src/test/java/com/fastservice/platform/tools/generatedappverifier
 
 high_frequency_change_playbooks:
   - docs/ai/playbooks/backend-domain-change.md
@@ -105,6 +112,7 @@ validation_entrypoints:
   assembly_compatibility: node ./scripts/verify-app-assembly-compatibility.mjs
   assembly_java_scaffold: ./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>
   generated_app_reference_verifier: node ./scripts/verify-derived-app.mjs <generated-app-dir>
+  generated_app_java_verifier: ./scripts/verify-derived-app-java.sh <generated-app-dir>
   backend: ./scripts/verify-backend.sh
   frontend: ./scripts/verify-frontend.sh
   fullstack: ./scripts/verify-fullstack.sh

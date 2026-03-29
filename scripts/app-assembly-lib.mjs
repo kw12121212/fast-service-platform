@@ -978,6 +978,12 @@ Or from the source platform repository:
 \`\`\`bash
 ./scripts/verify-derived-app.sh /absolute/path/to/${manifest.application.id}
 \`\`\`
+
+Or through the repository-owned Java verifier:
+
+\`\`\`bash
+./scripts/verify-derived-app-java.sh /absolute/path/to/${manifest.application.id}
+\`\`\`
 `
 }
 
@@ -1019,7 +1025,8 @@ function buildGeneratedContext(manifest, selectedModules, registry) {
       validation: {
         local: './scripts/verify-derived-app.sh',
         repositoryOwned: './scripts/verify-derived-app.sh <generated-app-dir>',
-        referenceVerifier: 'node ./scripts/verify-derived-app.mjs <generated-app-dir>'
+        referenceVerifier: 'node ./scripts/verify-derived-app.mjs <generated-app-dir>',
+        compatibleVerifier: './scripts/verify-derived-app-java.sh <generated-app-dir>'
       }
     },
     null,

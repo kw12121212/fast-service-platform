@@ -486,7 +486,9 @@ final class AssemblyGenerator {
                 .append("Run inside this generated application:\n\n")
                 .append("```bash\n./scripts/verify-derived-app.sh\n```\n\n")
                 .append("Or from the source platform repository:\n\n")
-                .append("```bash\n./scripts/verify-derived-app.sh /absolute/path/to/").append(appId).append("\n```\n");
+                .append("```bash\n./scripts/verify-derived-app.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("Or through the repository-owned Java verifier:\n\n")
+                .append("```bash\n./scripts/verify-derived-app-java.sh /absolute/path/to/").append(appId).append("\n```\n");
         return builder.toString();
     }
 
@@ -522,11 +524,14 @@ final class AssemblyGenerator {
         contractInputs.put("manifest", "app-manifest.json");
         contractInputs.put("moduleRegistry", "docs/ai/module-registry.json");
         contractInputs.put("assemblyContract", "docs/ai/app-assembly-contract.json");
+        contractInputs.put("generatedAppVerificationContract", "docs/ai/generated-app-verification-contract.json");
         context.put("contractInputs", contractInputs);
 
         Map<String, Object> validation = new LinkedHashMap<>();
         validation.put("local", "./scripts/verify-derived-app.sh");
         validation.put("repositoryOwned", "./scripts/verify-derived-app.sh <generated-app-dir>");
+        validation.put("referenceVerifier", "node ./scripts/verify-derived-app.mjs <generated-app-dir>");
+        validation.put("compatibleVerifier", "./scripts/verify-derived-app-java.sh <generated-app-dir>");
         context.put("validation", validation);
 
         return SimpleJson.stringify(context);

@@ -87,8 +87,8 @@
       "workspace": "tools/java-assembly-cli",
       "mainClass": "com.fastservice.platform.tools.assemblycli.AppAssemblyCli",
       "scaffoldEntrypoint": "scripts/scaffold-derived-app-java.sh",
-      "generatedAppVerifier": "scripts/verify-derived-app.mjs",
-      "generatedAppVerifierRole": "reference-verifier"
+      "generatedAppVerifier": "scripts/verify-derived-app-java.sh",
+      "generatedAppVerifierRole": "compatible-verifier"
     }
   ],
   "commands": {
@@ -99,6 +99,7 @@
     "verifyCompatibility": "node scripts/verify-app-assembly-compatibility.mjs",
     "verifyRepositoryAssembly": "./scripts/verify-app-assembly.sh",
     "referenceVerifyGeneratedApp": "node scripts/verify-derived-app.mjs <generated-app-dir>",
-    "verifyGeneratedApp": "./scripts/verify-derived-app.sh <generated-app-dir>"
+    "verifyGeneratedApp": "./scripts/verify-derived-app.sh <generated-app-dir>",
+    "verifyGeneratedAppJava": "./scripts/verify-derived-app-java.sh <generated-app-dir>"
   }
 }

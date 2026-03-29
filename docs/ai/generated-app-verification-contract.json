@@ -30,8 +30,19 @@
     {
       "id": "node-generated-app-verifier",
       "type": "reference-verifier",
+      "language": "node-esm",
       "entrypoint": "scripts/verify-derived-app.mjs",
       "wrapper": "scripts/verify-derived-app.sh"
+    }
+  ],
+  "compatibleVerifiers": [
+    {
+      "id": "java-generated-app-verifier",
+      "type": "compatible-verifier",
+      "language": "java-cli",
+      "workspace": "tools/java-generated-app-verifier",
+      "mainClass": "com.fastservice.platform.tools.generatedappverifier.GeneratedAppVerifierCli",
+      "wrapper": "scripts/verify-derived-app-java.sh"
     }
   ]
 }

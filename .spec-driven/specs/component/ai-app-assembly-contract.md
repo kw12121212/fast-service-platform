@@ -27,13 +27,18 @@ The system MUST provide a repository-owned scaffolding and assembly path that ge
 - AND the generated output reflects the selected modules instead of always copying the full default application
 
 ### Requirement: Scaffolded Output Includes Repository-Approved Validation Guidance
-The system MUST define scaffolded-application validation through a language-neutral verification contract rather than only through a single verifier script.
+The system MUST define scaffolded-application validation through a language-neutral verification contract that may be satisfied by multiple compatible verifier implementations rather than only through a single verifier script.
 
 #### Scenario: A contributor validates a generated application
 - GIVEN a contributor has generated a new application from the platform
 - WHEN they consult the generated output and repository documentation
 - THEN they can identify the repository-approved validation commands or entrypoints for that derived application
 - AND they can identify the machine-readable verification contract that those entrypoints are expected to satisfy
+
+#### Scenario: A contributor validates a generated application with a non-Node verifier
+- GIVEN a contributor has generated a new application from the platform
+- WHEN they choose a compatible verifier implementation that targets the same verification contract
+- THEN they can validate the generated application without depending on the internal structure of the Node verifier
 
 ### Requirement: App Assembly Contract Is Implementation-Independent
 The system MUST define its app assembly contract independently from any single implementation language or script structure.
