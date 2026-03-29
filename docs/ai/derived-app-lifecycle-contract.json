@@ -7,6 +7,8 @@
     "upgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
     "upgradeExecutionContractSchema": "docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
     "platformReleaseMetadata": "docs/ai/platform-release.json",
+    "platformReleaseHistory": "docs/ai/platform-release-history.json",
+    "platformReleaseHistorySchema": "docs/ai/schemas/platform-release-history.schema.json",
     "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
     "platformReleaseAdvisorySchema": "docs/ai/schemas/platform-release-advisory.schema.json",
     "moduleRegistry": "docs/ai/module-registry.json"
@@ -31,14 +33,17 @@
     "selectedModules",
     "requiredCoreModules",
     "upgradeEvaluation.repositoryOwnedEntrypoint",
+    "upgradeEvaluation.repositoryOwnedTargetSelectionEntrypoint",
     "upgradeEvaluation.repositoryOwnedAdvisoryEntrypoint",
     "upgradeEvaluation.repositoryOwnedExecutionEntrypoint",
     "upgradeEvaluation.platformReleaseMetadata",
+    "upgradeEvaluation.platformReleaseHistory",
     "upgradeEvaluation.platformReleaseAdvisory",
     "upgradeEvaluation.upgradeExecutionContract"
   ],
   "upgradeEvaluation": {
     "repositoryOwnedEntrypoint": "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>",
+    "repositoryOwnedTargetSelectionEntrypoint": "./scripts/list-platform-upgrade-targets.sh [generated-app-dir]",
     "repositoryOwnedAdvisoryEntrypoint": "./scripts/show-platform-release-advisory.sh [generated-app-dir]",
     "repositoryOwnedExecutionEntrypoint": "./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]",
     "requiredGeneratedInputs": [
@@ -48,6 +53,8 @@
     ],
     "compatibilitySignals": [
       "matching-source-platform-id",
+      "recognized-source-platform-release",
+      "supported-upgrade-path-to-target-release",
       "supported-lifecycle-metadata-version",
       "supported-lifecycle-contract-version",
       "supported-assembly-contract-version",

@@ -16,7 +16,9 @@ import {
   loadGeneratedAppVerificationContract,
   loadModuleRegistry,
   loadPlatformReleaseAdvisory,
+  loadPlatformReleaseHistory,
   loadPlatformReleaseMetadata,
+  listPlatformUpgradeTargets,
   planDerivedAppUpgrade,
   readJson,
   readPlatformReleaseAdvisory,
@@ -88,6 +90,7 @@ test('generated app verification contract is exposed as a normative asset', asyn
   const lifecycleContract = await loadDerivedAppLifecycleContract()
   const executionContract = await loadDerivedAppUpgradeExecutionContract()
   const platformAdvisory = await loadPlatformReleaseAdvisory()
+  const platformHistory = await loadPlatformReleaseHistory()
   const platformRelease = await loadPlatformReleaseMetadata()
   const verificationContract = await loadGeneratedAppVerificationContract()
 
@@ -108,6 +111,10 @@ test('generated app verification contract is exposed as a normative asset', asyn
     'docs/ai/platform-release.json'
   )
   assert.equal(
+    assemblyContract.normativeAssets.platformReleaseHistory,
+    'docs/ai/platform-release-history.json'
+  )
+  assert.equal(
     assemblyContract.normativeAssets.platformReleaseAdvisory,
     'docs/ai/platform-release-advisory.json'
   )
@@ -118,8 +125,18 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(lifecycleContract.schemaVersion, 'fsp-derived-app-lifecycle-contract/v1')
   assert.equal(executionContract.schemaVersion, 'fsp-derived-app-upgrade-execution-contract/v1')
   assert.equal(platformRelease.currentRelease.lifecycleContractVersion, lifecycleContract.schemaVersion)
+  assert.equal(platformHistory.schemaVersion, 'fsp-platform-release-history/v1')
+  assert.equal(
+    lifecycleContract.normativeAssets.platformReleaseHistory,
+    'docs/ai/platform-release-history.json'
+  )
+  assert.equal(
+    executionContract.normativeAssets.platformReleaseHistory,
+    'docs/ai/platform-release-history.json'
+  )
   assert.equal(platformAdvisory.schemaVersion, 'fsp-platform-release-advisory/v1')
   assert.equal(platformRelease.currentRelease.releaseAdvisory, 'docs/ai/platform-release-advisory.json')
+  assert.equal(platformRelease.currentRelease.releaseHistory, 'docs/ai/platform-release-history.json')
   assert.deepEqual(verificationContract.checks, [
     'required-files-present',
     'verification-inputs-present',
@@ -197,8 +214,16 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
     assert.deepEqual(lifecycle.selectedModules, manifest.modules)
     assert.equal(context.lifecycle.metadata, 'docs/ai/derived-app-lifecycle.json')
     assert.equal(
+      context.contractInputs.platformReleaseHistory,
+      'docs/ai/platform-release-history.json'
+    )
+    assert.equal(
       context.lifecycle.repositoryOwnedUpgradeEvaluation,
       './scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>'
+    )
+    assert.equal(
+      context.lifecycle.repositoryOwnedUpgradeTargetSelection,
+      './scripts/list-platform-upgrade-targets.sh [generated-app-dir]'
     )
     assert.equal(
       context.lifecycle.repositoryOwnedReleaseAdvisory,
@@ -209,6 +234,14 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
       './scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]'
     )
     assert.equal(
+      lifecycle.upgradeEvaluation.repositoryOwnedTargetSelectionEntrypoint,
+      './scripts/list-platform-upgrade-targets.sh [generated-app-dir]'
+    )
+    assert.equal(
+      lifecycle.upgradeEvaluation.platformReleaseHistory,
+      'docs/ai/platform-release-history.json'
+    )
+    assert.equal(
       lifecycle.upgradeEvaluation.platformReleaseAdvisory,
       'docs/ai/platform-release-advisory.json'
     )
@@ -217,6 +250,7 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
       'docs/ai/derived-app-upgrade-execution-contract.json'
     )
     assert.ok(readme.includes('./scripts/evaluate-derived-app-upgrade.sh'))
+    assert.ok(readme.includes('./scripts/list-platform-upgrade-targets.sh'))
     assert.ok(readme.includes('./scripts/show-platform-release-advisory.sh'))
     assert.ok(readme.includes('./scripts/execute-derived-app-upgrade.sh'))
   } finally {
@@ -301,6 +335,55 @@ test('evaluateDerivedAppUpgrade returns compatibility metadata for a generated a
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }
+})
+
+test('listPlatformUpgradeTargets returns recognized releases and supported targets for a generated app', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-upgrade-targets-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const result = await listPlatformUpgradeTargets(outputDir)
+    assert.equal(result.platformId, 'fast-service-platform')
+    assert.equal(result.currentReleaseId, 'fast-service-platform/0.1.0-dev')
+    assert.equal(result.sourceReleaseId, 'fast-service-platform/0.1.0-dev')
+    assert.ok(
+      result.recognizedReleases.some(
+        (release) => release.releaseId === 'fast-service-platform/0.0.0-bootstrap'
+      )
+    )
+    assert.deepEqual(
+      result.availableTargetReleases.map((release) => release.releaseId),
+      ['fast-service-platform/0.1.0-dev']
+    )
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('platform upgrade target wrapper returns machine-readable lineage output', async () => {
+  const result = spawnSync(
+    path.join(REPO_ROOT, 'scripts/list-platform-upgrade-targets.sh'),
+    [],
+    {
+      cwd: REPO_ROOT,
+      encoding: 'utf8'
+    }
+  )
+
+  assert.equal(result.status, 0, result.stderr || result.stdout)
+  const payload = JSON.parse(result.stdout.trim().split('\n').at(-1))
+  assert.equal(payload.platformId, 'fast-service-platform')
+  assert.equal(payload.currentReleaseId, 'fast-service-platform/0.1.0-dev')
+  assert.equal(payload.defaultTargetReleaseId, 'fast-service-platform/0.1.0-dev')
+  assert.ok(
+    payload.recognizedReleases.some(
+      (release) => release.releaseId === 'fast-service-platform/0.0.0-bootstrap'
+    )
+  )
 })
 
 test('evaluateDerivedAppUpgrade reports unsupported source platform ids', async () => {

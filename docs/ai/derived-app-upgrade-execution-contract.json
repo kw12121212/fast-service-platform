@@ -8,6 +8,7 @@
     "assemblyContract": "docs/ai/app-assembly-contract.json",
     "lifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
     "platformReleaseMetadata": "docs/ai/platform-release.json",
+    "platformReleaseHistory": "docs/ai/platform-release-history.json",
     "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
     "moduleRegistry": "docs/ai/module-registry.json"
   },
@@ -32,6 +33,7 @@
     "recommendedNextActions": "string[]"
   },
   "postUpgradeValidation": [
+    "./scripts/list-platform-upgrade-targets.sh [generated-app-dir]",
     "./scripts/verify-derived-app.sh <generated-app-dir>",
     "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>",
     "./scripts/show-platform-release-advisory.sh [generated-app-dir]"

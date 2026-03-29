@@ -14,7 +14,7 @@ The repository MUST provide an AI-oriented quickstart that identifies required r
 - THEN it can find the derivation workflow, the relevant machine-readable indexes, and the validation entrypoints for generated output
 
 ### Requirement: Repository Provides Machine-Readable AI Context
-The repository MUST provide a machine-readable AI context manifest that exposes the current stack baseline, required guidance files, workspace boundaries, verification commands, hard repository constraints, the machine-readable assets used for application derivation, the lifecycle / upgrade assets needed to evaluate existing derived applications, the advisory assets needed to explain current platform release deltas, and the execution assets needed to plan or apply derived-app upgrades.
+The repository MUST provide a machine-readable AI context manifest that exposes the current stack baseline, required guidance files, workspace boundaries, verification commands, hard repository constraints, the machine-readable assets used for application derivation, the lifecycle / upgrade assets needed to evaluate existing derived applications, the advisory assets needed to explain platform release deltas, the release-history / lineage assets needed to select supported upgrade targets, and the execution assets needed to plan or apply derived-app upgrades.
 
 #### Scenario: A tool-driven agent loads repository context
 - GIVEN an AI agent can consume structured repository metadata
@@ -36,8 +36,13 @@ The repository MUST provide a machine-readable AI context manifest that exposes 
 - WHEN it reads the machine-readable AI context asset
 - THEN it can identify the upgrade plan contract, playbooks, repository-owned execution entrypoints, and post-upgrade validation paths without inferring them from prose alone
 
+#### Scenario: A tool-driven agent loads release lineage context
+- GIVEN an AI agent needs to choose a valid upgrade target for a derived application
+- WHEN it reads the machine-readable AI context asset
+- THEN it can identify the release-history / lineage contract, relevant schemas, playbooks, and repository-owned target-selection entrypoints without inferring them from prose alone
+
 ### Requirement: Repository Provides High-Frequency Change Playbooks
-The repository MUST provide repository-owned playbooks for the current high-frequency change scenarios, including derived-application lifecycle, release advisory, upgrade evaluation, and upgrade execution, so contributors can follow repeatable extension patterns instead of reconstructing them from scattered source files.
+The repository MUST provide repository-owned playbooks for the current high-frequency change scenarios, including derived-application lifecycle, release advisory, release-history / lineage lookup, upgrade evaluation, and upgrade execution, so contributors can follow repeatable extension patterns instead of reconstructing them from scattered source files.
 
 #### Scenario: A contributor plans a common repository change
 - GIVEN a contributor needs to perform a common backend, frontend, integration-oriented, or app-derivation change
@@ -58,6 +63,11 @@ The repository MUST provide repository-owned playbooks for the current high-freq
 - GIVEN a contributor needs to apply a repository-owned upgrade path to a derived application
 - WHEN they read the corresponding repository playbook
 - THEN they can identify the machine-readable plan inputs, execution entrypoints, manual-intervention checkpoints, and post-upgrade verification steps
+
+#### Scenario: A contributor prepares an upgrade target selection
+- GIVEN a contributor needs to choose a supported release target before evaluating or executing an upgrade
+- WHEN they read the corresponding repository playbook
+- THEN they can identify the relevant release-history assets, repository-owned lookup entrypoints, and supported-path selection guidance
 
 ### Requirement: Repository Provides Automated Validation Entrypoints
 The repository MUST provide stable automated entrypoints for backend validation, frontend validation, full-stack validation, and derived-application assembly validation.

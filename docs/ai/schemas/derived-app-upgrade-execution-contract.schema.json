@@ -33,6 +33,7 @@
         "assemblyContract",
         "lifecycleContract",
         "platformReleaseMetadata",
+        "platformReleaseHistory",
         "platformReleaseAdvisory",
         "moduleRegistry"
       ],
@@ -54,6 +55,10 @@
           "minLength": 1
         },
         "platformReleaseMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseHistory": {
           "type": "string",
           "minLength": 1
         },

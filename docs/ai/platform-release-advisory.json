@@ -81,6 +81,7 @@
     }
   ],
   "recommendedNextActions": [
+    "list-supported-upgrade-targets",
     "review-platform-release-advisory",
     "run-derived-app-upgrade-evaluation",
     "run-generated-app-verifiers"

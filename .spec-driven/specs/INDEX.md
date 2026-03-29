@@ -14,6 +14,7 @@
 - `core/ai-repository-readiness.md` - AI-first quickstart, machine-readable context, change playbooks, automated validation entrypoints, and troubleshooting guidance for repository contribution.
 - `core/derived-app-lifecycle-and-upgrade-contract.md` - Machine-readable lifecycle metadata, platform-origin semantics, upgrade compatibility inputs, and repository-owned upgrade evaluation for derived applications.
 - `core/generated-app-verification-contract.md` - Machine-readable verifier inputs, observable checks, result semantics, and reference-verifier role for generated applications.
+- `core/platform-release-history-and-version-lineage.md` - Machine-readable platform release history, lineage relationships, supported upgrade paths, and repository-owned release lookup behavior.
 - `core/project-foundation.md` - Repository bootstrap documentation, agent rules, and reserved full-stack workspace layout.
 - `frontend/admin-shell.md` - Runnable PC admin frontend workspace and coherent V1 admin shell behavior.
 - `frontend/data-access.md` - Consistent frontend data-access convention for backend-connected admin pages.

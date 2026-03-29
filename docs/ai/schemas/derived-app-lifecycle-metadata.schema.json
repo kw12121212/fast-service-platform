@@ -109,14 +109,20 @@
       "additionalProperties": false,
       "required": [
         "repositoryOwnedEntrypoint",
+        "repositoryOwnedTargetSelectionEntrypoint",
         "repositoryOwnedAdvisoryEntrypoint",
         "repositoryOwnedExecutionEntrypoint",
         "platformReleaseMetadata",
+        "platformReleaseHistory",
         "platformReleaseAdvisory",
         "upgradeExecutionContract"
       ],
       "properties": {
         "repositoryOwnedEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repositoryOwnedTargetSelectionEntrypoint": {
           "type": "string",
           "minLength": 1
         },
@@ -129,6 +135,10 @@
           "minLength": 1
         },
         "platformReleaseMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseHistory": {
           "type": "string",
           "minLength": 1
         },

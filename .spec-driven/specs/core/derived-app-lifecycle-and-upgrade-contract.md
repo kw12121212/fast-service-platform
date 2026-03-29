@@ -17,7 +17,7 @@ Derived applications MUST expose machine-readable metadata that identifies the p
 - THEN they can determine which platform release and baseline identity the generated application came from
 
 ### Requirement: Repository Defines Upgrade Compatibility Inputs
-The repository MUST define the machine-readable inputs used to evaluate whether a derived application is compatible with a later platform release, including the release-delta and advisory assets that explain what changed and what should be checked next.
+The repository MUST define the machine-readable inputs used to evaluate whether a derived application is compatible with a later platform release, including the standardized release-history / lineage assets, the release-delta and advisory assets for candidate targets, and the supported upgrade-path declarations that explain which source-to-target combinations the repository recognizes.
 
 #### Scenario: A contributor evaluates upgrade eligibility
 - GIVEN a contributor wants to know whether a derived application can be upgraded
@@ -29,8 +29,13 @@ The repository MUST define the machine-readable inputs used to evaluate whether 
 - WHEN they inspect the repository-owned lifecycle and upgrade assets
 - THEN they can identify the machine-readable release advisory inputs that describe changed contracts, impacted modules, and recommended follow-up checks
 
+#### Scenario: A contributor evaluates multiple candidate targets
+- GIVEN a contributor has a derived application from an older platform release
+- WHEN they inspect the repository-owned lifecycle and upgrade assets
+- THEN they can identify which target releases are declared as supported candidates instead of inferring upgrade eligibility from the current release alone
+
 ### Requirement: Repository Provides A Repository-Owned Upgrade Evaluation Path
-The repository MUST provide repository-owned entrypoints that evaluate derived-application upgrade compatibility, surface release advisory details about the current platform delta, and provide a controlled upgrade execution path.
+The repository MUST provide repository-owned entrypoints that evaluate derived-application upgrade compatibility, surface release advisory details for repository-declared target releases, provide release lookup guidance for selecting a supported target, and provide a controlled upgrade execution path.
 
 #### Scenario: A contributor runs the upgrade evaluation flow
 - GIVEN a contributor has a derived application and a target platform release
@@ -51,6 +56,11 @@ The repository MUST provide repository-owned entrypoints that evaluate derived-a
 - GIVEN a contributor has accepted the repository-owned upgrade plan
 - WHEN they run the documented execution path
 - THEN the repository applies the supported upgrade actions, reports any remaining manual-intervention items, and identifies the required post-upgrade validation commands
+
+#### Scenario: A contributor selects a supported upgrade target
+- GIVEN a contributor has a derived application and needs to choose a valid platform target release
+- WHEN they run the documented repository-owned release lookup path
+- THEN they can identify the supported target releases and the declared path semantics before running upgrade evaluation or execution
 
 ### Requirement: Lifecycle And Upgrade Contracts Are Implementation-Independent
 The repository MUST define derived-app lifecycle, advisory, and upgrade execution semantics independently from any single implementation language or script structure.

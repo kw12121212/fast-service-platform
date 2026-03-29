@@ -518,6 +518,8 @@ final class AssemblyGenerator {
                 .append("```bash\n./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("Read the current platform release advisory from the source repository:\n\n")
                 .append("```bash\n./scripts/show-platform-release-advisory.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("Inspect the repository-supported upgrade targets for this derived application:\n\n")
+                .append("```bash\n./scripts/list-platform-upgrade-targets.sh /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("Preview the repository-owned upgrade plan:\n\n")
                 .append("```bash\n./scripts/execute-derived-app-upgrade.sh /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("Apply the supported repository-owned upgrade actions:\n\n")
@@ -571,6 +573,7 @@ final class AssemblyGenerator {
         contractInputs.put("derivedAppUpgradeExecutionContract", "docs/ai/derived-app-upgrade-execution-contract.json");
         contractInputs.put("derivedAppLifecycleMetadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
         contractInputs.put("platformReleaseMetadata", "docs/ai/platform-release.json");
+        contractInputs.put("platformReleaseHistory", "docs/ai/platform-release-history.json");
         contractInputs.put("platformReleaseAdvisory", "docs/ai/platform-release-advisory.json");
         contractInputs.put("generatedAppVerificationContract", "docs/ai/generated-app-verification-contract.json");
         context.put("contractInputs", contractInputs);
@@ -585,6 +588,7 @@ final class AssemblyGenerator {
         Map<String, Object> lifecycle = new LinkedHashMap<>();
         lifecycle.put("metadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
         lifecycle.put("repositoryOwnedUpgradeEvaluation", "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>");
+        lifecycle.put("repositoryOwnedUpgradeTargetSelection", "./scripts/list-platform-upgrade-targets.sh [generated-app-dir]");
         lifecycle.put("repositoryOwnedReleaseAdvisory", "./scripts/show-platform-release-advisory.sh [generated-app-dir]");
         lifecycle.put("repositoryOwnedUpgradeExecution", "./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]");
         lifecycle.put("derivedProfile", deriveProfileId(registry, selectedModules));
@@ -619,6 +623,9 @@ final class AssemblyGenerator {
         upgradeEvaluation.put("repositoryOwnedEntrypoint",
                 asString(asMap(lifecycleContract.get("upgradeEvaluation"), "lifecycle contract must include upgradeEvaluation")
                         .get("repositoryOwnedEntrypoint")));
+        upgradeEvaluation.put("repositoryOwnedTargetSelectionEntrypoint",
+                asString(asMap(lifecycleContract.get("upgradeEvaluation"), "lifecycle contract must include upgradeEvaluation")
+                        .get("repositoryOwnedTargetSelectionEntrypoint")));
         upgradeEvaluation.put("repositoryOwnedAdvisoryEntrypoint",
                 asString(asMap(lifecycleContract.get("upgradeEvaluation"), "lifecycle contract must include upgradeEvaluation")
                         .get("repositoryOwnedAdvisoryEntrypoint")));
@@ -628,6 +635,9 @@ final class AssemblyGenerator {
         upgradeEvaluation.put("platformReleaseMetadata",
                 asString(asMap(lifecycleContract.get("normativeAssets"), "lifecycle contract must include normativeAssets")
                         .get("platformReleaseMetadata")));
+        upgradeEvaluation.put("platformReleaseHistory",
+                asString(asMap(lifecycleContract.get("normativeAssets"), "lifecycle contract must include normativeAssets")
+                        .get("platformReleaseHistory")));
         upgradeEvaluation.put("platformReleaseAdvisory",
                 asString(asMap(lifecycleContract.get("normativeAssets"), "lifecycle contract must include normativeAssets")
                         .get("platformReleaseAdvisory")));

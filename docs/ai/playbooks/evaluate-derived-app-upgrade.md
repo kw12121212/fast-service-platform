@@ -11,19 +11,22 @@
 1. `docs/ai/context.yaml`
 2. `docs/ai/derived-app-lifecycle-contract.json`
 3. `docs/ai/platform-release.json`
-4. `docs/ai/platform-release-advisory.json`
-5. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
-6. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
-7. `docs/ai/schemas/platform-release-advisory.schema.json`
-8. 派生应用里的：
+4. `docs/ai/platform-release-history.json`
+5. `docs/ai/platform-release-advisory.json`
+6. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
+7. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
+8. `docs/ai/schemas/platform-release-history.schema.json`
+9. `docs/ai/schemas/platform-release-advisory.schema.json`
+10. 派生应用里的：
    - `app-manifest.json`
    - `docs/ai/context.json`
    - `docs/ai/derived-app-lifecycle.json`
 
 优先级：
 
-- 规范事实来源是 lifecycle contract、platform release metadata 和生成应用自带的 lifecycle metadata
+- 规范事实来源是 lifecycle contract、platform release metadata、platform release history 和生成应用自带的 lifecycle metadata
 - release advisory 是“当前平台发布改了什么、影响哪些模块、建议先检查什么”的机器可读说明
+- release history 负责回答“这个来源 release 是否被识别、允许升到哪些 target release”
 - 这一步的目标是“评估升级兼容性”，不是直接做自动代码合并
 - repository-owned evaluator 是默认入口，不要把某个实现内部逻辑当成规范
 
@@ -33,6 +36,12 @@
 
 ```bash
 ./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/derived-app
+```
+
+先看支持的 upgrade target：
+
+```bash
+./scripts/list-platform-upgrade-targets.sh /absolute/path/to/derived-app
 ```
 
 或者直接执行 Node 入口：
@@ -51,6 +60,8 @@ node scripts/evaluate-derived-app-upgrade.mjs /absolute/path/to/derived-app
 
 - 派生应用是否暴露必需的 lifecycle metadata
 - lifecycle metadata 是否声明了平台来源和 contract 版本
+- 派生应用的 source release 是否在标准化 release history 里被识别
+- source release 到目标 release 的 upgrade path 是否被仓库声明为支持
 - 当前平台 release 是否支持该 lifecycle metadata 版本
 - 当前平台 release 是否仍支持派生应用声明的 assembly contract 版本
 - 派生应用选择的模块是否仍然是当前平台已知模块

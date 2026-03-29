@@ -12,12 +12,19 @@
 2. `docs/ai/derived-app-upgrade-execution-contract.json`
 3. `docs/ai/derived-app-lifecycle-contract.json`
 4. `docs/ai/platform-release.json`
-5. `docs/ai/platform-release-advisory.json`
-6. `docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json`
-7. 派生应用里的：
+5. `docs/ai/platform-release-history.json`
+6. `docs/ai/platform-release-advisory.json`
+7. `docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json`
+8. 派生应用里的：
    - `app-manifest.json`
    - `docs/ai/context.json`
    - `docs/ai/derived-app-lifecycle.json`
+
+如果还没确认 target release，先执行：
+
+```bash
+./scripts/list-platform-upgrade-targets.sh /absolute/path/to/derived-app
+```
 
 ## 标准执行路径
 
@@ -50,6 +57,7 @@
 ## 执行后必须复验
 
 ```bash
+./scripts/list-platform-upgrade-targets.sh /absolute/path/to/derived-app
 ./scripts/verify-derived-app.sh /absolute/path/to/derived-app
 ./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/derived-app
 ./scripts/show-platform-release-advisory.sh /absolute/path/to/derived-app

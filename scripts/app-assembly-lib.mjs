@@ -370,6 +370,10 @@ export async function loadPlatformReleaseMetadata(rootDir = REPO_ROOT) {
   return readJson(path.join(rootDir, 'docs', 'ai', 'platform-release.json'))
 }
 
+export async function loadPlatformReleaseHistory(rootDir = REPO_ROOT) {
+  return readJson(path.join(rootDir, 'docs', 'ai', 'platform-release-history.json'))
+}
+
 export async function loadPlatformReleaseAdvisory(rootDir = REPO_ROOT) {
   return readJson(path.join(rootDir, 'docs', 'ai', 'platform-release-advisory.json'))
 }
@@ -1028,6 +1032,12 @@ Read the current platform release advisory from the source repository:
 ./scripts/show-platform-release-advisory.sh /absolute/path/to/${manifest.application.id}
 \`\`\`
 
+Inspect the repository-supported upgrade targets for this derived application:
+
+\`\`\`bash
+./scripts/list-platform-upgrade-targets.sh /absolute/path/to/${manifest.application.id}
+\`\`\`
+
 Preview the repository-owned upgrade plan:
 
 \`\`\`bash
@@ -1086,6 +1096,7 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
         derivedAppUpgradeExecutionContract: 'docs/ai/derived-app-upgrade-execution-contract.json',
         derivedAppLifecycleMetadata: DERIVED_APP_LIFECYCLE_METADATA_PATH,
         platformReleaseMetadata: 'docs/ai/platform-release.json',
+        platformReleaseHistory: 'docs/ai/platform-release-history.json',
         platformReleaseAdvisory: 'docs/ai/platform-release-advisory.json',
         generatedAppVerificationContract: 'docs/ai/generated-app-verification-contract.json'
       },
@@ -1099,6 +1110,8 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
         metadata: DERIVED_APP_LIFECYCLE_METADATA_PATH,
         repositoryOwnedUpgradeEvaluation:
           './scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>',
+        repositoryOwnedUpgradeTargetSelection:
+          './scripts/list-platform-upgrade-targets.sh [generated-app-dir]',
         repositoryOwnedReleaseAdvisory:
           './scripts/show-platform-release-advisory.sh [generated-app-dir]',
         repositoryOwnedUpgradeExecution:
@@ -1133,11 +1146,14 @@ function buildDerivedAppLifecycle(manifest, selectedModules, registry, assemblyC
       upgradeEvaluation: {
         repositoryOwnedEntrypoint:
           lifecycleContract.upgradeEvaluation.repositoryOwnedEntrypoint,
+        repositoryOwnedTargetSelectionEntrypoint:
+          lifecycleContract.upgradeEvaluation.repositoryOwnedTargetSelectionEntrypoint,
         repositoryOwnedAdvisoryEntrypoint:
           lifecycleContract.upgradeEvaluation.repositoryOwnedAdvisoryEntrypoint,
         repositoryOwnedExecutionEntrypoint:
           lifecycleContract.upgradeEvaluation.repositoryOwnedExecutionEntrypoint,
         platformReleaseMetadata: lifecycleContract.normativeAssets.platformReleaseMetadata,
+        platformReleaseHistory: lifecycleContract.normativeAssets.platformReleaseHistory,
         platformReleaseAdvisory: lifecycleContract.normativeAssets.platformReleaseAdvisory,
         upgradeExecutionContract: lifecycleContract.normativeAssets.upgradeExecutionContract
       }
@@ -1489,12 +1505,86 @@ function resolveNestedField(root, fieldPath) {
   return current
 }
 
+function buildReleaseIndex(releaseHistory) {
+  return new Map((releaseHistory.releases ?? []).map((release) => [release.releaseId, release]))
+}
+
+function findSupportedUpgradePath(releaseHistory, sourceReleaseId, targetReleaseId) {
+  return (releaseHistory.supportedUpgradePaths ?? []).find(
+    (upgradePath) =>
+      upgradePath.sourceReleaseId === sourceReleaseId &&
+      upgradePath.targetReleaseId === targetReleaseId &&
+      upgradePath.supportStatus === 'supported'
+  )
+}
+
+export async function listPlatformUpgradeTargets(targetDir = null, rootDir = REPO_ROOT) {
+  const resolvedRootDir = path.resolve(rootDir)
+  const releaseHistory = await loadPlatformReleaseHistory(resolvedRootDir)
+  const releaseIndex = buildReleaseIndex(releaseHistory)
+
+  let lifecycleMetadata = null
+  let sourceReleaseId = null
+  let selectedModules = null
+
+  if (targetDir) {
+    lifecycleMetadata = await readJson(
+      path.join(path.resolve(targetDir), DERIVED_APP_LIFECYCLE_METADATA_PATH)
+    )
+    sourceReleaseId = lifecycleMetadata.sourcePlatform?.releaseId ?? null
+    selectedModules = lifecycleMetadata.selectedModules ?? []
+  }
+
+  const relevantPaths =
+    sourceReleaseId === null
+      ? releaseHistory.supportedUpgradePaths ?? []
+      : (releaseHistory.supportedUpgradePaths ?? []).filter(
+          (upgradePath) => upgradePath.sourceReleaseId === sourceReleaseId
+        )
+
+  const availableTargetReleases =
+    sourceReleaseId === null
+      ? []
+      : relevantPaths
+          .filter((upgradePath) => upgradePath.supportStatus === 'supported')
+          .map((upgradePath) => {
+            const release = releaseIndex.get(upgradePath.targetReleaseId) ?? {
+              releaseId: upgradePath.targetReleaseId,
+              version: 'unavailable',
+              supportStatus: 'unknown',
+              lineageParentReleaseId: null,
+              advisoryAsset: upgradePath.advisoryAsset ?? 'unavailable'
+            }
+            return {
+              releaseId: release.releaseId,
+              version: release.version,
+              supportStatus: release.supportStatus,
+              lineageParentReleaseId: release.lineageParentReleaseId ?? null,
+              advisoryAsset: release.advisoryAsset
+            }
+          })
+
+  return {
+    platformId: releaseHistory.platform?.id ?? 'unavailable',
+    currentReleaseId: releaseHistory.currentReleaseId ?? 'unavailable',
+    sourceReleaseId,
+    selectedModules,
+    recognizedReleases: releaseHistory.releases ?? [],
+    supportedUpgradePaths: relevantPaths,
+    availableTargetReleases,
+    defaultTargetReleaseId: releaseHistory.compatibilityWindow?.defaultTargetReleaseId ?? null,
+    lookupEntrypoint:
+      releaseHistory.compatibilityWindow?.upgradeTargetSelectionEntrypoint ?? null
+  }
+}
+
 export async function evaluateDerivedAppUpgrade(targetDir, rootDir = REPO_ROOT) {
   const resolvedTargetDir = path.resolve(targetDir)
   const resolvedRootDir = path.resolve(rootDir)
   const issues = []
   const lifecycleContract = await loadDerivedAppLifecycleContract(resolvedRootDir)
   const platformRelease = await loadPlatformReleaseMetadata(resolvedRootDir)
+  const releaseHistory = await loadPlatformReleaseHistory(resolvedRootDir)
   const currentRegistry = await loadModuleRegistry(resolvedRootDir)
 
   let lifecycleMetadata
@@ -1546,13 +1636,33 @@ export async function evaluateDerivedAppUpgrade(targetDir, rootDir = REPO_ROOT) 
 
   const upgradeSupport = platformRelease.upgradeSupport ?? {}
   const sourcePlatform = lifecycleMetadata.sourcePlatform ?? {}
-  const targetRelease = platformRelease.currentRelease?.releaseId ?? 'unavailable'
+  const targetRelease =
+    upgradeSupport.defaultTargetReleaseId ??
+    releaseHistory.compatibilityWindow?.defaultTargetReleaseId ??
+    platformRelease.currentRelease?.releaseId ??
+    'unavailable'
   const sourceRelease = sourcePlatform.releaseId ?? 'unavailable'
+  const knownReleaseIds = buildReleaseIndex(releaseHistory)
 
   if (
     !(upgradeSupport.supportedSourcePlatformIds ?? []).includes(sourcePlatform.id)
   ) {
     issues.push(`Unsupported source platform id: ${sourcePlatform.id ?? 'unavailable'}`)
+  }
+
+  if (!knownReleaseIds.has(sourceRelease)) {
+    issues.push(`Unknown source platform release: ${sourceRelease}`)
+  }
+
+  if (
+    !(releaseHistory.compatibilityWindow?.supportedSourceReleaseIds ?? []).includes(sourceRelease)
+  ) {
+    issues.push(`Source platform release is outside the supported upgrade window: ${sourceRelease}`)
+  }
+
+  const supportedUpgradePath = findSupportedUpgradePath(releaseHistory, sourceRelease, targetRelease)
+  if (sourceRelease !== targetRelease && !supportedUpgradePath) {
+    issues.push(`Unsupported upgrade path: ${sourceRelease} -> ${targetRelease}`)
   }
 
   if (
@@ -1597,7 +1707,7 @@ export async function evaluateDerivedAppUpgrade(targetDir, rootDir = REPO_ROOT) 
     sourceRelease === targetRelease
       ? 'already-on-target-platform-release'
       : compatible
-        ? upgradeSupport.recommendedCompatibleAction
+        ? supportedUpgradePath?.recommendedAction ?? upgradeSupport.recommendedCompatibleAction
         : upgradeSupport.recommendedIncompatibleAction
 
   return {
