@@ -10,12 +10,18 @@ The manifest MUST let a contributor identify the target application and the sele
 - THEN it can express the target application identity and selected modules through the repository's machine-readable manifest contract
 
 ### Requirement: Platform Provides A Machine-Readable Module Registry
-The system MUST provide a machine-readable module registry that exposes the available platform core and optional modules, their assembly roles, and their dependency expectations.
+The system MUST provide a machine-readable module registry that exposes the available platform core and optional modules, their assembly roles, their dependency expectations, and the finer-grained optional business capability units that may be selected during application assembly.
 
 #### Scenario: An AI agent decides which modules it can include
 - GIVEN an AI agent wants to choose modules without inferring from source directories
 - WHEN it reads the repository's module registry
 - THEN it can identify available modules, their classification, and any declared dependency expectations needed for assembly
+
+#### Scenario: An AI agent chooses among decomposed optional business units
+- GIVEN an AI agent wants to derive an application with only part of the delivery-management capability area
+- WHEN it reads the repository's module registry
+- THEN it can identify smaller optional project, ticket, or kanban capability units
+- AND it can determine which of those units may be selected independently and which require declared dependencies
 
 ### Requirement: Repository Generates An Independent Application Skeleton
 The system MUST provide a repository-owned scaffolding and assembly path that generates an independent monolithic application skeleton from the application manifest and selected modules, and that generated output MUST expose the machine-readable lifecycle metadata needed for later upgrade evaluation.
@@ -67,12 +73,17 @@ The system MUST identify which machine-readable assets are normative assembly an
 - THEN they can distinguish the standard inputs and required outputs from the current reference implementation details
 
 ### Requirement: Compatible Implementations Must Satisfy Output Invariants
-The system MUST define the observable output invariants that any compatible app assembly implementation must satisfy.
+The system MUST define the observable output invariants that any compatible app assembly implementation must satisfy, including the requirement that selected decomposed optional business units are reflected consistently across generated routes, services, tables, and validation guidance.
 
 #### Scenario: A contributor checks whether two implementations produce compatible outputs
 - GIVEN two different implementations assemble an application from the same valid manifest
 - WHEN the outputs are checked against the platform contract
 - THEN both can be evaluated by the same output invariants rather than by matching one implementation's internal code paths
+
+#### Scenario: A contributor checks a partially selected delivery-management assembly
+- GIVEN a compatible implementation assembles an application with only a subset of the decomposed optional business units
+- WHEN the output is checked against the platform contract
+- THEN the generated application includes only the routes, services, tables, and guidance associated with the selected units and their declared dependencies
 
 ### Requirement: Repository Supports Multiple Compatible Assembly Implementations
 The system MUST support multiple compatible app assembly implementations against the same standard contract and compatibility suite.

@@ -8,7 +8,8 @@
         "admin-shell",
         "user-management",
         "role-permission-management",
-        "software-project-management",
+        "project-management",
+        "project-repository-management",
         "kanban-management",
         "ticket-management"
       ]
@@ -27,7 +28,17 @@
         "admin-shell",
         "user-management",
         "role-permission-management",
-        "software-project-management"
+        "project-management"
+      ]
+    },
+    "project-repository": {
+      "description": "Adds repository binding and branch switching on top of project management.",
+      "modules": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "project-repository-management"
       ]
     },
     "project-kanban": {
@@ -36,7 +47,7 @@
         "admin-shell",
         "user-management",
         "role-permission-management",
-        "software-project-management",
+        "project-management",
         "kanban-management"
       ]
     }
@@ -100,9 +111,9 @@
       }
     },
     {
-      "id": "software-project-management",
+      "id": "project-management",
       "role": "optional-business-module",
-      "description": "Software project management and repository-binding workflows.",
+      "description": "Software project creation, listing, and project-scope workflows.",
       "dependsOn": [
         "admin-shell",
         "user-management",
@@ -110,8 +121,7 @@
       ],
       "backend": {
         "tables": [
-          "software_project",
-          "project_repository_binding"
+          "software_project"
         ],
         "services": [
           "project_service"
@@ -124,11 +134,24 @@
       }
     },
     {
+      "id": "project-repository-management",
+      "role": "optional-business-module",
+      "description": "Repository binding and branch switching workflows scoped to managed software projects.",
+      "dependsOn": [
+        "project-management"
+      ],
+      "backend": {
+        "tables": [
+          "project_repository_binding"
+        ]
+      }
+    },
+    {
       "id": "kanban-management",
       "role": "optional-business-module",
       "description": "Kanban board management scoped to software projects.",
       "dependsOn": [
-        "software-project-management"
+        "project-management"
       ],
       "backend": {
         "tables": [
@@ -149,7 +172,7 @@
       "role": "optional-business-module",
       "description": "Ticket workflows and minimal kanban state progression.",
       "dependsOn": [
-        "software-project-management",
+        "project-management",
         "kanban-management",
         "user-management"
       ],

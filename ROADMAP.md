@@ -14,6 +14,7 @@
 - machine-readable 的 derived-app lifecycle / upgrade evaluation / upgrade execution contract
 - machine-readable 的 platform release advisory、release history 和 version lineage
 - repository-owned 的 upgrade target lookup、upgrade evaluation、advisory 和 execution 入口
+- machine-readable 的 AI tool orchestration contract，以及统一 façade 优先的 AI 使用路径
 
 下一阶段的重点不再只是“再增加一种实现语言”，而是继续提高平台的长期可演进性、兼容性可信度和 AI 可消费性。
 
@@ -28,6 +29,7 @@
 - [x] `add-platform-release-delta-and-upgrade-advisory`
 - [x] `add-derived-app-upgrade-execution-path`
 - [x] `standardize-platform-release-history-and-version-lineage`
+- [x] `define-ai-tool-orchestration-contract`
 
 ## 建议优先级
 
@@ -56,12 +58,12 @@
 - 风险：如果设计过度，容易变成一层收益有限的包装。
 - 建议 change name：`unify-platform-tooling-entrypoints`
 
-#### [ ] 4. AI 直接装配与验证路径
+#### [x] 4. AI 工具编排契约
 
-- 方向：让 AI 不依赖现成 `Node/Java` 实现，只根据标准 contract 和 compatibility assets 直接完成装配或验证。
-- 价值：中高。能证明规范本身足够稳固，确实可被 AI 直接消费。
-- 风险：稳定性和验收难度通常高于代码实现。
-- 建议 change name：`add-ai-direct-assembly-and-verification-path`
+- 方向：让 AI 学会优先使用 repository-owned tooling façade、playbook 和兼容 wrapper，而不是直接替代已有 assembly / verification / upgrade 实现。
+- 价值：中高。能把平台的既有 contract 和工具真正变成 AI 可稳定消费的工作流。
+- 风险：需要跨多个 contract、playbook 和 façade 入口统一 AI 的默认行为边界。
+- 建议 change name：`define-ai-tool-orchestration-contract`
 
 ### P2
 
@@ -95,14 +97,16 @@
 1. [x] `define-derived-app-lifecycle-and-upgrade-contract`
 2. [x] `expand-app-assembly-compatibility-fixtures`
 3. [x] `unify-platform-tooling-entrypoints`
-4. [ ] `add-ai-direct-assembly-and-verification-path`
+4. [x] `define-ai-tool-orchestration-contract`
+5. [ ] `decompose-optional-business-modules`
 
 原因：
 
 - 当前最缺的不是“还能不能再生成一次”，而是“派生出去以后怎么持续升级和兼容”。
 - 在 lifecycle 明确之前，平台更像一个可演示生成器，不像可长期演进的基础库。
 - compatibility suite 和 tooling entrypoints 能优先提高标准可信度和日常可用性。
-- AI direct path 的战略价值高，但更适合作为前面几项打稳之后的能力验证。
+- AI tool orchestration 让 AI 优先复用仓库已有工具，而不是绕开它们重做 workflow。
+- 下一步更适合继续收紧模块边界，把平台进一步做成可组合的基础库。
 
 ## 使用方式
 

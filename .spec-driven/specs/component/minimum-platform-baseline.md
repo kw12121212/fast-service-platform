@@ -3,15 +3,21 @@
 ### Requirement: Minimum Reusable Enterprise Component Baseline
 The system MUST provide a reusable enterprise application platform core that includes tests, an administrative home page, role and permission management, and user management.
 The role and permission management portion of that core baseline MUST support minimum manageable RBAC workflows rather than a read-only diagnostic view.
-The system MAY provide software project management, ticket management, and kanban management as optional built-in modules during application assembly instead of requiring them in every derived application.
+The system MAY provide decomposed software project, ticket, and kanban capability units as optional built-in modules during application assembly instead of requiring the entire delivery-management area in every derived application.
 The system MAY include optional demo data for demonstration or first-run setup.
 
 #### Scenario: The platform baseline is checked for completeness
 - GIVEN a contributor reviews the repository's current component baseline
 - WHEN they verify what AI can reliably reuse from the platform
 - THEN they can confirm the presence of tests, an administrative home page, role and permission management, and user management in the required platform core
-- AND they can identify software project management, ticket management, and kanban management as optional built-in modules rather than mandatory requirements for every derived application
+- AND they can identify decomposed project, ticket, and kanban capability units as optional built-in modules rather than mandatory requirements for every derived application
 - AND they can determine that the RBAC portion of the baseline is manageable rather than limited to manual inspection
+
+#### Scenario: The platform baseline is checked after delivery-management decomposition
+- GIVEN a contributor reviews the repository's current component baseline
+- WHEN they verify what remains required core versus optional business capability
+- THEN they can still identify the required admin, user, and RBAC platform core
+- AND they can identify the decomposed delivery-management units as optional built-in modules instead of mandatory baseline requirements
 
 ### Requirement: Minimum Platform Baseline Must Be Functionally Composable
 The system MUST define the minimum reusable platform baseline so the required core and selected optional modules form a usable enterprise-management capability rather than a disconnected feature list.
@@ -39,7 +45,7 @@ When software project management, kanban management, and ticket management modul
 - AND they can advance tickets through the minimal delivery-state flow
 
 ### Requirement: Current Runnable Baseline Remains Reproducible As A Default Assembly
-The system MUST preserve a default assembly profile that reproduces the repository's current runnable baseline application behavior.
+The system MUST preserve a default assembly profile that reproduces the repository's current runnable baseline application behavior even when the optional delivery-management area is decomposed into smaller module units.
 
 #### Scenario: A contributor checks for regression after optional modules are introduced
 - GIVEN the platform introduces optional module assembly

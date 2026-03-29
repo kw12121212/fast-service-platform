@@ -25,7 +25,8 @@
         "admin-shell",
         "user-management",
         "role-permission-management",
-        "software-project-management",
+        "project-management",
+        "project-repository-management",
         "ticket-management",
         "kanban-management"
       ],
@@ -48,7 +49,8 @@
         "admin-shell",
         "user-management",
         "role-permission-management",
-        "software-project-management",
+        "project-management",
+        "project-repository-management",
         "ticket-management",
         "kanban-management"
       ],
@@ -70,7 +72,8 @@
         "admin-shell",
         "user-management",
         "role-permission-management",
-        "software-project-management",
+        "project-management",
+        "project-repository-management",
         "ticket-management",
         "kanban-management"
       ],

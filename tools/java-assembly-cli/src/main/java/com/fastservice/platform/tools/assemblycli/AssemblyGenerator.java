@@ -44,7 +44,7 @@ final class AssemblyGenerator {
             "frontend/vite.config.ts");
 
     private static final Map<String, String> FRONTEND_OPTIONAL_FEATURES = Map.of(
-            "software-project-management", "frontend/src/features/projects",
+            "project-management", "frontend/src/features/projects",
             "ticket-management", "frontend/src/features/tickets",
             "kanban-management", "frontend/src/features/kanban");
 
@@ -63,7 +63,7 @@ final class AssemblyGenerator {
             "backend/src/main/java/com/fastservice/platform/backend/generated/service/executor/UserServiceExecutor.java");
 
     private static final Map<String, List<String>> BACKEND_OPTIONAL_PATHS = Map.of(
-            "software-project-management", List.of(
+            "project-management", List.of(
                     "backend/src/main/java/com/fastservice/platform/backend/project",
                     "backend/src/main/java/com/fastservice/platform/backend/generated/service/executor/ProjectServiceExecutor.java"),
             "kanban-management", List.of(
@@ -83,9 +83,9 @@ final class AssemblyGenerator {
             new RouteModule("role-permission-management", "/roles", "RolePermissionsPage", "@/features/roles/role-permissions-page",
                     "Roles & Permissions", "Identity", "ShieldCheck", "Role Permission Management",
                     "Manage roles, permissions, and user-role assignments."),
-            new RouteModule("software-project-management", "/projects", "ProjectsPage", "@/features/projects/projects-page",
-                    "Projects", "Delivery", "FolderKanban", "Software Project Management",
-                    "Manage software projects and repository binding workflows."),
+            new RouteModule("project-management", "/projects", "ProjectsPage", "@/features/projects/projects-page",
+                    "Projects", "Delivery", "FolderKanban", "Project Management",
+                    "Manage software projects and project-scope workflows."),
             new RouteModule("ticket-management", "/tickets", "TicketsPage", "@/features/tickets/tickets-page",
                     "Tickets", "Delivery", "Ticket", "Ticket Management",
                     "Manage tickets and minimal state progression."),
@@ -127,7 +127,7 @@ final class AssemblyGenerator {
                       permission_id long
                     ) package @packageName generate code @modelSrcDir;
                     """),
-            new SqlModuleEntry("software-project-management", """
+            new SqlModuleEntry("project-management", """
                     create table if not exists software_project (
                       id long auto_increment primary key,
                       project_key varchar,
@@ -135,7 +135,8 @@ final class AssemblyGenerator {
                       project_description varchar,
                       active boolean
                     ) package @packageName generate code @modelSrcDir;
-
+                    """),
+            new SqlModuleEntry("project-repository-management", """
                     create table if not exists project_repository_binding (
                       project_id long primary key,
                       repository_root_path varchar
@@ -186,17 +187,6 @@ final class AssemblyGenerator {
                     implement by 'com.fastservice.platform.backend.access.AccessControlServiceImpl'
                     generate code @serviceSrcDir;
                     """),
-            new SqlModuleEntry("software-project-management", """
-                    create service if not exists project_service (
-                      createProject(projectKey varchar, projectName varchar, description varchar) long,
-                      bindProjectRepository(projectId long, repositoryPath varchar) varchar,
-                      switchProjectBranch(projectId long, branchName varchar) varchar,
-                      listProjects() varchar
-                    )
-                    package @packageName
-                    implement by 'com.fastservice.platform.backend.project.ProjectServiceImpl'
-                    generate code @serviceSrcDir;
-                    """),
             new SqlModuleEntry("kanban-management", """
                     create service if not exists kanban_service (
                       createKanban(projectId long, boardName varchar) long,
@@ -235,12 +225,19 @@ final class AssemblyGenerator {
                     insert into app_role_permission(role_id, permission_id)
                     values(200, 300);
                     """),
-            new SqlModuleEntry("software-project-management", """
+            new SqlModuleEntry("project-management", """
                     insert into app_permission(id, permission_code, permission_name, scope)
                     values(301, 'project:manage', 'Manage Projects', 'FUNCTION');
 
                     insert into app_role_permission(role_id, permission_id)
                     values(200, 301);
+                    """),
+            new SqlModuleEntry("project-repository-management", """
+                    insert into app_permission(id, permission_code, permission_name, scope)
+                    values(304, 'project:repository:manage', 'Manage Project Repositories', 'FUNCTION');
+
+                    insert into app_role_permission(role_id, permission_id)
+                    values(200, 304);
                     """),
             new SqlModuleEntry("ticket-management", """
                     insert into app_permission(id, permission_code, permission_name, scope)
@@ -456,10 +453,24 @@ final class AssemblyGenerator {
         writeString(outputDir.resolve("backend/src/main/resources/sql/demo.sql"), buildDemoSql(selectedModules));
         writeString(outputDir.resolve("backend/src/main/java/com/fastservice/platform/backend/demo/DemoDataSupport.java"),
                 buildDemoDataSupport());
+        if (selectedModules.contains("project-management")) {
+            boolean includeRepositoryManagement = selectedModules.contains("project-repository-management");
+            writeString(
+                    outputDir.resolve("backend/src/main/java/com/fastservice/platform/backend/project/ProjectServiceImpl.java"),
+                    buildProjectServiceImpl(includeRepositoryManagement));
+            writeString(
+                    outputDir.resolve("backend/src/main/java/com/fastservice/platform/backend/generated/service/executor/ProjectServiceExecutor.java"),
+                    buildProjectServiceExecutor(includeRepositoryManagement));
+        }
 
         writeString(outputDir.resolve("frontend/src/app/router.tsx"), buildRouterTsx(selectedModules));
         writeString(outputDir.resolve("frontend/src/app/navigation.ts"), buildNavigationTs(selectedModules));
         writeString(outputDir.resolve("frontend/src/features/dashboard/dashboard-page.tsx"), buildDashboardPage(selectedModules));
+        if (selectedModules.contains("project-management")) {
+            writeString(
+                    outputDir.resolve("frontend/src/features/projects/projects-page.tsx"),
+                    buildProjectsPage(selectedModules.contains("project-repository-management")));
+        }
 
         copyRelativePath("scripts/app-assembly-lib.mjs", outputDir);
         copyRelativePath("scripts/verify-derived-app.mjs", outputDir);
@@ -675,10 +686,39 @@ final class AssemblyGenerator {
     }
 
     private String buildServicesSql(List<String> selectedModules) {
-        return buildSqlBlock("""
-                set @packageName 'com.fastservice.platform.backend.generated.service';
-                set @serviceSrcDir './target/generated-sources/lealone-service';
-                """, selectedModules, SERVICE_ENTRIES);
+        Set<String> selected = new LinkedHashSet<>(selectedModules);
+        List<String> serviceBlocks = new ArrayList<>();
+        for (SqlModuleEntry entry : SERVICE_ENTRIES) {
+            if (selected.contains(entry.moduleId())) {
+                serviceBlocks.add(entry.sql().trim());
+            }
+        }
+        if (selected.contains("project-management")) {
+            serviceBlocks.add(2, buildProjectServiceSql(selected.contains("project-repository-management")));
+        }
+
+        return String.join("\n",
+                "set @packageName 'com.fastservice.platform.backend.generated.service';",
+                "set @serviceSrcDir './target/generated-sources/lealone-service';",
+                "",
+                String.join("\n\n", serviceBlocks),
+                "");
+    }
+
+    private String buildProjectServiceSql(boolean includeRepositoryManagement) {
+        List<String> lines = new ArrayList<>();
+        lines.add("create service if not exists project_service (");
+        lines.add("  createProject(projectKey varchar, projectName varchar, description varchar) long,");
+        if (includeRepositoryManagement) {
+            lines.add("  bindProjectRepository(projectId long, repositoryPath varchar) varchar,");
+            lines.add("  switchProjectBranch(projectId long, branchName varchar) varchar,");
+        }
+        lines.add("  listProjects() varchar");
+        lines.add(")");
+        lines.add("package @packageName");
+        lines.add("implement by 'com.fastservice.platform.backend.project.ProjectServiceImpl'");
+        lines.add("generate code @serviceSrcDir;");
+        return String.join("\n", lines);
     }
 
     private String buildDemoSql(List<String> selectedModules) {
@@ -747,6 +787,296 @@ final class AssemblyGenerator {
                             }
                         }
                     }
+                }
+                """;
+    }
+
+    private String buildProjectServiceImpl(boolean includeRepositoryManagement) throws IOException {
+        if (includeRepositoryManagement) {
+            return Files.readString(
+                    repoRoot.resolve("backend/src/main/java/com/fastservice/platform/backend/project/ProjectServiceImpl.java"));
+        }
+
+        return String.join("\n",
+                "package com.fastservice.platform.backend.project;",
+                "",
+                "import java.sql.Connection;",
+                "import java.sql.PreparedStatement;",
+                "import java.sql.ResultSet;",
+                "import java.sql.SQLException;",
+                "",
+                "import com.fastservice.platform.backend.common.db.JdbcSupport;",
+                "import com.fastservice.platform.backend.common.json.JsonStrings;",
+                "",
+                "public class ProjectServiceImpl {",
+                "",
+                "    public long createproject(String projectKey, String projectName, String description) {",
+                "        return createProject(projectKey, projectName, description);",
+                "    }",
+                "",
+                "    public String listprojects() {",
+                "        return listProjects();",
+                "    }",
+                "",
+                "    public long createProject(String projectKey, String projectName, String description) {",
+                "        String sql = \"INSERT INTO software_project(project_key, project_name, project_description, active) VALUES(?, ?, ?, true)\";",
+                "        try (Connection connection = JdbcSupport.getConnection();",
+                "                PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {",
+                "            statement.setString(1, projectKey);",
+                "            statement.setString(2, projectName);",
+                "            statement.setString(3, description);",
+                "            statement.executeUpdate();",
+                "            try (ResultSet keys = statement.getGeneratedKeys()) {",
+                "                if (keys.next()) {",
+                "                    return keys.getLong(1);",
+                "                }",
+                "            }",
+                "            throw new IllegalStateException(\"No generated key returned for project insert\");",
+                "        } catch (SQLException e) {",
+                "            throw new IllegalStateException(\"Unable to create project\", e);",
+                "        }",
+                "    }",
+                "",
+                "    public String listProjects() {",
+                "        String sql = \"SELECT id, project_key, project_name, active FROM software_project ORDER BY id\";",
+                "        try (Connection connection = JdbcSupport.getConnection();",
+                "                PreparedStatement statement = connection.prepareStatement(sql);",
+                "                ResultSet rs = statement.executeQuery()) {",
+                "            StringBuilder builder = new StringBuilder(\"[\");",
+                "            boolean first = true;",
+                "            while (rs.next()) {",
+                "                if (!first) {",
+                "                    builder.append(',');",
+                "                }",
+                "                first = false;",
+                "                builder.append(\"{\\\"id\\\":\").append(rs.getLong(\"id\"));",
+                "                builder.append(\",\\\"key\\\":\").append(JsonStrings.quote(rs.getString(\"project_key\")));",
+                "                builder.append(\",\\\"name\\\":\").append(JsonStrings.quote(rs.getString(\"project_name\")));",
+                "                builder.append(\",\\\"active\\\":\").append(rs.getBoolean(\"active\"));",
+                "                builder.append(\",\\\"repository\\\":null}\");",
+                "            }",
+                "            builder.append(']');",
+                "            return builder.toString();",
+                "        } catch (SQLException e) {",
+                "            throw new IllegalStateException(\"Unable to list projects\", e);",
+                "        }",
+                "    }",
+                "}");
+    }
+
+    private String buildProjectServiceExecutor(boolean includeRepositoryManagement) throws IOException {
+        if (includeRepositoryManagement) {
+            return Files.readString(repoRoot.resolve(
+                    "backend/src/main/java/com/fastservice/platform/backend/generated/service/executor/ProjectServiceExecutor.java"));
+        }
+
+        return """
+                package com.fastservice.platform.backend.generated.service.executor;
+
+                import java.util.Map;
+
+                import com.fastservice.platform.backend.project.ProjectServiceImpl;
+                import com.lealone.db.service.ServiceExecutor;
+                import com.lealone.db.value.Value;
+                import com.lealone.db.value.ValueLong;
+                import com.lealone.db.value.ValueNull;
+                import com.lealone.db.value.ValueString;
+                import com.lealone.plugins.orm.json.JsonArray;
+
+                public class ProjectServiceExecutor implements ServiceExecutor {
+
+                    private final ProjectServiceImpl service = new ProjectServiceImpl();
+
+                    @Override
+                    public Value executeService(String methodName, Value[] methodArgs) {
+                        return switch (methodName) {
+                        case "CREATEPROJECT" -> {
+                            Long result = service.createproject(
+                                    methodArgs[0].getString(),
+                                    methodArgs[1].getString(),
+                                    methodArgs[2].getString());
+                            yield result == null ? ValueNull.INSTANCE : ValueLong.get(result);
+                        }
+                        case "LISTPROJECTS" -> {
+                            String result = service.listprojects();
+                            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+                        }
+                        default -> throw noMethodException(methodName);
+                        };
+                    }
+
+                    @Override
+                    public Object executeService(String methodName, Map<String, Object> methodArgs) {
+                        return switch (methodName) {
+                        case "CREATEPROJECT" -> service.createproject(
+                                toString("PROJECTKEY", methodArgs),
+                                toString("PROJECTNAME", methodArgs),
+                                toString("DESCRIPTION", methodArgs));
+                        case "LISTPROJECTS" -> service.listprojects();
+                        default -> throw noMethodException(methodName);
+                        };
+                    }
+
+                    @Override
+                    public Object executeService(String methodName, String json) {
+                        return switch (methodName) {
+                        case "CREATEPROJECT" -> {
+                            JsonArray ja = new JsonArray(json);
+                            yield service.createproject(ja.getString(0), ja.getString(1), ja.getString(2));
+                        }
+                        case "LISTPROJECTS" -> service.listprojects();
+                        default -> throw noMethodException(methodName);
+                        };
+                    }
+                }
+                """;
+    }
+
+    private String buildProjectsPage(boolean includeRepositoryManagement) throws IOException {
+        if (includeRepositoryManagement) {
+            return Files.readString(repoRoot.resolve("frontend/src/features/projects/projects-page.tsx"));
+        }
+
+        return """
+                import { type FormEvent, useState } from 'react'
+                import { RefreshCcw } from 'lucide-react'
+
+                import { MutationStatus } from '@/components/admin/mutation-status'
+                import { PageHeader } from '@/components/admin/page-header'
+                import { ResourceState } from '@/components/admin/resource-state'
+                import { Badge } from '@/components/ui/badge'
+                import { Button } from '@/components/ui/button'
+                import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+                import { Input } from '@/components/ui/input'
+                import { Label } from '@/components/ui/label'
+                import { useCreateProjectAction, useProjectsResource } from '@/lib/api/hooks'
+
+                export function ProjectsPage() {
+                  const projects = useProjectsResource()
+                  const createProject = useCreateProjectAction()
+                  const [projectKey, setProjectKey] = useState('')
+                  const [projectName, setProjectName] = useState('')
+                  const [description, setDescription] = useState('')
+
+                  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+                    event.preventDefault()
+
+                    try {
+                      await createProject.submit({
+                        projectKey,
+                        projectName,
+                        description,
+                      })
+                      setProjectKey('')
+                      setProjectName('')
+                      setDescription('')
+                      projects.reload()
+                    } catch {
+                      return
+                    }
+                  }
+
+                  return (
+                    <div className="space-y-8">
+                      <PageHeader
+                        eyebrow="Delivery"
+                        title="Project management"
+                        description="Projects are displayed from the backend project service and provide the scope anchor for downstream delivery modules."
+                        actions={
+                          <Button variant="outline" onClick={projects.reload}>
+                            <RefreshCcw className="mr-2 size-4" />
+                            Refresh
+                          </Button>
+                        }
+                      />
+
+                      <div className="grid gap-4 xl:grid-cols-[0.82fr_1.18fr]">
+                        <Card className="bg-card/96">
+                          <CardHeader>
+                            <CardTitle className="text-lg">Create project</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <form className="space-y-4" onSubmit={handleSubmit}>
+                              <div className="space-y-2">
+                                <Label htmlFor="create-project-key">Project key</Label>
+                                <Input id="create-project-key" value={projectKey} onChange={(event) => setProjectKey(event.target.value)} placeholder="FSP" required />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label htmlFor="create-project-name">Project name</Label>
+                                <Input id="create-project-name" value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="Fast Service Platform" required />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label htmlFor="create-project-description">Description</Label>
+                                <textarea
+                                  id="create-project-description"
+                                  className="min-h-28 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                                  value={description}
+                                  onChange={(event) => setDescription(event.target.value)}
+                                  placeholder="Describe the delivery scope this project anchors."
+                                  required
+                                />
+                              </div>
+
+                              <MutationStatus
+                                status={createProject.status}
+                                error={createProject.error}
+                                submittingMessage="Creating project through the backend service..."
+                                successMessage="Project created and the project list has been refreshed."
+                              />
+
+                              <Button type="submit" disabled={createProject.status === 'submitting'}>
+                                Create project
+                              </Button>
+                            </form>
+                          </CardContent>
+                        </Card>
+
+                        <ResourceState
+                          status={projects.status}
+                          error={projects.error}
+                          empty={projects.data.length === 0}
+                          emptyTitle="No projects returned"
+                          emptyMessage="Add a software project through the backend core or enable demo data to seed the first project."
+                          onRetry={projects.reload}
+                        >
+                          <div className="grid gap-4 xl:grid-cols-2">
+                            {projects.data.map((project) => (
+                              <Card key={project.id} className="overflow-hidden border-border/70 bg-[linear-gradient(155deg,rgba(255,255,255,0.96),rgba(246,245,238,0.92))]">
+                                <CardContent className="space-y-6 p-6">
+                                  <div className="flex flex-wrap items-start justify-between gap-4">
+                                    <div>
+                                      <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                        Project key
+                                      </div>
+                                      <div className="mt-2 text-2xl font-semibold tracking-tight">
+                                        {project.key}
+                                      </div>
+                                      <div className="mt-1 text-base text-muted-foreground">
+                                        {project.name}
+                                      </div>
+                                    </div>
+                                    <Badge className={project.active ? 'bg-primary/12 text-primary' : 'bg-muted text-muted-foreground'}>
+                                      {project.active ? 'Active' : 'Inactive'}
+                                    </Badge>
+                                  </div>
+
+                                  <div className="rounded-[22px] border border-border/60 bg-muted/35 p-4 text-sm leading-6 text-muted-foreground">
+                                    Project id <span className="font-semibold text-foreground">{project.id}</span> is available as the scope anchor for selected downstream delivery modules.
+                                  </div>
+
+                                  <div className="rounded-[22px] border border-dashed border-border/70 bg-background/55 p-4 text-sm leading-6 text-muted-foreground">
+                                    Repository binding workflows are not enabled for this derived application assembly.
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </ResourceState>
+                      </div>
+                    </div>
+                  )
                 }
                 """;
     }

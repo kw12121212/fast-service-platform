@@ -80,6 +80,72 @@ public class AppAssemblyCliTest {
         }
     }
 
+    @Test
+    void scaffoldProjectAdminOmitsRepositoryBindingWiring() throws Exception {
+        AssemblyGenerator generator = new AssemblyGenerator(repoRoot);
+        Path outputDir = Files.createTempDirectory("fsp-java-project-admin-");
+
+        try {
+            AssemblyGenerator.AssemblyResult result = generator.scaffold(
+                    repoRoot.resolve("docs/ai/compatibility/fixtures/project-admin.manifest.json"),
+                    outputDir);
+
+            assertEquals(List.of(
+                    "admin-shell",
+                    "user-management",
+                    "role-permission-management",
+                    "project-management"), result.selectedModules());
+
+            String servicesSql = Files.readString(outputDir.resolve("backend/src/main/resources/sql/services.sql"));
+            String tablesSql = Files.readString(outputDir.resolve("backend/src/main/resources/sql/tables.sql"));
+            String projectsPage = Files.readString(outputDir.resolve("frontend/src/features/projects/projects-page.tsx"));
+
+            assertTrue(servicesSql.contains("project_service"));
+            assertFalse(servicesSql.contains("bindProjectRepository"));
+            assertFalse(servicesSql.contains("switchProjectBranch"));
+            assertTrue(tablesSql.contains("software_project"));
+            assertFalse(tablesSql.contains("project_repository_binding"));
+            assertFalse(projectsPage.contains("Bind repository"));
+            assertFalse(projectsPage.contains("Switch branch"));
+            assertTrue(projectsPage.contains("Repository binding workflows are not enabled for this derived application assembly."));
+        } finally {
+            deleteRecursively(outputDir);
+        }
+    }
+
+    @Test
+    void scaffoldProjectRepositoryIncludesRepositoryBindingWiring() throws Exception {
+        AssemblyGenerator generator = new AssemblyGenerator(repoRoot);
+        Path outputDir = Files.createTempDirectory("fsp-java-project-repository-");
+
+        try {
+            AssemblyGenerator.AssemblyResult result = generator.scaffold(
+                    repoRoot.resolve("docs/ai/compatibility/fixtures/project-repository.manifest.json"),
+                    outputDir);
+
+            assertEquals(List.of(
+                    "admin-shell",
+                    "user-management",
+                    "role-permission-management",
+                    "project-management",
+                    "project-repository-management"), result.selectedModules());
+
+            String servicesSql = Files.readString(outputDir.resolve("backend/src/main/resources/sql/services.sql"));
+            String tablesSql = Files.readString(outputDir.resolve("backend/src/main/resources/sql/tables.sql"));
+            String projectsPage = Files.readString(outputDir.resolve("frontend/src/features/projects/projects-page.tsx"));
+
+            assertTrue(servicesSql.contains("project_service"));
+            assertTrue(servicesSql.contains("bindProjectRepository"));
+            assertTrue(servicesSql.contains("switchProjectBranch"));
+            assertTrue(tablesSql.contains("software_project"));
+            assertTrue(tablesSql.contains("project_repository_binding"));
+            assertTrue(projectsPage.contains("Bind repository"));
+            assertTrue(projectsPage.contains("Switch branch"));
+        } finally {
+            deleteRecursively(outputDir);
+        }
+    }
+
     private static void deleteRecursively(Path path) throws Exception {
         if (!Files.exists(path)) {
             return;

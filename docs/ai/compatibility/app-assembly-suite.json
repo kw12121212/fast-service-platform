@@ -10,7 +10,8 @@
           "admin-shell",
           "user-management",
           "role-permission-management",
-          "software-project-management",
+          "project-management",
+          "project-repository-management",
           "kanban-management",
           "ticket-management"
         ]
@@ -33,7 +34,19 @@
           "admin-shell",
           "user-management",
           "role-permission-management",
-          "software-project-management"
+          "project-management"
+        ]
+      },
+      {
+        "id": "project-repository",
+        "manifestPath": "docs/ai/compatibility/fixtures/project-repository.manifest.json",
+        "expectedProfile": "project-repository",
+        "expectedSelectedModules": [
+          "admin-shell",
+          "user-management",
+          "role-permission-management",
+          "project-management",
+          "project-repository-management"
         ]
       },
       {
@@ -44,7 +57,7 @@
           "admin-shell",
           "user-management",
           "role-permission-management",
-          "software-project-management",
+          "project-management",
           "kanban-management"
         ]
       }
@@ -73,7 +86,12 @@
       {
         "id": "kanban-without-project",
         "manifestPath": "docs/ai/compatibility/fixtures/kanban-without-project.manifest.json",
-        "expectedErrorIncludes": "requires dependency software-project-management"
+        "expectedErrorIncludes": "requires dependency project-management"
+      },
+      {
+        "id": "repository-without-project",
+        "manifestPath": "docs/ai/compatibility/fixtures/repository-without-project.manifest.json",
+        "expectedErrorIncludes": "requires dependency project-management"
       },
       {
         "id": "invalid-package-prefix",

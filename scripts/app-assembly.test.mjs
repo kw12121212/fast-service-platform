@@ -90,7 +90,7 @@ test('compatibility suite fixture coverage includes representative valid and inv
 
   assert.deepEqual(
     suite.fixtures.valid.map((fixture) => fixture.id),
-    ['default-baseline', 'core-admin', 'project-admin', 'project-kanban']
+    ['default-baseline', 'core-admin', 'project-admin', 'project-repository', 'project-kanban']
   )
   assert.deepEqual(
     suite.fixtures.invalid.map((fixture) => fixture.id),
@@ -100,6 +100,7 @@ test('compatibility suite fixture coverage includes representative valid and inv
       'missing-dependency',
       'duplicate-module',
       'kanban-without-project',
+      'repository-without-project',
       'invalid-package-prefix'
     ]
   )
@@ -217,8 +218,8 @@ test('compatibility suite passes for the node reference implementation', async (
   assert.deepEqual(
     result.implementations.map((implementation) => implementation.validFixtures),
     [
-      ['default-baseline', 'core-admin', 'project-admin', 'project-kanban'],
-      ['default-baseline', 'core-admin', 'project-admin', 'project-kanban']
+      ['default-baseline', 'core-admin', 'project-admin', 'project-repository', 'project-kanban'],
+      ['default-baseline', 'core-admin', 'project-admin', 'project-repository', 'project-kanban']
     ]
   )
   assert.deepEqual(
@@ -230,6 +231,7 @@ test('compatibility suite passes for the node reference implementation', async (
         'missing-dependency',
         'duplicate-module',
         'kanban-without-project',
+        'repository-without-project',
         'invalid-package-prefix'
       ],
       [
@@ -238,6 +240,7 @@ test('compatibility suite passes for the node reference implementation', async (
         'missing-dependency',
         'duplicate-module',
         'kanban-without-project',
+        'repository-without-project',
         'invalid-package-prefix'
       ]
     ]
@@ -262,9 +265,67 @@ test('project-admin compatibility fixture generates projects without kanban or t
       path.join(outputDir, 'backend/src/main/resources/sql/services.sql'),
       'utf8'
     )
+    const tablesSql = await readFile(
+      path.join(outputDir, 'backend/src/main/resources/sql/tables.sql'),
+      'utf8'
+    )
+    const projectsPage = await readFile(
+      path.join(outputDir, 'frontend/src/features/projects/projects-page.tsx'),
+      'utf8'
+    )
     assert.equal(servicesSql.includes('project_service'), true)
     assert.equal(servicesSql.includes('kanban_service'), false)
     assert.equal(servicesSql.includes('ticket_service'), false)
+    assert.equal(servicesSql.includes('bindProjectRepository'), false)
+    assert.equal(servicesSql.includes('switchProjectBranch'), false)
+    assert.equal(tablesSql.includes('software_project'), true)
+    assert.equal(tablesSql.includes('project_repository_binding'), false)
+    assert.equal(projectsPage.includes('Bind repository'), false)
+    assert.equal(projectsPage.includes('Switch branch'), false)
+    assert.equal(
+      projectsPage.includes('Repository binding workflows are not enabled for this derived application assembly.'),
+      true
+    )
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('project-repository compatibility fixture generates repository wiring without kanban or ticket wiring', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-project-repository-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/compatibility/fixtures/project-repository.manifest.json'),
+      outputDir
+    })
+
+    const router = await readFile(path.join(outputDir, 'frontend/src/app/router.tsx'), 'utf8')
+    const servicesSql = await readFile(
+      path.join(outputDir, 'backend/src/main/resources/sql/services.sql'),
+      'utf8'
+    )
+    const tablesSql = await readFile(
+      path.join(outputDir, 'backend/src/main/resources/sql/tables.sql'),
+      'utf8'
+    )
+    const projectsPage = await readFile(
+      path.join(outputDir, 'frontend/src/features/projects/projects-page.tsx'),
+      'utf8'
+    )
+
+    assert.equal(router.includes("path: 'projects'"), true)
+    assert.equal(router.includes("path: 'kanban'"), false)
+    assert.equal(router.includes("path: 'tickets'"), false)
+    assert.equal(servicesSql.includes('project_service'), true)
+    assert.equal(servicesSql.includes('kanban_service'), false)
+    assert.equal(servicesSql.includes('ticket_service'), false)
+    assert.equal(servicesSql.includes('bindProjectRepository'), true)
+    assert.equal(servicesSql.includes('switchProjectBranch'), true)
+    assert.equal(tablesSql.includes('software_project'), true)
+    assert.equal(tablesSql.includes('project_repository_binding'), true)
+    assert.equal(projectsPage.includes('Bind repository'), true)
+    assert.equal(projectsPage.includes('Switch branch'), true)
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }

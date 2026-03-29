@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "broken-repository-without-project",
+    "name": "Broken Repository Without Project",
+    "packagePrefix": "com.fastservice.platform.repositorywithoutproject"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management",
+    "project-repository-management"
+  ]
+}

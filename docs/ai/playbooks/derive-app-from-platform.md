@@ -71,7 +71,8 @@ AI 编排顺序：
 
 - 必选核心模块由 `docs/ai/module-registry.json` 定义
 - 可选业务模块当前包括：
-  - `software-project-management`
+  - `project-management`
+  - `project-repository-management`
   - `kanban-management`
   - `ticket-management`
 - 依赖关系也以 registry 为准，不要手工猜
