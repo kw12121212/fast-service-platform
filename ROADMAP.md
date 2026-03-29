@@ -42,14 +42,14 @@
 
 ### P1
 
-#### [ ] 2. 兼容性套件扩容
+#### [x] 2. 兼容性套件扩容
 
 - 方向：增加更多 manifest、失败样例、模块组合、空模块边界和冲突依赖样例。
 - 价值：高。能快速提高标准可信度，减少边界遗漏。
 - 风险：测试资产会变多，维护成本会增加。
 - 建议 change name：`expand-app-assembly-compatibility-fixtures`
 
-#### [ ] 3. 统一工具入口
+#### [x] 3. 统一工具入口
 
 - 方向：把分散的 `Node`、`Java`、`shell` 入口收敛成一致的仓库命令界面。
 - 价值：高。降低工具使用门槛，让文档和自动化入口更清晰。
@@ -93,8 +93,8 @@
 建议按下面顺序推进：
 
 1. [x] `define-derived-app-lifecycle-and-upgrade-contract`
-2. [ ] `expand-app-assembly-compatibility-fixtures`
-3. [ ] `unify-platform-tooling-entrypoints`
+2. [x] `expand-app-assembly-compatibility-fixtures`
+3. [x] `unify-platform-tooling-entrypoints`
 4. [ ] `add-ai-direct-assembly-and-verification-path`
 
 原因：
