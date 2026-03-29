@@ -8,6 +8,11 @@ import { fileURLToPath } from 'node:url'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 export const REPO_ROOT = path.resolve(SCRIPT_DIR, '..')
+const DERIVED_APP_LIFECYCLE_METADATA_PATH = 'docs/ai/derived-app-lifecycle.json'
+const DYNAMIC_GENERATED_DOCS = new Set([
+  'docs/ai/context.json',
+  DERIVED_APP_LIFECYCLE_METADATA_PATH
+])
 
 const ROUTE_MODULES = [
   {
@@ -353,6 +358,14 @@ export async function loadAssemblyContract(rootDir = REPO_ROOT) {
   return readJson(path.join(rootDir, 'docs', 'ai', 'app-assembly-contract.json'))
 }
 
+export async function loadDerivedAppLifecycleContract(rootDir = REPO_ROOT) {
+  return readJson(path.join(rootDir, 'docs', 'ai', 'derived-app-lifecycle-contract.json'))
+}
+
+export async function loadPlatformReleaseMetadata(rootDir = REPO_ROOT) {
+  return readJson(path.join(rootDir, 'docs', 'ai', 'platform-release.json'))
+}
+
 export async function loadGeneratedAppVerificationContract(rootDir = REPO_ROOT) {
   return readJson(path.join(rootDir, 'docs', 'ai', 'generated-app-verification-contract.json'))
 }
@@ -371,9 +384,7 @@ function getRequiredGeneratedFiles(contract) {
 
 function getGeneratedContractAssetPaths(contract) {
   return getRequiredGeneratedFiles(contract).filter(
-    (relativePath) =>
-      relativePath.startsWith('docs/ai/') &&
-      relativePath !== 'docs/ai/context.json'
+    (relativePath) => relativePath.startsWith('docs/ai/') && !DYNAMIC_GENERATED_DOCS.has(relativePath)
   )
 }
 
@@ -409,6 +420,16 @@ function getBackendTablesByModule(registry) {
 
 function getGeneratedAppCheckIds(verificationContract) {
   return new Set(verificationContract.checks ?? [])
+}
+
+function deriveProfileId(registry, selectedModules) {
+  const selectedSignature = JSON.stringify(selectedModules)
+  for (const [profileId, profile] of Object.entries(registry.profiles ?? {})) {
+    if (JSON.stringify(profile.modules ?? []) === selectedSignature) {
+      return profileId
+    }
+  }
+  return 'custom'
 }
 
 function resolveVerificationInputPath(targetDir, verificationContract, inputKey, issues) {
@@ -984,6 +1005,14 @@ Or through the repository-owned Java verifier:
 \`\`\`bash
 ./scripts/verify-derived-app-java.sh /absolute/path/to/${manifest.application.id}
 \`\`\`
+
+## Upgrade Evaluation
+
+Evaluate this derived application against the current platform release from the source repository:
+
+\`\`\`bash
+./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/${manifest.application.id}
+\`\`\`
 `
 }
 
@@ -995,6 +1024,7 @@ function buildAgentsFile() {
 - Read \`README.md\`
 - Read \`app-manifest.json\`
 - Read \`docs/ai/context.json\`
+- Read \`docs/ai/derived-app-lifecycle.json\`
 - Read \`docs/ai/module-registry.json\`
 - Run \`./scripts/verify-derived-app.sh\` before expanding the generated skeleton
 
@@ -1002,15 +1032,21 @@ function buildAgentsFile() {
 
 - This generated app is a derived skeleton from Fast Service Platform
 - Keep the selected module set in sync with \`app-manifest.json\`
+- Keep lifecycle metadata in sync with the generated module set and source platform release
 - Do not silently widen the dependency boundary
 `
 }
 
-function buildGeneratedContext(manifest, selectedModules, registry) {
+function buildGeneratedContext(manifest, selectedModules, registry, platformRelease) {
   return JSON.stringify(
     {
       schemaVersion: 'fsp-derived-app-context/v1',
-      sourcePlatform: 'Fast Service Platform',
+      sourcePlatform: {
+        id: platformRelease.platform.id,
+        name: platformRelease.platform.name,
+        releaseId: platformRelease.currentRelease.releaseId,
+        version: platformRelease.currentRelease.version
+      },
       application: manifest.application,
       selectedModules,
       requiredCoreModules: registry.modules
@@ -1020,6 +1056,9 @@ function buildGeneratedContext(manifest, selectedModules, registry) {
         manifest: 'app-manifest.json',
         moduleRegistry: 'docs/ai/module-registry.json',
         assemblyContract: 'docs/ai/app-assembly-contract.json',
+        derivedAppLifecycleContract: 'docs/ai/derived-app-lifecycle-contract.json',
+        derivedAppLifecycleMetadata: DERIVED_APP_LIFECYCLE_METADATA_PATH,
+        platformReleaseMetadata: 'docs/ai/platform-release.json',
         generatedAppVerificationContract: 'docs/ai/generated-app-verification-contract.json'
       },
       validation: {
@@ -1027,6 +1066,42 @@ function buildGeneratedContext(manifest, selectedModules, registry) {
         repositoryOwned: './scripts/verify-derived-app.sh <generated-app-dir>',
         referenceVerifier: 'node ./scripts/verify-derived-app.mjs <generated-app-dir>',
         compatibleVerifier: './scripts/verify-derived-app-java.sh <generated-app-dir>'
+      },
+      lifecycle: {
+        metadata: DERIVED_APP_LIFECYCLE_METADATA_PATH,
+        repositoryOwnedUpgradeEvaluation:
+          './scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>',
+        derivedProfile: deriveProfileId(registry, selectedModules)
+      }
+    },
+    null,
+    2
+  )
+}
+
+function buildDerivedAppLifecycle(manifest, selectedModules, registry, assemblyContract, verificationContract, lifecycleContract, platformRelease) {
+  return JSON.stringify(
+    {
+      schemaVersion: 'fsp-derived-app-lifecycle/v1',
+      contractVersion: lifecycleContract.schemaVersion,
+      application: manifest.application,
+      sourcePlatform: {
+        id: platformRelease.platform.id,
+        name: platformRelease.platform.name,
+        releaseId: platformRelease.currentRelease.releaseId,
+        version: platformRelease.currentRelease.version,
+        assemblyContractVersion: assemblyContract.schemaVersion,
+        generatedAppVerificationContractVersion: verificationContract.schemaVersion
+      },
+      selectedModules,
+      requiredCoreModules: registry.modules
+        .filter((module) => module.role === 'required-core')
+        .map((module) => module.id),
+      derivedProfile: deriveProfileId(registry, selectedModules),
+      upgradeEvaluation: {
+        repositoryOwnedEntrypoint:
+          lifecycleContract.upgradeEvaluation.repositoryOwnedEntrypoint,
+        platformReleaseMetadata: lifecycleContract.normativeAssets.platformReleaseMetadata
       }
     },
     null,
@@ -1046,10 +1121,28 @@ node "$ROOT_DIR/scripts/verify-derived-app.mjs" "$TARGET_DIR"
 }
 
 async function writeGeneratedApp(outputDir, manifest, registry, contract, selectedModules) {
+  const lifecycleContract = await loadDerivedAppLifecycleContract()
+  const platformRelease = await loadPlatformReleaseMetadata()
+  const verificationContract = await loadGeneratedAppVerificationContract()
   await writeFile(path.join(outputDir, 'README.md'), buildRootReadme(manifest, selectedModules))
   await writeFile(path.join(outputDir, 'AGENTS.md'), buildAgentsFile())
   await writeFile(path.join(outputDir, 'app-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
-  await writeFile(path.join(outputDir, 'docs/ai/context.json'), `${buildGeneratedContext(manifest, selectedModules, registry)}\n`)
+  await writeFile(
+    path.join(outputDir, DERIVED_APP_LIFECYCLE_METADATA_PATH),
+    `${buildDerivedAppLifecycle(
+      manifest,
+      selectedModules,
+      registry,
+      contract,
+      verificationContract,
+      lifecycleContract,
+      platformRelease
+    )}\n`
+  )
+  await writeFile(
+    path.join(outputDir, 'docs/ai/context.json'),
+    `${buildGeneratedContext(manifest, selectedModules, registry, platformRelease)}\n`
+  )
   await copyNormativeAssets(contract, outputDir)
   await writeFile(
     path.join(outputDir, 'backend/src/main/resources/sql/tables.sql'),
@@ -1347,6 +1440,134 @@ export async function verifyDerivedApp(targetDir) {
     selectedModules,
     contractVersion: verificationContract.schemaVersion,
     verifierId
+  }
+}
+
+function resolveNestedField(root, fieldPath) {
+  let current = root
+  for (const part of fieldPath.split('.')) {
+    current = current?.[part]
+  }
+  return current
+}
+
+export async function evaluateDerivedAppUpgrade(targetDir, rootDir = REPO_ROOT) {
+  const resolvedTargetDir = path.resolve(targetDir)
+  const resolvedRootDir = path.resolve(rootDir)
+  const issues = []
+  const lifecycleContract = await loadDerivedAppLifecycleContract(resolvedRootDir)
+  const platformRelease = await loadPlatformReleaseMetadata(resolvedRootDir)
+  const currentRegistry = await loadModuleRegistry(resolvedRootDir)
+
+  let lifecycleMetadata
+  let manifest
+  let context
+
+  for (const relativePath of lifecycleContract.upgradeEvaluation.requiredGeneratedInputs ?? []) {
+    try {
+      await readFile(path.join(resolvedTargetDir, relativePath), 'utf8')
+    } catch {
+      issues.push(`Missing upgrade evaluation input: ${relativePath}`)
+    }
+  }
+
+  if (issues.length > 0) {
+    return {
+      compatible: false,
+      issues,
+      sourcePlatformRelease: 'unavailable',
+      targetPlatformRelease: platformRelease.currentRelease.releaseId,
+      recommendedAction: platformRelease.upgradeSupport.recommendedIncompatibleAction
+    }
+  }
+
+  lifecycleMetadata = await readJson(
+    path.join(
+      resolvedTargetDir,
+      lifecycleContract.generatedOutput.lifecycleMetadata
+    )
+  )
+  manifest = await readJson(
+    path.join(
+      resolvedTargetDir,
+      lifecycleContract.generatedOutput.applicationManifest
+    )
+  )
+  context = await readJson(
+    path.join(
+      resolvedTargetDir,
+      lifecycleContract.generatedOutput.generatedContext
+    )
+  )
+
+  for (const fieldPath of lifecycleContract.requiredLifecycleFields ?? []) {
+    if (resolveNestedField(lifecycleMetadata, fieldPath) === undefined) {
+      issues.push(`Missing lifecycle metadata field: ${fieldPath}`)
+    }
+  }
+
+  const upgradeSupport = platformRelease.upgradeSupport ?? {}
+  const sourcePlatform = lifecycleMetadata.sourcePlatform ?? {}
+  const targetRelease = platformRelease.currentRelease?.releaseId ?? 'unavailable'
+  const sourceRelease = sourcePlatform.releaseId ?? 'unavailable'
+
+  if (
+    !(upgradeSupport.supportedSourcePlatformIds ?? []).includes(sourcePlatform.id)
+  ) {
+    issues.push(`Unsupported source platform id: ${sourcePlatform.id ?? 'unavailable'}`)
+  }
+
+  if (
+    !(upgradeSupport.supportedLifecycleMetadataVersions ?? []).includes(lifecycleMetadata.schemaVersion)
+  ) {
+    issues.push(`Unsupported lifecycle metadata version: ${lifecycleMetadata.schemaVersion ?? 'unavailable'}`)
+  }
+
+  if (
+    !(upgradeSupport.supportedLifecycleContractVersions ?? []).includes(lifecycleMetadata.contractVersion)
+  ) {
+    issues.push(`Unsupported lifecycle contract version: ${lifecycleMetadata.contractVersion ?? 'unavailable'}`)
+  }
+
+  if (
+    !(upgradeSupport.supportedAssemblyContractVersions ?? []).includes(
+      sourcePlatform.assemblyContractVersion
+    )
+  ) {
+    issues.push(
+      `Unsupported assembly contract version: ${sourcePlatform.assemblyContractVersion ?? 'unavailable'}`
+    )
+  }
+
+  if (JSON.stringify(lifecycleMetadata.selectedModules ?? []) !== JSON.stringify(manifest.modules ?? [])) {
+    issues.push('Lifecycle metadata selectedModules do not match app-manifest.json')
+  }
+
+  if (JSON.stringify(context.selectedModules ?? []) !== JSON.stringify(manifest.modules ?? [])) {
+    issues.push('docs/ai/context.json selectedModules do not match app-manifest.json')
+  }
+
+  const knownModules = new Set(currentRegistry.modules?.map((module) => module.id) ?? [])
+  for (const moduleId of lifecycleMetadata.selectedModules ?? []) {
+    if (!knownModules.has(moduleId)) {
+      issues.push(`Selected module is unknown to target platform release: ${moduleId}`)
+    }
+  }
+
+  const compatible = issues.length === 0
+  const recommendedAction =
+    sourceRelease === targetRelease
+      ? 'already-on-target-platform-release'
+      : compatible
+        ? upgradeSupport.recommendedCompatibleAction
+        : upgradeSupport.recommendedIncompatibleAction
+
+  return {
+    compatible,
+    issues,
+    sourcePlatformRelease: sourceRelease,
+    targetPlatformRelease: targetRelease,
+    recommendedAction
   }
 }
 

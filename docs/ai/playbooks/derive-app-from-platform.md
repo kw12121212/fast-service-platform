@@ -13,8 +13,12 @@
 3. `docs/ai/schemas/app-manifest.schema.json`
 4. `docs/ai/module-registry.json`
 5. `docs/ai/generated-app-verification-contract.json`
-6. `docs/ai/compatibility/app-assembly-suite.json`
-7. 一个示例 manifest：
+6. `docs/ai/derived-app-lifecycle-contract.json`
+7. `docs/ai/platform-release.json`
+8. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
+9. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
+10. `docs/ai/compatibility/app-assembly-suite.json`
+11. 一个示例 manifest：
    - `docs/ai/manifests/default-baseline-app.json`
    - `docs/ai/manifests/core-admin-app.json`
 
@@ -22,6 +26,7 @@
 
 - 规范事实来源是 `contract + schema + compatibility suite`
 - generated app 的验证标准事实来源是 `generated-app verification contract`
+- generated app 的生命周期和升级评估事实来源是 `derived-app lifecycle contract + platform release metadata`
 - `scripts/scaffold-derived-app.mjs` 是当前参考实现，不是唯一合法实现
 - `tools/java-assembly-cli/` 是仓库内的第二个兼容实现
 - `scripts/verify-derived-app.mjs` 是当前 reference verifier，不是 generated-app verification contract 本身
@@ -91,6 +96,16 @@ node scripts/scaffold-derived-app.mjs \
 ```bash
 ./scripts/verify-derived-app.sh
 ```
+
+## 派生后如何准备升级
+
+如果你要判断一个已派生应用是否还能对齐当前平台发布，优先走 repository-owned evaluator：
+
+```bash
+./scripts/evaluate-derived-app-upgrade.sh ../core-admin-console
+```
+
+这个入口读取生成应用自带的 lifecycle metadata，并用当前平台的 `docs/ai/platform-release.json` 做兼容性判断。
 
 ## 常见坑
 

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "fsp-derived-app-lifecycle-contract/v1",
+  "normativeAssets": {
+    "lifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
+    "lifecycleContractSchema": "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
+    "lifecycleMetadataSchema": "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
+    "platformReleaseMetadata": "docs/ai/platform-release.json",
+    "moduleRegistry": "docs/ai/module-registry.json"
+  },
+  "generatedOutput": {
+    "lifecycleMetadata": "docs/ai/derived-app-lifecycle.json",
+    "generatedContext": "docs/ai/context.json",
+    "applicationManifest": "app-manifest.json"
+  },
+  "requiredLifecycleFields": [
+    "schemaVersion",
+    "contractVersion",
+    "application.id",
+    "application.name",
+    "application.packagePrefix",
+    "sourcePlatform.id",
+    "sourcePlatform.name",
+    "sourcePlatform.releaseId",
+    "sourcePlatform.version",
+    "sourcePlatform.assemblyContractVersion",
+    "sourcePlatform.generatedAppVerificationContractVersion",
+    "selectedModules",
+    "requiredCoreModules"
+  ],
+  "upgradeEvaluation": {
+    "repositoryOwnedEntrypoint": "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>",
+    "requiredGeneratedInputs": [
+      "app-manifest.json",
+      "docs/ai/context.json",
+      "docs/ai/derived-app-lifecycle.json"
+    ],
+    "compatibilitySignals": [
+      "matching-source-platform-id",
+      "supported-lifecycle-metadata-version",
+      "supported-lifecycle-contract-version",
+      "supported-assembly-contract-version",
+      "selected-modules-known-to-target-platform"
+    ],
+    "resultShape": {
+      "compatible": "boolean",
+      "issues": "string[]",
+      "sourcePlatformRelease": "string",
+      "targetPlatformRelease": "string",
+      "recommendedAction": "string"
+    }
+  }
+}

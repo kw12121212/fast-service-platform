@@ -40,10 +40,14 @@ ai_indexes:
   schemas:
     - docs/ai/schemas/app-manifest.schema.json
     - docs/ai/schemas/module-registry.schema.json
+    - docs/ai/schemas/derived-app-lifecycle-contract.schema.json
+    - docs/ai/schemas/derived-app-lifecycle-metadata.schema.json
     - docs/ai/schemas/generated-app-verification-contract.schema.json
     - docs/ai/schemas/app-assembly-compatibility-suite.schema.json
   module_registry: docs/ai/module-registry.json
   assembly_contract: docs/ai/app-assembly-contract.json
+  derived_app_lifecycle_contract: docs/ai/derived-app-lifecycle-contract.json
+  platform_release_metadata: docs/ai/platform-release.json
   generated_app_verification_contract: docs/ai/generated-app-verification-contract.json
   compatibility_suite: docs/ai/compatibility/app-assembly-suite.json
   example_manifests:
@@ -104,6 +108,7 @@ workspaces:
 high_frequency_change_playbooks:
   - docs/ai/playbooks/backend-domain-change.md
   - docs/ai/playbooks/derive-app-from-platform.md
+  - docs/ai/playbooks/evaluate-derived-app-upgrade.md
   - docs/ai/playbooks/frontend-admin-change.md
   - docs/ai/playbooks/integration-demo-and-smoke.md
 
@@ -111,6 +116,7 @@ validation_entrypoints:
   assembly: ./scripts/verify-app-assembly.sh
   assembly_compatibility: node ./scripts/verify-app-assembly-compatibility.mjs
   assembly_java_scaffold: ./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>
+  derived_app_upgrade_evaluation: ./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>
   generated_app_reference_verifier: node ./scripts/verify-derived-app.mjs <generated-app-dir>
   generated_app_java_verifier: ./scripts/verify-derived-app-java.sh <generated-app-dir>
   backend: ./scripts/verify-backend.sh

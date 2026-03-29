@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
+  "title": "Fast Service Platform Derived App Lifecycle Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "normativeAssets",
+    "generatedOutput",
+    "requiredLifecycleFields",
+    "upgradeEvaluation"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-derived-app-lifecycle-contract/v1"
+    },
+    "normativeAssets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lifecycleContract",
+        "lifecycleContractSchema",
+        "lifecycleMetadataSchema",
+        "platformReleaseMetadata",
+        "moduleRegistry"
+      ],
+      "properties": {
+        "lifecycleContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lifecycleContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lifecycleMetadataSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "moduleRegistry": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "generatedOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lifecycleMetadata",
+        "generatedContext",
+        "applicationManifest"
+      ],
+      "properties": {
+        "lifecycleMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generatedContext": {
+          "type": "string",
+          "minLength": 1
+        },
+        "applicationManifest": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "requiredLifecycleFields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "upgradeEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryOwnedEntrypoint",
+        "requiredGeneratedInputs",
+        "compatibilitySignals",
+        "resultShape"
+      ],
+      "properties": {
+        "repositoryOwnedEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requiredGeneratedInputs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "compatibilitySignals": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "resultShape": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "compatible",
+            "issues",
+            "sourcePlatformRelease",
+            "targetPlatformRelease",
+            "recommendedAction"
+          ],
+          "properties": {
+            "compatible": {
+              "const": "boolean"
+            },
+            "issues": {
+              "const": "string[]"
+            },
+            "sourcePlatformRelease": {
+              "const": "string"
+            },
+            "targetPlatformRelease": {
+              "const": "string"
+            },
+            "recommendedAction": {
+              "const": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

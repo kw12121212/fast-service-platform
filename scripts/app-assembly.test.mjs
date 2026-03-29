@@ -1,16 +1,19 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 
 import {
   REPO_ROOT,
+  evaluateDerivedAppUpgrade,
   loadAssemblyContract,
   loadCompatibilitySuite,
+  loadDerivedAppLifecycleContract,
   loadGeneratedAppVerificationContract,
   loadModuleRegistry,
+  loadPlatformReleaseMetadata,
   readJson,
   runCompatibilitySuite,
   scaffoldDerivedApp,
@@ -77,6 +80,8 @@ test('compatibility suite fixtures match module registry profiles', async () => 
 
 test('generated app verification contract is exposed as a normative asset', async () => {
   const assemblyContract = await loadAssemblyContract()
+  const lifecycleContract = await loadDerivedAppLifecycleContract()
+  const platformRelease = await loadPlatformReleaseMetadata()
   const verificationContract = await loadGeneratedAppVerificationContract()
 
   assert.equal(
@@ -87,6 +92,16 @@ test('generated app verification contract is exposed as a normative asset', asyn
     assemblyContract.normativeAssets.generatedAppVerificationContractSchema,
     'docs/ai/schemas/generated-app-verification-contract.schema.json'
   )
+  assert.equal(
+    assemblyContract.normativeAssets.derivedAppLifecycleContract,
+    'docs/ai/derived-app-lifecycle-contract.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.platformReleaseMetadata,
+    'docs/ai/platform-release.json'
+  )
+  assert.equal(lifecycleContract.schemaVersion, 'fsp-derived-app-lifecycle-contract/v1')
+  assert.equal(platformRelease.currentRelease.lifecycleContractVersion, lifecycleContract.schemaVersion)
   assert.deepEqual(verificationContract.checks, [
     'required-files-present',
     'verification-inputs-present',
@@ -144,6 +159,35 @@ test('generated output includes contract schemas required by the standardized in
   }
 })
 
+test('generated output includes lifecycle metadata and upgrade guidance', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-lifecycle-output-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const lifecycle = await readJson(path.join(outputDir, 'docs/ai/derived-app-lifecycle.json'))
+    const context = await readJson(path.join(outputDir, 'docs/ai/context.json'))
+    const manifest = await readJson(path.join(outputDir, 'app-manifest.json'))
+    const readme = await readFile(path.join(outputDir, 'README.md'), 'utf8')
+
+    assert.equal(lifecycle.schemaVersion, 'fsp-derived-app-lifecycle/v1')
+    assert.equal(lifecycle.contractVersion, 'fsp-derived-app-lifecycle-contract/v1')
+    assert.equal(lifecycle.sourcePlatform.id, 'fast-service-platform')
+    assert.deepEqual(lifecycle.selectedModules, manifest.modules)
+    assert.equal(context.lifecycle.metadata, 'docs/ai/derived-app-lifecycle.json')
+    assert.equal(
+      context.lifecycle.repositoryOwnedUpgradeEvaluation,
+      './scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>'
+    )
+    assert.ok(readme.includes('./scripts/evaluate-derived-app-upgrade.sh'))
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
 test('verifyDerivedApp returns standardized verifier metadata', async () => {
   const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-verifier-metadata-'))
 
@@ -189,6 +233,60 @@ test('java generated-app verifier validates a generated app through repository-o
       'user-management',
       'role-permission-management'
     ])
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('evaluateDerivedAppUpgrade returns compatibility metadata for a generated app', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-upgrade-eval-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const result = spawnSync(
+      path.join(REPO_ROOT, 'scripts/evaluate-derived-app-upgrade.sh'),
+      [outputDir],
+      {
+        cwd: REPO_ROOT,
+        encoding: 'utf8'
+      }
+    )
+
+    assert.equal(result.status, 0, result.stderr || result.stdout)
+    const payload = JSON.parse(result.stdout.trim().split('\n').at(-1))
+    assert.equal(payload.compatible, true)
+    assert.equal(payload.sourcePlatformRelease, 'fast-service-platform/0.1.0-dev')
+    assert.equal(payload.targetPlatformRelease, 'fast-service-platform/0.1.0-dev')
+    assert.equal(payload.recommendedAction, 'already-on-target-platform-release')
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('evaluateDerivedAppUpgrade reports unsupported source platform ids', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-upgrade-eval-negative-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const lifecyclePath = path.join(outputDir, 'docs/ai/derived-app-lifecycle.json')
+    const lifecycle = await readJson(lifecyclePath)
+    lifecycle.sourcePlatform.id = 'external-platform'
+    await writeFile(lifecyclePath, `${JSON.stringify(lifecycle, null, 2)}\n`)
+
+    const result = await evaluateDerivedAppUpgrade(outputDir)
+    assert.equal(result.compatible, false)
+    assert.ok(
+      result.issues.some((issue) => issue.includes('Unsupported source platform id')),
+      result.issues.join('\n')
+    )
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }

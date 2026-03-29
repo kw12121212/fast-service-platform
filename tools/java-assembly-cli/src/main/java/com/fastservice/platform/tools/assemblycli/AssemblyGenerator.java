@@ -20,6 +20,7 @@ final class AssemblyGenerator {
 
     private static final Pattern APP_ID_PATTERN = Pattern.compile("^[a-z0-9]+(?:-[a-z0-9]+)*$");
     private static final Pattern PACKAGE_PREFIX_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$");
+    private static final String DERIVED_APP_LIFECYCLE_METADATA_PATH = "docs/ai/derived-app-lifecycle.json";
 
     private static final List<String> FRONTEND_SHARED_PATHS = List.of(
             "frontend/bun.lock",
@@ -323,6 +324,14 @@ final class AssemblyGenerator {
         return SimpleJson.parseObject(Files.readString(repoRoot.resolve("docs/ai/app-assembly-contract.json")));
     }
 
+    Map<String, Object> loadDerivedAppLifecycleContract() throws IOException {
+        return SimpleJson.parseObject(Files.readString(repoRoot.resolve("docs/ai/derived-app-lifecycle-contract.json")));
+    }
+
+    Map<String, Object> loadPlatformReleaseMetadata() throws IOException {
+        return SimpleJson.parseObject(Files.readString(repoRoot.resolve("docs/ai/platform-release.json")));
+    }
+
     ManifestSelection validateManifest(Map<String, Object> manifest, Map<String, Object> registry, Map<String, Object> contract) {
         require("fsp-app-manifest/v1".equals(asString(manifest.get("schemaVersion"))), "Unsupported manifest schemaVersion");
         Map<String, Object> application = asMap(manifest.get("application"), "Manifest must include application");
@@ -423,10 +432,23 @@ final class AssemblyGenerator {
 
     private void writeGeneratedApp(Path outputDir, String rawManifest, Map<String, Object> manifest, Map<String, Object> registry,
             Map<String, Object> contract, List<String> selectedModules) throws IOException {
+        Map<String, Object> lifecycleContract = loadDerivedAppLifecycleContract();
+        Map<String, Object> platformRelease = loadPlatformReleaseMetadata();
+        Map<String, Object> verificationContract = SimpleJson.parseObject(
+                Files.readString(repoRoot.resolve("docs/ai/generated-app-verification-contract.json")));
         writeString(outputDir.resolve("README.md"), buildRootReadme(applicationName(manifest), applicationId(manifest), selectedModules));
         writeString(outputDir.resolve("AGENTS.md"), buildAgentsFile());
         writeString(outputDir.resolve("app-manifest.json"), ensureTrailingNewline(rawManifest));
-        writeString(outputDir.resolve("docs/ai/context.json"), ensureTrailingNewline(buildGeneratedContext(manifest, selectedModules, registry)));
+        writeString(outputDir.resolve(DERIVED_APP_LIFECYCLE_METADATA_PATH), ensureTrailingNewline(buildDerivedAppLifecycle(
+                manifest,
+                selectedModules,
+                registry,
+                contract,
+                verificationContract,
+                lifecycleContract,
+                platformRelease)));
+        writeString(outputDir.resolve("docs/ai/context.json"),
+                ensureTrailingNewline(buildGeneratedContext(manifest, selectedModules, registry, platformRelease)));
         copyNormativeAssets(contract, outputDir);
 
         writeString(outputDir.resolve("backend/src/main/resources/sql/tables.sql"), buildTablesSql(selectedModules));
@@ -447,7 +469,9 @@ final class AssemblyGenerator {
 
     private void copyNormativeAssets(Map<String, Object> contract, Path outputDir) throws IOException {
         for (String relativePath : requiredGeneratedFiles(contract)) {
-            if (relativePath.startsWith("docs/ai/") && !"docs/ai/context.json".equals(relativePath)) {
+            if (relativePath.startsWith("docs/ai/")
+                    && !"docs/ai/context.json".equals(relativePath)
+                    && !DERIVED_APP_LIFECYCLE_METADATA_PATH.equals(relativePath)) {
                 copyRelativePath(relativePath, outputDir);
             }
         }
@@ -488,7 +512,10 @@ final class AssemblyGenerator {
                 .append("Or from the source platform repository:\n\n")
                 .append("```bash\n./scripts/verify-derived-app.sh /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("Or through the repository-owned Java verifier:\n\n")
-                .append("```bash\n./scripts/verify-derived-app-java.sh /absolute/path/to/").append(appId).append("\n```\n");
+                .append("```bash\n./scripts/verify-derived-app-java.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("## Upgrade Evaluation\n\n")
+                .append("Evaluate this derived application against the current platform release from the source repository:\n\n")
+                .append("```bash\n./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/").append(appId).append("\n```\n");
         return builder.toString();
     }
 
@@ -501,6 +528,7 @@ final class AssemblyGenerator {
                 - Read `README.md`
                 - Read `app-manifest.json`
                 - Read `docs/ai/context.json`
+                - Read `docs/ai/derived-app-lifecycle.json`
                 - Read `docs/ai/module-registry.json`
                 - Run `./scripts/verify-derived-app.sh` before expanding the generated skeleton
 
@@ -508,14 +536,23 @@ final class AssemblyGenerator {
 
                 - This generated app is a derived skeleton from Fast Service Platform
                 - Keep the selected module set in sync with `app-manifest.json`
+                - Keep lifecycle metadata in sync with the generated module set and source platform release
                 - Do not silently widen the dependency boundary
                 """;
     }
 
-    private String buildGeneratedContext(Map<String, Object> manifest, List<String> selectedModules, Map<String, Object> registry) {
+    private String buildGeneratedContext(Map<String, Object> manifest, List<String> selectedModules, Map<String, Object> registry,
+            Map<String, Object> platformRelease) {
         Map<String, Object> context = new LinkedHashMap<>();
         context.put("schemaVersion", "fsp-derived-app-context/v1");
-        context.put("sourcePlatform", "Fast Service Platform");
+        Map<String, Object> sourcePlatform = new LinkedHashMap<>();
+        sourcePlatform.put("id", asString(asMap(platformRelease.get("platform"), "platform release must include platform").get("id")));
+        sourcePlatform.put("name", asString(asMap(platformRelease.get("platform"), "platform release must include platform").get("name")));
+        sourcePlatform.put("releaseId",
+                asString(asMap(platformRelease.get("currentRelease"), "platform release must include currentRelease").get("releaseId")));
+        sourcePlatform.put("version",
+                asString(asMap(platformRelease.get("currentRelease"), "platform release must include currentRelease").get("version")));
+        context.put("sourcePlatform", sourcePlatform);
         context.put("application", manifest.get("application"));
         context.put("selectedModules", selectedModules);
         context.put("requiredCoreModules", requiredCoreModuleIds(registry));
@@ -524,6 +561,9 @@ final class AssemblyGenerator {
         contractInputs.put("manifest", "app-manifest.json");
         contractInputs.put("moduleRegistry", "docs/ai/module-registry.json");
         contractInputs.put("assemblyContract", "docs/ai/app-assembly-contract.json");
+        contractInputs.put("derivedAppLifecycleContract", "docs/ai/derived-app-lifecycle-contract.json");
+        contractInputs.put("derivedAppLifecycleMetadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
+        contractInputs.put("platformReleaseMetadata", "docs/ai/platform-release.json");
         contractInputs.put("generatedAppVerificationContract", "docs/ai/generated-app-verification-contract.json");
         context.put("contractInputs", contractInputs);
 
@@ -534,7 +574,47 @@ final class AssemblyGenerator {
         validation.put("compatibleVerifier", "./scripts/verify-derived-app-java.sh <generated-app-dir>");
         context.put("validation", validation);
 
+        Map<String, Object> lifecycle = new LinkedHashMap<>();
+        lifecycle.put("metadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
+        lifecycle.put("repositoryOwnedUpgradeEvaluation", "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>");
+        lifecycle.put("derivedProfile", deriveProfileId(registry, selectedModules));
+        context.put("lifecycle", lifecycle);
+
         return SimpleJson.stringify(context);
+    }
+
+    private String buildDerivedAppLifecycle(Map<String, Object> manifest, List<String> selectedModules, Map<String, Object> registry,
+            Map<String, Object> assemblyContract, Map<String, Object> verificationContract, Map<String, Object> lifecycleContract,
+            Map<String, Object> platformRelease) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("schemaVersion", "fsp-derived-app-lifecycle/v1");
+        metadata.put("contractVersion", asString(lifecycleContract.get("schemaVersion")));
+        metadata.put("application", manifest.get("application"));
+
+        Map<String, Object> sourcePlatform = new LinkedHashMap<>();
+        sourcePlatform.put("id", asString(asMap(platformRelease.get("platform"), "platform release must include platform").get("id")));
+        sourcePlatform.put("name", asString(asMap(platformRelease.get("platform"), "platform release must include platform").get("name")));
+        sourcePlatform.put("releaseId",
+                asString(asMap(platformRelease.get("currentRelease"), "platform release must include currentRelease").get("releaseId")));
+        sourcePlatform.put("version",
+                asString(asMap(platformRelease.get("currentRelease"), "platform release must include currentRelease").get("version")));
+        sourcePlatform.put("assemblyContractVersion", asString(assemblyContract.get("schemaVersion")));
+        sourcePlatform.put("generatedAppVerificationContractVersion", asString(verificationContract.get("schemaVersion")));
+        metadata.put("sourcePlatform", sourcePlatform);
+        metadata.put("selectedModules", selectedModules);
+        metadata.put("requiredCoreModules", requiredCoreModuleIds(registry));
+        metadata.put("derivedProfile", deriveProfileId(registry, selectedModules));
+
+        Map<String, Object> upgradeEvaluation = new LinkedHashMap<>();
+        upgradeEvaluation.put("repositoryOwnedEntrypoint",
+                asString(asMap(lifecycleContract.get("upgradeEvaluation"), "lifecycle contract must include upgradeEvaluation")
+                        .get("repositoryOwnedEntrypoint")));
+        upgradeEvaluation.put("platformReleaseMetadata",
+                asString(asMap(lifecycleContract.get("normativeAssets"), "lifecycle contract must include normativeAssets")
+                        .get("platformReleaseMetadata")));
+        metadata.put("upgradeEvaluation", upgradeEvaluation);
+
+        return SimpleJson.stringify(metadata);
     }
 
     private String buildLocalVerifyScript() {
@@ -799,6 +879,23 @@ final class AssemblyGenerator {
             }
         }
         return routeModules;
+    }
+
+    private String deriveProfileId(Map<String, Object> registry, List<String> selectedModules) {
+        Object profilesValue = registry.get("profiles");
+        if (!(profilesValue instanceof Map<?, ?> profiles)) {
+            return "custom";
+        }
+
+        for (Map.Entry<?, ?> entry : profiles.entrySet()) {
+            String profileId = String.valueOf(entry.getKey());
+            Map<String, Object> profile = asMap(entry.getValue(), "Profile must be an object");
+            if (selectedModules.equals(asOptionalStringList(profile.get("modules")))) {
+                return profileId;
+            }
+        }
+
+        return "custom";
     }
 
     private String applicationId(Map<String, Object> manifest) {

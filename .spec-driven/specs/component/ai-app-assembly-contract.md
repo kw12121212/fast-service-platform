@@ -18,7 +18,7 @@ The system MUST provide a machine-readable module registry that exposes the avai
 - THEN it can identify available modules, their classification, and any declared dependency expectations needed for assembly
 
 ### Requirement: Repository Generates An Independent Application Skeleton
-The system MUST provide a repository-owned scaffolding and assembly path that generates an independent monolithic application skeleton from the application manifest and selected modules.
+The system MUST provide a repository-owned scaffolding and assembly path that generates an independent monolithic application skeleton from the application manifest and selected modules, and that generated output MUST expose the machine-readable lifecycle metadata needed for later upgrade evaluation.
 
 #### Scenario: A contributor scaffolds a new application from the platform
 - GIVEN a contributor has provided a valid application-assembly input
@@ -26,8 +26,13 @@ The system MUST provide a repository-owned scaffolding and assembly path that ge
 - THEN the repository generates an independent application skeleton outside the current baseline runtime workspace
 - AND the generated output reflects the selected modules instead of always copying the full default application
 
+#### Scenario: A contributor inspects the generated application's lifecycle metadata
+- GIVEN a contributor has generated an independent application from the platform
+- WHEN they inspect the generated output assets
+- THEN they can identify the machine-readable metadata that declares which platform release or lifecycle contract the derived application was produced from
+
 ### Requirement: Scaffolded Output Includes Repository-Approved Validation Guidance
-The system MUST define scaffolded-application validation through a language-neutral verification contract that may be satisfied by multiple compatible verifier implementations rather than only through a single verifier script.
+The system MUST define scaffolded-application validation and lifecycle guidance through language-neutral contracts that may be satisfied by multiple compatible implementations rather than only through a single verifier script.
 
 #### Scenario: A contributor validates a generated application
 - GIVEN a contributor has generated a new application from the platform
@@ -39,6 +44,11 @@ The system MUST define scaffolded-application validation through a language-neut
 - GIVEN a contributor has generated a new application from the platform
 - WHEN they choose a compatible verifier implementation that targets the same verification contract
 - THEN they can validate the generated application without depending on the internal structure of the Node verifier
+
+#### Scenario: A contributor prepares to upgrade a generated application
+- GIVEN a contributor has generated an application from the platform
+- WHEN they consult the generated output and repository documentation
+- THEN they can identify the repository-approved lifecycle or upgrade entrypoints for evaluating that derived application's compatibility with later platform releases
 
 ### Requirement: App Assembly Contract Is Implementation-Independent
 The system MUST define its app assembly contract independently from any single implementation language or script structure.

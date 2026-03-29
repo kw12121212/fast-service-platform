@@ -1,0 +1,62 @@
+# Playbook: Evaluate Derived App Upgrade
+
+适用场景：
+
+- 已经有一个从平台派生出去的独立应用骨架
+- 需要判断它是否仍然兼容当前平台发布
+- 需要为后续升级准备输入，而不是直接自动 merge 或 rebase
+
+## 先读什么
+
+1. `docs/ai/context.yaml`
+2. `docs/ai/derived-app-lifecycle-contract.json`
+3. `docs/ai/platform-release.json`
+4. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
+5. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
+6. 派生应用里的：
+   - `app-manifest.json`
+   - `docs/ai/context.json`
+   - `docs/ai/derived-app-lifecycle.json`
+
+优先级：
+
+- 规范事实来源是 lifecycle contract、platform release metadata 和生成应用自带的 lifecycle metadata
+- 这一步的目标是“评估升级兼容性”，不是直接做自动代码合并
+- repository-owned evaluator 是默认入口，不要把某个实现内部逻辑当成规范
+
+## 标准评估路径
+
+从平台仓库根目录执行：
+
+```bash
+./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/derived-app
+```
+
+或者直接执行 Node 入口：
+
+```bash
+node scripts/evaluate-derived-app-upgrade.mjs /absolute/path/to/derived-app
+```
+
+## evaluator 会检查什么
+
+- 派生应用是否暴露必需的 lifecycle metadata
+- lifecycle metadata 是否声明了平台来源和 contract 版本
+- 当前平台 release 是否支持该 lifecycle metadata 版本
+- 当前平台 release 是否仍支持派生应用声明的 assembly contract 版本
+- 派生应用选择的模块是否仍然是当前平台已知模块
+
+## 输出怎么理解
+
+- `compatible: true`
+  表示该派生应用满足当前仓库定义的升级输入和兼容性前提，可以进入后续人工升级或差异审查。
+- `compatible: false`
+  表示至少有一项 contract 级输入不满足，通常需要先补 lifecycle metadata、手工迁移，或重新派生。
+- `recommendedAction`
+  表示仓库建议的下一步动作，不等于自动执行升级。
+
+## 当前边界
+
+- 这条路径只负责评估和准备升级输入
+- 它不自动 merge、rebase 或解决冲突
+- 它不承诺不同平台版本之间一定存在无损自动迁移
