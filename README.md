@@ -157,6 +157,7 @@ V1 平台基线至少必须提供：
 ├── .spec-driven/     # 需求、变更提案、任务和规格
 ├── backend/          # Java 25 + Lealone-Platform 后端核心
 ├── frontend/         # Vite + React + shadcn/ui + Tailwind CSS 管理后台
+├── ROADMAP.md        # 平台后续方向与建议优先级
 ├── scripts/          # 本地安装与辅助脚本
 ├── vendor/           # Lealone 与 Lealone-Platform 源码依赖
 ├── AGENTS.md         # AI/代理协作入口
@@ -169,6 +170,7 @@ V1 平台基线至少必须提供：
 - 非平凡改动先进入 `.spec-driven/`
 - 主规则先看 `AGENTS.md`
 - 技术背景先看 `RTK.md`
+- 后续方向优先看 `ROADMAP.md`
 - 当前主规格索引见 `.spec-driven/specs/INDEX.md`
 - AI 接手仓库的统一入口见 `docs/ai/quickstart.md`
 - 机器可读上下文见 `docs/ai/context.yaml`
