@@ -64,9 +64,13 @@ public class AppAssemblyCliTest {
             assertFalse(servicesSql.contains("kanban_service"));
 
             String context = Files.readString(outputDir.resolve("docs/ai/context.json"));
+            String readme = Files.readString(outputDir.resolve("README.md"));
             assertTrue(context.contains("\"selectedModules\":[\"admin-shell\",\"user-management\",\"role-permission-management\"]"));
             assertTrue(context.contains("\"platformReleaseHistory\":\"docs/ai/platform-release-history.json\""));
+            assertTrue(context.contains("\"aiToolOrchestrationContract\":\"docs/ai/ai-tool-orchestration-contract.json\""));
             assertTrue(context.contains("\"repositoryOwned\":\"./scripts/platform-tool.sh generated-app verify <generated-app-dir>\""));
+            assertTrue(readme.contains("## AI Tooling"));
+            assertTrue(readme.contains("docs/ai/ai-tool-orchestration-contract.json"));
             assertTrue(Files.exists(outputDir.resolve("scripts/app-assembly-lib.mjs")));
             assertTrue(Files.exists(outputDir.resolve("scripts/verify-derived-app.mjs")));
             assertTrue(Files.exists(outputDir.resolve("scripts/verify-derived-app.sh")));

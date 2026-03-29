@@ -11,6 +11,11 @@
     "backendServices": "backend/src/main/resources/sql/services.sql",
     "backendTables": "backend/src/main/resources/sql/tables.sql"
   },
+  "aiToolingGuidance": {
+    "defaultRole": "tool-orchestrator",
+    "orchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
+    "preferredEntrypoint": "./scripts/platform-tool.sh generated-app verify <generated-app-dir>"
+  },
   "checks": [
     "required-files-present",
     "verification-inputs-present",

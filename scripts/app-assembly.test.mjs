@@ -113,7 +113,18 @@ test('generated app verification contract is exposed as a normative asset', asyn
   const platformHistory = await loadPlatformReleaseHistory()
   const platformRelease = await loadPlatformReleaseMetadata()
   const verificationContract = await loadGeneratedAppVerificationContract()
+  const orchestrationContract = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/ai-tool-orchestration-contract.json')
+  )
 
+  assert.equal(
+    assemblyContract.normativeAssets.aiToolOrchestrationContract,
+    'docs/ai/ai-tool-orchestration-contract.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.aiToolOrchestrationContractSchema,
+    'docs/ai/schemas/ai-tool-orchestration-contract.schema.json'
+  )
   assert.equal(
     assemblyContract.normativeAssets.generatedAppVerificationContract,
     'docs/ai/generated-app-verification-contract.json'
@@ -157,6 +168,19 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(platformAdvisory.schemaVersion, 'fsp-platform-release-advisory/v1')
   assert.equal(platformRelease.currentRelease.releaseAdvisory, 'docs/ai/platform-release-advisory.json')
   assert.equal(platformRelease.currentRelease.releaseHistory, 'docs/ai/platform-release-history.json')
+  assert.equal(orchestrationContract.aiRole, 'tool-orchestrator')
+  assert.equal(orchestrationContract.defaultFacade, './scripts/platform-tool.sh <group> <command> [...]')
+  assert.deepEqual(
+    orchestrationContract.supportedWorkflowCategories.map((workflow) => workflow.id),
+    [
+      'assembly',
+      'generated-app-verification',
+      'upgrade-target-selection',
+      'release-advisory',
+      'upgrade-evaluation',
+      'upgrade-execution'
+    ]
+  )
   assert.deepEqual(verificationContract.checks, [
     'required-files-present',
     'verification-inputs-present',
@@ -168,6 +192,18 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.deepEqual(
     verificationContract.compatibleVerifiers.map((verifier) => verifier.id),
     ['java-generated-app-verifier']
+  )
+  assert.equal(
+    verificationContract.aiToolingGuidance.orchestrationContract,
+    'docs/ai/ai-tool-orchestration-contract.json'
+  )
+  assert.equal(
+    lifecycleContract.normativeAssets.aiToolOrchestrationContract,
+    'docs/ai/ai-tool-orchestration-contract.json'
+  )
+  assert.equal(
+    executionContract.normativeAssets.aiToolOrchestrationContract,
+    'docs/ai/ai-tool-orchestration-contract.json'
   )
 })
 
@@ -320,6 +356,10 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
       './scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]'
     )
     assert.equal(
+      context.contractInputs.aiToolOrchestrationContract,
+      'docs/ai/ai-tool-orchestration-contract.json'
+    )
+    assert.equal(
       context.validation.repositoryOwned,
       './scripts/platform-tool.sh generated-app verify <generated-app-dir>'
     )
@@ -343,6 +383,9 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
       lifecycle.upgradeEvaluation.upgradeExecutionContract,
       'docs/ai/derived-app-upgrade-execution-contract.json'
     )
+    assert.ok(readme.includes('## AI Tooling'))
+    assert.ok(readme.includes('docs/ai/ai-tool-orchestration-contract.json'))
+    assert.ok(readme.includes('./scripts/platform-tool.sh'))
     assert.ok(readme.includes('./scripts/platform-tool.sh generated-app verify'))
     assert.ok(readme.includes('./scripts/platform-tool.sh generated-app verify-java'))
     assert.ok(readme.includes('./scripts/platform-tool.sh upgrade evaluate'))

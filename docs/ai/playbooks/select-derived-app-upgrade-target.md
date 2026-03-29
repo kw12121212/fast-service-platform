@@ -9,17 +9,19 @@
 ## 先读什么
 
 1. `docs/ai/context.yaml`
-2. `docs/ai/platform-release.json`
-3. `docs/ai/platform-release-history.json`
-4. `docs/ai/platform-release-advisory.json`
-5. `docs/ai/schemas/platform-release-history.schema.json`
-6. 派生应用里的：
+2. `docs/ai/ai-tool-orchestration-contract.json`
+3. `docs/ai/platform-release.json`
+4. `docs/ai/platform-release-history.json`
+5. `docs/ai/platform-release-advisory.json`
+6. `docs/ai/schemas/platform-release-history.schema.json`
+7. 派生应用里的：
    - `docs/ai/derived-app-lifecycle.json`
    - `docs/ai/context.json`
 
 优先级：
 
 - `platform-release-history.json` 是 release lineage 和 supported upgrade path 的事实来源
+- AI 默认先读 orchestration contract，再走 `platform-tool.sh upgrade targets`
 - `platform-release-advisory.json` 解释某个 target release 的 observable delta 和 follow-up checks
 - 这一步的目标是“选择仓库支持的 target release”，不是直接执行升级
 

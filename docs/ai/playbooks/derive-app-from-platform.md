@@ -9,22 +9,24 @@
 ## 先读什么
 
 1. `docs/ai/context.yaml`
-2. `docs/ai/app-assembly-contract.json`
-3. `docs/ai/schemas/app-manifest.schema.json`
-4. `docs/ai/module-registry.json`
-5. `docs/ai/generated-app-verification-contract.json`
-6. `docs/ai/derived-app-lifecycle-contract.json`
-7. `docs/ai/platform-release.json`
-8. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
-9. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
-10. `docs/ai/compatibility/app-assembly-suite.json`
-11. 一个示例 manifest：
+2. `docs/ai/ai-tool-orchestration-contract.json`
+3. `docs/ai/app-assembly-contract.json`
+4. `docs/ai/schemas/app-manifest.schema.json`
+5. `docs/ai/module-registry.json`
+6. `docs/ai/generated-app-verification-contract.json`
+7. `docs/ai/derived-app-lifecycle-contract.json`
+8. `docs/ai/platform-release.json`
+9. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
+10. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
+11. `docs/ai/compatibility/app-assembly-suite.json`
+12. 一个示例 manifest：
    - `docs/ai/manifests/default-baseline-app.json`
    - `docs/ai/manifests/core-admin-app.json`
 
 优先级：
 
 - 规范事实来源是 `contract + schema + compatibility suite`
+- AI 默认先读 orchestration contract，再决定走 `platform-tool.sh` 的哪个 workflow
 - generated app 的验证标准事实来源是 `generated-app verification contract`
 - generated app 的生命周期和升级评估事实来源是 `derived-app lifecycle contract + platform release metadata`
 - `scripts/scaffold-derived-app.mjs` 是当前参考实现，不是唯一合法实现
@@ -33,6 +35,15 @@
 - `tools/java-generated-app-verifier/` 是仓库内的 Java compatible verifier
 
 ## 标准派生路径
+
+AI 编排顺序：
+
+1. 读 `docs/ai/ai-tool-orchestration-contract.json`
+2. 读 assembly contract 和 module registry
+3. 通过 `platform-tool.sh assembly scaffold ...` 执行装配
+4. 装配完成后立刻执行 `platform-tool.sh generated-app verify ...`
+
+只有在 orchestration contract 明确允许时，才回退到具体 wrapper 或实现专用路径。
 
 从仓库根目录执行：
 

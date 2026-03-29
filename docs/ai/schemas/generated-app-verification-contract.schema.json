@@ -7,6 +7,7 @@
   "required": [
     "schemaVersion",
     "normativeInputs",
+    "aiToolingGuidance",
     "checks",
     "resultShape",
     "referenceVerifiers"
@@ -63,6 +64,28 @@
           "minLength": 1
         },
         "backendTables": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "aiToolingGuidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultRole",
+        "orchestrationContract",
+        "preferredEntrypoint"
+      ],
+      "properties": {
+        "defaultRole": {
+          "const": "tool-orchestrator"
+        },
+        "orchestrationContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preferredEntrypoint": {
           "type": "string",
           "minLength": 1
         }
@@ -128,6 +151,7 @@
         "id",
         "type",
         "language",
+        "defaultFacade",
         "entrypoint",
         "wrapper"
       ],
@@ -140,6 +164,10 @@
           "const": "reference-verifier"
         },
         "language": {
+          "type": "string",
+          "minLength": 1
+        },
+        "defaultFacade": {
           "type": "string",
           "minLength": 1
         },
@@ -162,6 +190,7 @@
         "language",
         "workspace",
         "mainClass",
+        "defaultFacade",
         "wrapper"
       ],
       "properties": {
@@ -181,6 +210,10 @@
           "minLength": 1
         },
         "mainClass": {
+          "type": "string",
+          "minLength": 1
+        },
+        "defaultFacade": {
           "type": "string",
           "minLength": 1
         },

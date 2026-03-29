@@ -4,6 +4,8 @@
   "dryRunDefault": true,
   "normativeAssets": {
     "executionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
+    "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
+    "aiToolOrchestrationContractSchema": "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
     "executionContractSchema": "docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
     "assemblyContract": "docs/ai/app-assembly-contract.json",
     "lifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
@@ -37,5 +39,15 @@
     "./scripts/platform-tool.sh generated-app verify <generated-app-dir>",
     "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>",
     "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]"
-  ]
+  ],
+  "aiToolingGuidance": {
+    "defaultRole": "tool-orchestrator",
+    "preferredSequence": [
+      "./scripts/platform-tool.sh upgrade targets [generated-app-dir]",
+      "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]",
+      "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>",
+      "./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]"
+    ],
+    "orchestrationContract": "docs/ai/ai-tool-orchestration-contract.json"
+  }
 }

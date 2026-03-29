@@ -506,7 +506,12 @@ final class AssemblyGenerator {
         for (String moduleId : selectedModules) {
             builder.append("- `").append(moduleId).append("`\n");
         }
-        builder.append("\n## Validation\n\n")
+        builder.append("\n## AI Tooling\n\n")
+                .append("When an AI agent works with this generated application against the source platform repository:\n\n")
+                .append("- Read `docs/ai/ai-tool-orchestration-contract.json` from the source platform repository first\n")
+                .append("- Prefer `./scripts/platform-tool.sh` in the source platform repository before using workflow-specific wrappers\n")
+                .append("- Stop and report blockers when the repository-owned façade and allowed fallback wrappers are both unavailable\n")
+                .append("\n## Validation\n\n")
                 .append("Run inside this generated application:\n\n")
                 .append("```bash\n./scripts/verify-derived-app.sh\n```\n\n")
                 .append("Or from the source platform repository:\n\n")
@@ -568,6 +573,7 @@ final class AssemblyGenerator {
         Map<String, Object> contractInputs = new LinkedHashMap<>();
         contractInputs.put("manifest", "app-manifest.json");
         contractInputs.put("moduleRegistry", "docs/ai/module-registry.json");
+        contractInputs.put("aiToolOrchestrationContract", "docs/ai/ai-tool-orchestration-contract.json");
         contractInputs.put("assemblyContract", "docs/ai/app-assembly-contract.json");
         contractInputs.put("derivedAppLifecycleContract", "docs/ai/derived-app-lifecycle-contract.json");
         contractInputs.put("derivedAppUpgradeExecutionContract", "docs/ai/derived-app-upgrade-execution-contract.json");

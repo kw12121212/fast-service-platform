@@ -9,16 +9,26 @@
 ## 先读什么
 
 1. `docs/ai/context.yaml`
-2. `docs/ai/derived-app-upgrade-execution-contract.json`
-3. `docs/ai/derived-app-lifecycle-contract.json`
-4. `docs/ai/platform-release.json`
-5. `docs/ai/platform-release-history.json`
-6. `docs/ai/platform-release-advisory.json`
-7. `docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json`
-8. 派生应用里的：
+2. `docs/ai/ai-tool-orchestration-contract.json`
+3. `docs/ai/derived-app-upgrade-execution-contract.json`
+4. `docs/ai/derived-app-lifecycle-contract.json`
+5. `docs/ai/platform-release.json`
+6. `docs/ai/platform-release-history.json`
+7. `docs/ai/platform-release-advisory.json`
+8. `docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json`
+9. 派生应用里的：
    - `app-manifest.json`
    - `docs/ai/context.json`
    - `docs/ai/derived-app-lifecycle.json`
+
+AI 编排顺序：
+
+1. `./scripts/platform-tool.sh upgrade targets /absolute/path/to/derived-app`
+2. `./scripts/platform-tool.sh upgrade advisory /absolute/path/to/derived-app`
+3. `./scripts/platform-tool.sh upgrade evaluate /absolute/path/to/derived-app`
+4. `./scripts/platform-tool.sh upgrade execute /absolute/path/to/derived-app`
+
+不要跳过前 3 步直接执行 upgrade apply。
 
 如果还没确认 target release，先执行：
 

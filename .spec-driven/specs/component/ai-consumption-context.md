@@ -39,9 +39,10 @@ The system MUST provide machine-readable indexes that distinguish repository ent
 - AND it can distinguish those facts from the application assembly inputs, outputs, and validation expectations
 
 ### Requirement: AI Can Target The Standard Without Depending On A Single Runtime Implementation
-The system MUST let AI contributors consume the assembly standard through normative machine-readable assets and compatibility expectations rather than depending on the internal structure of a single implementation runtime.
+The system MUST let AI contributors consume the platform standard through normative machine-readable assets, orchestration guidance, and compatibility expectations rather than depending on the internal structure of a single implementation runtime.
 
-#### Scenario: An AI contributor plans a compatible assembly implementation
-- GIVEN an AI contributor wants to implement or validate app assembly behavior
-- WHEN it reads the repository-owned assembly assets
-- THEN it can target the platform standard without reverse-engineering the current Node implementation
+#### Scenario: An AI contributor plans a tool-driven platform workflow
+- GIVEN an AI contributor wants to perform assembly, verification, advisory, lifecycle, or upgrade work against the platform
+- WHEN it reads the repository-owned AI consumption assets
+- THEN it can identify the normative contracts and the repository-owned tooling sequence it is expected to use
+- AND it does not need to reverse-engineer a direct replacement implementation from one runtime

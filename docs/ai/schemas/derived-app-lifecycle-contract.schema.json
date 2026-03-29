@@ -9,7 +9,8 @@
     "normativeAssets",
     "generatedOutput",
     "requiredLifecycleFields",
-    "upgradeEvaluation"
+    "upgradeEvaluation",
+    "aiToolingGuidance"
   ],
   "properties": {
     "schemaVersion": {
@@ -20,6 +21,8 @@
       "additionalProperties": false,
       "required": [
         "lifecycleContract",
+        "aiToolOrchestrationContract",
+        "aiToolOrchestrationContractSchema",
         "lifecycleContractSchema",
         "lifecycleMetadataSchema",
         "upgradeExecutionContract",
@@ -33,6 +36,14 @@
       ],
       "properties": {
         "lifecycleContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aiToolOrchestrationContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aiToolOrchestrationContractSchema": {
           "type": "string",
           "minLength": 1
         },
@@ -184,6 +195,33 @@
               "const": "string"
             }
           }
+        }
+      }
+    },
+    "aiToolingGuidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultRole",
+        "preferredSequence",
+        "orchestrationContract"
+      ],
+      "properties": {
+        "defaultRole": {
+          "const": "tool-orchestrator"
+        },
+        "preferredSequence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "orchestrationContract": {
+          "type": "string",
+          "minLength": 1
         }
       }
     }

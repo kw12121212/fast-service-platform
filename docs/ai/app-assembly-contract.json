@@ -10,6 +10,8 @@
   ],
   "normativeAssets": {
     "assemblyContract": "docs/ai/app-assembly-contract.json",
+    "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
+    "aiToolOrchestrationContractSchema": "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
     "manifestSchema": "docs/ai/schemas/app-manifest.schema.json",
     "moduleRegistry": "docs/ai/module-registry.json",
     "moduleRegistrySchema": "docs/ai/schemas/module-registry.schema.json",
@@ -39,6 +41,7 @@
       "AGENTS.md",
       "app-manifest.json",
       "docs/ai/context.json",
+      "docs/ai/ai-tool-orchestration-contract.json",
       "docs/ai/derived-app-lifecycle.json",
       "docs/ai/derived-app-lifecycle-contract.json",
       "docs/ai/derived-app-upgrade-execution-contract.json",
@@ -59,6 +62,7 @@
       "docs/ai/compatibility/fixtures/project-admin.manifest.json",
       "docs/ai/compatibility/fixtures/project-kanban.manifest.json",
       "docs/ai/schemas/app-manifest.schema.json",
+      "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
       "docs/ai/schemas/module-registry.schema.json",
       "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
       "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
@@ -85,12 +89,14 @@
       "docs/ai/context.yaml"
     ],
     "moduleRegistry": "docs/ai/module-registry.json",
+    "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
     "derivedAppLifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
     "derivedAppUpgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
     "platformReleaseMetadata": "docs/ai/platform-release.json",
     "platformReleaseHistory": "docs/ai/platform-release-history.json",
     "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
     "schemas": [
+      "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
       "docs/ai/schemas/app-manifest.schema.json",
       "docs/ai/schemas/module-registry.schema.json",
       "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
@@ -143,6 +149,11 @@
     "listPlatformUpgradeTargets": "./scripts/platform-tool.sh upgrade targets [generated-app-dir]",
     "showPlatformReleaseAdvisory": "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]",
     "executeDerivedAppUpgrade": "./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]"
+  },
+  "aiToolingGuidance": {
+    "defaultRole": "tool-orchestrator",
+    "preferredWorkflow": "use-repository-owned-platform-tooling-before-direct-reimplementation",
+    "orchestrationContract": "docs/ai/ai-tool-orchestration-contract.json"
   },
   "legacyCommands": {
     "scaffoldNode": "node scripts/scaffold-derived-app.mjs --manifest <manifest-path> --output <absolute-output-dir>",

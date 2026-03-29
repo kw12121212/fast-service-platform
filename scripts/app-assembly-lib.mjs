@@ -998,6 +998,14 @@ This application skeleton was derived from Fast Service Platform.
 
 ${selectedModules.map((moduleId) => `- \`${moduleId}\``).join('\n')}
 
+## AI Tooling
+
+When an AI agent works with this generated application against the source platform repository:
+
+- Read \`docs/ai/ai-tool-orchestration-contract.json\` from the source platform repository first
+- Prefer \`./scripts/platform-tool.sh\` in the source platform repository before using workflow-specific wrappers
+- Stop and report blockers when the repository-owned façade and allowed fallback wrappers are both unavailable
+
 ## Validation
 
 Run inside this generated application:
@@ -1091,6 +1099,7 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
       contractInputs: {
         manifest: 'app-manifest.json',
         moduleRegistry: 'docs/ai/module-registry.json',
+        aiToolOrchestrationContract: 'docs/ai/ai-tool-orchestration-contract.json',
         assemblyContract: 'docs/ai/app-assembly-contract.json',
         derivedAppLifecycleContract: 'docs/ai/derived-app-lifecycle-contract.json',
         derivedAppUpgradeExecutionContract: 'docs/ai/derived-app-upgrade-execution-contract.json',

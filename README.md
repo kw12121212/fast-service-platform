@@ -181,6 +181,7 @@ V1 平台基线至少必须提供：
 
 - `docs/ai/quickstart.md`
 - `docs/ai/context.yaml`
+- `docs/ai/ai-tool-orchestration-contract.json`
 - `docs/ai/schemas/`
 - `docs/ai/module-registry.json`
 - `docs/ai/app-assembly-contract.json`
@@ -198,6 +199,7 @@ V1 平台基线至少必须提供：
 说明：
 
 - `contract + schemas + compatibility suite` 是语言无关的装配标准
+- `docs/ai/ai-tool-orchestration-contract.json` 规定 AI 应优先编排仓库工具，而不是直接重做已支持 workflow
 - `scripts/platform-tool.sh` 是统一的 repository-owned tooling façade
 - `scripts/scaffold-derived-app.mjs` 是当前的 `Node` 参考实现
 

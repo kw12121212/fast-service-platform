@@ -38,6 +38,7 @@ ai_indexes:
     - docs/ai/quickstart.md
     - docs/ai/context.yaml
   schemas:
+    - docs/ai/schemas/ai-tool-orchestration-contract.schema.json
     - docs/ai/schemas/app-manifest.schema.json
     - docs/ai/schemas/module-registry.schema.json
     - docs/ai/schemas/derived-app-lifecycle-contract.schema.json
@@ -48,6 +49,7 @@ ai_indexes:
     - docs/ai/schemas/generated-app-verification-contract.schema.json
     - docs/ai/schemas/app-assembly-compatibility-suite.schema.json
   module_registry: docs/ai/module-registry.json
+  ai_tool_orchestration_contract: docs/ai/ai-tool-orchestration-contract.json
   assembly_contract: docs/ai/app-assembly-contract.json
   derived_app_lifecycle_contract: docs/ai/derived-app-lifecycle-contract.json
   derived_app_upgrade_execution_contract: docs/ai/derived-app-upgrade-execution-contract.json
@@ -112,6 +114,7 @@ workspaces:
       tests: tools/java-generated-app-verifier/src/test/java/com/fastservice/platform/tools/generatedappverifier
 
 high_frequency_change_playbooks:
+  - docs/ai/playbooks/ai-tool-orchestration.md
   - docs/ai/playbooks/backend-domain-change.md
   - docs/ai/playbooks/derive-app-from-platform.md
   - docs/ai/playbooks/evaluate-derived-app-upgrade.md

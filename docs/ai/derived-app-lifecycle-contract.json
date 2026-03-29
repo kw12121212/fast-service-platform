@@ -2,6 +2,8 @@
   "schemaVersion": "fsp-derived-app-lifecycle-contract/v1",
   "normativeAssets": {
     "lifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
+    "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
+    "aiToolOrchestrationContractSchema": "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
     "lifecycleContractSchema": "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
     "lifecycleMetadataSchema": "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
     "upgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
@@ -67,5 +69,14 @@
       "targetPlatformRelease": "string",
       "recommendedAction": "string"
     }
+  },
+  "aiToolingGuidance": {
+    "defaultRole": "tool-orchestrator",
+    "preferredSequence": [
+      "./scripts/platform-tool.sh upgrade targets [generated-app-dir]",
+      "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]",
+      "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>"
+    ],
+    "orchestrationContract": "docs/ai/ai-tool-orchestration-contract.json"
   }
 }
