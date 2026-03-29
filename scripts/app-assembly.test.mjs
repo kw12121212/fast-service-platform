@@ -305,23 +305,31 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
     )
     assert.equal(
       context.lifecycle.repositoryOwnedUpgradeEvaluation,
-      './scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>'
+      './scripts/platform-tool.sh upgrade evaluate <generated-app-dir>'
     )
     assert.equal(
       context.lifecycle.repositoryOwnedUpgradeTargetSelection,
-      './scripts/list-platform-upgrade-targets.sh [generated-app-dir]'
+      './scripts/platform-tool.sh upgrade targets [generated-app-dir]'
     )
     assert.equal(
       context.lifecycle.repositoryOwnedReleaseAdvisory,
-      './scripts/show-platform-release-advisory.sh [generated-app-dir]'
+      './scripts/platform-tool.sh upgrade advisory [generated-app-dir]'
     )
     assert.equal(
       context.lifecycle.repositoryOwnedUpgradeExecution,
-      './scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]'
+      './scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]'
+    )
+    assert.equal(
+      context.validation.repositoryOwned,
+      './scripts/platform-tool.sh generated-app verify <generated-app-dir>'
     )
     assert.equal(
       lifecycle.upgradeEvaluation.repositoryOwnedTargetSelectionEntrypoint,
-      './scripts/list-platform-upgrade-targets.sh [generated-app-dir]'
+      './scripts/platform-tool.sh upgrade targets [generated-app-dir]'
+    )
+    assert.equal(
+      lifecycle.upgradeEvaluation.repositoryOwnedEntrypoint,
+      './scripts/platform-tool.sh upgrade evaluate <generated-app-dir>'
     )
     assert.equal(
       lifecycle.upgradeEvaluation.platformReleaseHistory,
@@ -335,10 +343,12 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
       lifecycle.upgradeEvaluation.upgradeExecutionContract,
       'docs/ai/derived-app-upgrade-execution-contract.json'
     )
-    assert.ok(readme.includes('./scripts/evaluate-derived-app-upgrade.sh'))
-    assert.ok(readme.includes('./scripts/list-platform-upgrade-targets.sh'))
-    assert.ok(readme.includes('./scripts/show-platform-release-advisory.sh'))
-    assert.ok(readme.includes('./scripts/execute-derived-app-upgrade.sh'))
+    assert.ok(readme.includes('./scripts/platform-tool.sh generated-app verify'))
+    assert.ok(readme.includes('./scripts/platform-tool.sh generated-app verify-java'))
+    assert.ok(readme.includes('./scripts/platform-tool.sh upgrade evaluate'))
+    assert.ok(readme.includes('./scripts/platform-tool.sh upgrade targets'))
+    assert.ok(readme.includes('./scripts/platform-tool.sh upgrade advisory'))
+    assert.ok(readme.includes('./scripts/platform-tool.sh upgrade execute'))
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }
@@ -470,6 +480,68 @@ test('platform upgrade target wrapper returns machine-readable lineage output', 
       (release) => release.releaseId === 'fast-service-platform/0.0.0-bootstrap'
     )
   )
+})
+
+test('platform-tool façade verifies a generated app through the unified entrypoint', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-platform-tool-verify-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const result = spawnSync(
+      path.join(REPO_ROOT, 'scripts/platform-tool.sh'),
+      ['generated-app', 'verify', outputDir],
+      {
+        cwd: REPO_ROOT,
+        encoding: 'utf8'
+      }
+    )
+
+    assert.equal(result.status, 0, result.stderr || result.stdout)
+    const payload = JSON.parse(result.stdout.trim())
+    assert.equal(payload.verified, true)
+    assert.equal(payload.verifierId, 'node-generated-app-verifier')
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('platform-tool façade exposes assembly compatibility verification', () => {
+  const result = spawnSync(
+    path.join(REPO_ROOT, 'scripts/platform-tool.sh'),
+    ['assembly', 'compatibility'],
+    {
+      cwd: REPO_ROOT,
+      encoding: 'utf8'
+    }
+  )
+
+  assert.equal(result.status, 0, result.stderr || result.stdout)
+  const payload = JSON.parse(result.stdout.trim())
+  assert.equal(payload.verified, true)
+  assert.deepEqual(
+    payload.implementations.map((implementation) => implementation.id),
+    ['node-scaffolder', 'java-cli']
+  )
+})
+
+test('platform-tool façade exposes upgrade target lookup', () => {
+  const result = spawnSync(
+    path.join(REPO_ROOT, 'scripts/platform-tool.sh'),
+    ['upgrade', 'targets'],
+    {
+      cwd: REPO_ROOT,
+      encoding: 'utf8'
+    }
+  )
+
+  assert.equal(result.status, 0, result.stderr || result.stdout)
+  const payload = JSON.parse(result.stdout.trim().split('\n').at(-1))
+  assert.equal(payload.currentReleaseId, 'fast-service-platform/0.1.0-dev')
+  assert.ok(Array.isArray(payload.recognizedReleases))
 })
 
 test('evaluateDerivedAppUpgrade reports unsupported source platform ids', async () => {

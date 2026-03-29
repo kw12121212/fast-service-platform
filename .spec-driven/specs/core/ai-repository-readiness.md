@@ -14,7 +14,7 @@ The repository MUST provide an AI-oriented quickstart that identifies required r
 - THEN it can find the derivation workflow, the relevant machine-readable indexes, and the validation entrypoints for generated output
 
 ### Requirement: Repository Provides Machine-Readable AI Context
-The repository MUST provide a machine-readable AI context manifest that exposes the current stack baseline, required guidance files, workspace boundaries, verification commands, hard repository constraints, the machine-readable assets used for application derivation, the lifecycle / upgrade assets needed to evaluate existing derived applications, the advisory assets needed to explain platform release deltas, the release-history / lineage assets needed to select supported upgrade targets, and the execution assets needed to plan or apply derived-app upgrades.
+The repository MUST provide a machine-readable AI context manifest that exposes the current stack baseline, required guidance files, workspace boundaries, verification commands, hard repository constraints, the machine-readable assets used for application derivation, the lifecycle / upgrade assets needed to evaluate existing derived applications, the advisory assets needed to explain platform release deltas, the release-history / lineage assets needed to select supported upgrade targets, the execution assets needed to plan or apply derived-app upgrades, and the unified repository-owned tooling façade that serves as the default invocation surface for those workflows.
 
 #### Scenario: A tool-driven agent loads repository context
 - GIVEN an AI agent can consume structured repository metadata
@@ -40,6 +40,11 @@ The repository MUST provide a machine-readable AI context manifest that exposes 
 - GIVEN an AI agent needs to choose a valid upgrade target for a derived application
 - WHEN it reads the machine-readable AI context asset
 - THEN it can identify the release-history / lineage contract, relevant schemas, playbooks, and repository-owned target-selection entrypoints without inferring them from prose alone
+
+#### Scenario: A tool-driven agent loads unified tooling context
+- GIVEN an AI agent needs to invoke repository-owned assembly or lifecycle tooling
+- WHEN it reads the machine-readable AI context asset
+- THEN it can identify the unified façade entrypoint and its role as the default invocation surface before falling back to more specific wrappers
 
 ### Requirement: Repository Provides High-Frequency Change Playbooks
 The repository MUST provide repository-owned playbooks for the current high-frequency change scenarios, including derived-application lifecycle, release advisory, release-history / lineage lookup, upgrade evaluation, and upgrade execution, so contributors can follow repeatable extension patterns instead of reconstructing them from scattered source files.

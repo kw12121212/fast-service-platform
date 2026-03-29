@@ -37,15 +37,15 @@
 从仓库根目录执行：
 
 ```bash
-node scripts/scaffold-derived-app.mjs \
-  --manifest docs/ai/manifests/core-admin-app.json \
-  --output ../core-admin-console
+./scripts/platform-tool.sh assembly scaffold node \
+  docs/ai/manifests/core-admin-app.json \
+  ../core-admin-console
 ```
 
 或者执行 Java CLI 兼容实现：
 
 ```bash
-./scripts/scaffold-derived-app-java.sh \
+./scripts/platform-tool.sh assembly scaffold java \
   docs/ai/manifests/core-admin-app.json \
   ../core-admin-console
 ```
@@ -70,7 +70,7 @@ node scripts/scaffold-derived-app.mjs \
 在仓库里验证装配系统本身：
 
 ```bash
-./scripts/verify-app-assembly.sh
+./scripts/platform-tool.sh assembly verify
 ```
 
 如果你要验证某个实现是否符合平台标准，优先看 compatibility suite，而不是看它是否和当前 Node 脚本有相同内部结构。
@@ -79,13 +79,13 @@ node scripts/scaffold-derived-app.mjs \
 验证某个已生成应用骨架：
 
 ```bash
-./scripts/verify-derived-app.sh ../core-admin-console
+./scripts/platform-tool.sh generated-app verify ../core-admin-console
 ```
 
 或者用 Java verifier：
 
 ```bash
-./scripts/verify-derived-app-java.sh ../core-admin-console
+./scripts/platform-tool.sh generated-app verify-java ../core-admin-console
 ```
 
 这些路径都应该满足 `docs/ai/generated-app-verification-contract.json`，
@@ -102,7 +102,7 @@ node scripts/scaffold-derived-app.mjs \
 如果你要判断一个已派生应用是否还能对齐当前平台发布，优先走 repository-owned evaluator：
 
 ```bash
-./scripts/evaluate-derived-app-upgrade.sh ../core-admin-console
+./scripts/platform-tool.sh upgrade evaluate ../core-admin-console
 ```
 
 这个入口读取生成应用自带的 lifecycle metadata，并用当前平台的 `docs/ai/platform-release.json` 做兼容性判断。

@@ -187,6 +187,7 @@ V1 平台基线至少必须提供：
 - `docs/ai/compatibility/app-assembly-suite.json`
 - `docs/ai/playbooks/`
 - `docs/ai/troubleshooting.md`
+- `scripts/platform-tool.sh`
 - `scripts/scaffold-derived-app.mjs`
 - `scripts/verify-app-assembly-compatibility.mjs`
 - `scripts/verify-app-assembly.sh`
@@ -197,6 +198,7 @@ V1 平台基线至少必须提供：
 说明：
 
 - `contract + schemas + compatibility suite` 是语言无关的装配标准
+- `scripts/platform-tool.sh` 是统一的 repository-owned tooling façade
 - `scripts/scaffold-derived-app.mjs` 是当前的 `Node` 参考实现
 
 ## 当前状态

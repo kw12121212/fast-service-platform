@@ -45,6 +45,6 @@
       "fast-service-platform/0.1.0-dev"
     ],
     "defaultTargetReleaseId": "fast-service-platform/0.1.0-dev",
-    "upgradeTargetSelectionEntrypoint": "./scripts/list-platform-upgrade-targets.sh [generated-app-dir]"
+    "upgradeTargetSelectionEntrypoint": "./scripts/platform-tool.sh upgrade targets [generated-app-dir]"
   }
 }

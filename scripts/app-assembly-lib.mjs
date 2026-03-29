@@ -1009,13 +1009,13 @@ Run inside this generated application:
 Or from the source platform repository:
 
 \`\`\`bash
-./scripts/verify-derived-app.sh /absolute/path/to/${manifest.application.id}
+./scripts/platform-tool.sh generated-app verify /absolute/path/to/${manifest.application.id}
 \`\`\`
 
-Or through the repository-owned Java verifier:
+Or through the repository-owned Java verifier path:
 
 \`\`\`bash
-./scripts/verify-derived-app-java.sh /absolute/path/to/${manifest.application.id}
+./scripts/platform-tool.sh generated-app verify-java /absolute/path/to/${manifest.application.id}
 \`\`\`
 
 ## Upgrade Evaluation
@@ -1023,31 +1023,31 @@ Or through the repository-owned Java verifier:
 Evaluate this derived application against the current platform release from the source repository:
 
 \`\`\`bash
-./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/${manifest.application.id}
+./scripts/platform-tool.sh upgrade evaluate /absolute/path/to/${manifest.application.id}
 \`\`\`
 
 Read the current platform release advisory from the source repository:
 
 \`\`\`bash
-./scripts/show-platform-release-advisory.sh /absolute/path/to/${manifest.application.id}
+./scripts/platform-tool.sh upgrade advisory /absolute/path/to/${manifest.application.id}
 \`\`\`
 
 Inspect the repository-supported upgrade targets for this derived application:
 
 \`\`\`bash
-./scripts/list-platform-upgrade-targets.sh /absolute/path/to/${manifest.application.id}
+./scripts/platform-tool.sh upgrade targets /absolute/path/to/${manifest.application.id}
 \`\`\`
 
 Preview the repository-owned upgrade plan:
 
 \`\`\`bash
-./scripts/execute-derived-app-upgrade.sh /absolute/path/to/${manifest.application.id}
+./scripts/platform-tool.sh upgrade execute /absolute/path/to/${manifest.application.id}
 \`\`\`
 
 Apply the supported repository-owned upgrade actions:
 
 \`\`\`bash
-./scripts/execute-derived-app-upgrade.sh /absolute/path/to/${manifest.application.id} --apply
+./scripts/platform-tool.sh upgrade execute /absolute/path/to/${manifest.application.id} --apply
 \`\`\`
 `
 }
@@ -1102,20 +1102,20 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
       },
       validation: {
         local: './scripts/verify-derived-app.sh',
-        repositoryOwned: './scripts/verify-derived-app.sh <generated-app-dir>',
-        referenceVerifier: 'node ./scripts/verify-derived-app.mjs <generated-app-dir>',
-        compatibleVerifier: './scripts/verify-derived-app-java.sh <generated-app-dir>'
+        repositoryOwned: './scripts/platform-tool.sh generated-app verify <generated-app-dir>',
+        referenceVerifier: './scripts/platform-tool.sh generated-app verify-reference <generated-app-dir>',
+        compatibleVerifier: './scripts/platform-tool.sh generated-app verify-java <generated-app-dir>'
       },
       lifecycle: {
         metadata: DERIVED_APP_LIFECYCLE_METADATA_PATH,
         repositoryOwnedUpgradeEvaluation:
-          './scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>',
+          './scripts/platform-tool.sh upgrade evaluate <generated-app-dir>',
         repositoryOwnedUpgradeTargetSelection:
-          './scripts/list-platform-upgrade-targets.sh [generated-app-dir]',
+          './scripts/platform-tool.sh upgrade targets [generated-app-dir]',
         repositoryOwnedReleaseAdvisory:
-          './scripts/show-platform-release-advisory.sh [generated-app-dir]',
+          './scripts/platform-tool.sh upgrade advisory [generated-app-dir]',
         repositoryOwnedUpgradeExecution:
-          './scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]',
+          './scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]',
         derivedProfile: deriveProfileId(registry, selectedModules)
       }
     },
@@ -1759,6 +1759,7 @@ function getManagedUpgradeAssetPaths(assemblyContract) {
     (relativePath) =>
       relativePath.startsWith('docs/ai/') ||
       relativePath === 'scripts/app-assembly-lib.mjs' ||
+      relativePath === 'scripts/platform-tool.sh' ||
       relativePath === 'scripts/verify-derived-app.mjs' ||
       relativePath === 'scripts/verify-derived-app.sh'
   )
@@ -1804,6 +1805,11 @@ async function buildDerivedAppManagedAssetMap(targetDir, rootDir = REPO_ROOT) {
 
     if (relativePath === 'scripts/verify-derived-app.sh') {
       managedAssets.set(relativePath, buildLocalVerifyScript())
+      continue
+    }
+
+    if (relativePath === 'scripts/platform-tool.sh') {
+      managedAssets.set(relativePath, await readFile(path.join(resolvedRootDir, relativePath), 'utf8'))
       continue
     }
 

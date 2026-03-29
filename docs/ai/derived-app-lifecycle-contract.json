@@ -42,10 +42,10 @@
     "upgradeEvaluation.upgradeExecutionContract"
   ],
   "upgradeEvaluation": {
-    "repositoryOwnedEntrypoint": "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>",
-    "repositoryOwnedTargetSelectionEntrypoint": "./scripts/list-platform-upgrade-targets.sh [generated-app-dir]",
-    "repositoryOwnedAdvisoryEntrypoint": "./scripts/show-platform-release-advisory.sh [generated-app-dir]",
-    "repositoryOwnedExecutionEntrypoint": "./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]",
+    "repositoryOwnedEntrypoint": "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>",
+    "repositoryOwnedTargetSelectionEntrypoint": "./scripts/platform-tool.sh upgrade targets [generated-app-dir]",
+    "repositoryOwnedAdvisoryEntrypoint": "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]",
+    "repositoryOwnedExecutionEntrypoint": "./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]",
     "requiredGeneratedInputs": [
       "app-manifest.json",
       "docs/ai/context.json",

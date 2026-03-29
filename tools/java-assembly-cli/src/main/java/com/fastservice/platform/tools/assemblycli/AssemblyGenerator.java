@@ -510,20 +510,20 @@ final class AssemblyGenerator {
                 .append("Run inside this generated application:\n\n")
                 .append("```bash\n./scripts/verify-derived-app.sh\n```\n\n")
                 .append("Or from the source platform repository:\n\n")
-                .append("```bash\n./scripts/verify-derived-app.sh /absolute/path/to/").append(appId).append("\n```\n\n")
-                .append("Or through the repository-owned Java verifier:\n\n")
-                .append("```bash\n./scripts/verify-derived-app-java.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("```bash\n./scripts/platform-tool.sh generated-app verify /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("Or through the repository-owned Java verifier path:\n\n")
+                .append("```bash\n./scripts/platform-tool.sh generated-app verify-java /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("## Upgrade Evaluation\n\n")
                 .append("Evaluate this derived application against the current platform release from the source repository:\n\n")
-                .append("```bash\n./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("```bash\n./scripts/platform-tool.sh upgrade evaluate /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("Read the current platform release advisory from the source repository:\n\n")
-                .append("```bash\n./scripts/show-platform-release-advisory.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("```bash\n./scripts/platform-tool.sh upgrade advisory /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("Inspect the repository-supported upgrade targets for this derived application:\n\n")
-                .append("```bash\n./scripts/list-platform-upgrade-targets.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("```bash\n./scripts/platform-tool.sh upgrade targets /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("Preview the repository-owned upgrade plan:\n\n")
-                .append("```bash\n./scripts/execute-derived-app-upgrade.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("```bash\n./scripts/platform-tool.sh upgrade execute /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("Apply the supported repository-owned upgrade actions:\n\n")
-                .append("```bash\n./scripts/execute-derived-app-upgrade.sh /absolute/path/to/").append(appId).append(" --apply\n```\n");
+                .append("```bash\n./scripts/platform-tool.sh upgrade execute /absolute/path/to/").append(appId).append(" --apply\n```\n");
         return builder.toString();
     }
 
@@ -580,17 +580,17 @@ final class AssemblyGenerator {
 
         Map<String, Object> validation = new LinkedHashMap<>();
         validation.put("local", "./scripts/verify-derived-app.sh");
-        validation.put("repositoryOwned", "./scripts/verify-derived-app.sh <generated-app-dir>");
-        validation.put("referenceVerifier", "node ./scripts/verify-derived-app.mjs <generated-app-dir>");
-        validation.put("compatibleVerifier", "./scripts/verify-derived-app-java.sh <generated-app-dir>");
+        validation.put("repositoryOwned", "./scripts/platform-tool.sh generated-app verify <generated-app-dir>");
+        validation.put("referenceVerifier", "./scripts/platform-tool.sh generated-app verify-reference <generated-app-dir>");
+        validation.put("compatibleVerifier", "./scripts/platform-tool.sh generated-app verify-java <generated-app-dir>");
         context.put("validation", validation);
 
         Map<String, Object> lifecycle = new LinkedHashMap<>();
         lifecycle.put("metadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
-        lifecycle.put("repositoryOwnedUpgradeEvaluation", "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>");
-        lifecycle.put("repositoryOwnedUpgradeTargetSelection", "./scripts/list-platform-upgrade-targets.sh [generated-app-dir]");
-        lifecycle.put("repositoryOwnedReleaseAdvisory", "./scripts/show-platform-release-advisory.sh [generated-app-dir]");
-        lifecycle.put("repositoryOwnedUpgradeExecution", "./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]");
+        lifecycle.put("repositoryOwnedUpgradeEvaluation", "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>");
+        lifecycle.put("repositoryOwnedUpgradeTargetSelection", "./scripts/platform-tool.sh upgrade targets [generated-app-dir]");
+        lifecycle.put("repositoryOwnedReleaseAdvisory", "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]");
+        lifecycle.put("repositoryOwnedUpgradeExecution", "./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]");
         lifecycle.put("derivedProfile", deriveProfileId(registry, selectedModules));
         context.put("lifecycle", lifecycle);
 

@@ -28,13 +28,13 @@
 从平台仓库根目录执行：
 
 ```bash
-./scripts/list-platform-upgrade-targets.sh /absolute/path/to/derived-app
+./scripts/platform-tool.sh upgrade targets /absolute/path/to/derived-app
 ```
 
 如果你只想看仓库当前识别的 release history，也可以不传派生应用目录：
 
 ```bash
-./scripts/list-platform-upgrade-targets.sh
+./scripts/platform-tool.sh upgrade targets
 ```
 
 ## 输出怎么理解

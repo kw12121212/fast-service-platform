@@ -1,6 +1,6 @@
 {
   "schemaVersion": "fsp-derived-app-upgrade-execution-contract/v1",
-  "repositoryOwnedEntrypoint": "./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]",
+  "repositoryOwnedEntrypoint": "./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]",
   "dryRunDefault": true,
   "normativeAssets": {
     "executionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
@@ -33,9 +33,9 @@
     "recommendedNextActions": "string[]"
   },
   "postUpgradeValidation": [
-    "./scripts/list-platform-upgrade-targets.sh [generated-app-dir]",
-    "./scripts/verify-derived-app.sh <generated-app-dir>",
-    "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>",
-    "./scripts/show-platform-release-advisory.sh [generated-app-dir]"
+    "./scripts/platform-tool.sh upgrade targets [generated-app-dir]",
+    "./scripts/platform-tool.sh generated-app verify <generated-app-dir>",
+    "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>",
+    "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]"
   ]
 }

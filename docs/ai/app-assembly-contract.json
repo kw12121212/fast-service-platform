@@ -129,13 +129,26 @@
     }
   ],
   "commands": {
+    "platformTool": "./scripts/platform-tool.sh <group> <command> [...]",
     "scaffold": {
-      "node": "node scripts/scaffold-derived-app.mjs --manifest <manifest-path> --output <absolute-output-dir>",
-      "java": "./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>"
+      "node": "./scripts/platform-tool.sh assembly scaffold node <manifest-path> <absolute-output-dir>",
+      "java": "./scripts/platform-tool.sh assembly scaffold java <manifest-path> <absolute-output-dir>"
     },
+    "verifyCompatibility": "./scripts/platform-tool.sh assembly compatibility",
+    "verifyRepositoryAssembly": "./scripts/platform-tool.sh assembly verify",
+    "referenceVerifyGeneratedApp": "./scripts/platform-tool.sh generated-app verify-reference <generated-app-dir>",
+    "verifyGeneratedApp": "./scripts/platform-tool.sh generated-app verify <generated-app-dir>",
+    "verifyGeneratedAppJava": "./scripts/platform-tool.sh generated-app verify-java <generated-app-dir>",
+    "evaluateDerivedAppUpgrade": "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>",
+    "listPlatformUpgradeTargets": "./scripts/platform-tool.sh upgrade targets [generated-app-dir]",
+    "showPlatformReleaseAdvisory": "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]",
+    "executeDerivedAppUpgrade": "./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]"
+  },
+  "legacyCommands": {
+    "scaffoldNode": "node scripts/scaffold-derived-app.mjs --manifest <manifest-path> --output <absolute-output-dir>",
+    "scaffoldJava": "./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>",
     "verifyCompatibility": "node scripts/verify-app-assembly-compatibility.mjs",
     "verifyRepositoryAssembly": "./scripts/verify-app-assembly.sh",
-    "referenceVerifyGeneratedApp": "node scripts/verify-derived-app.mjs <generated-app-dir>",
     "verifyGeneratedApp": "./scripts/verify-derived-app.sh <generated-app-dir>",
     "verifyGeneratedAppJava": "./scripts/verify-derived-app-java.sh <generated-app-dir>",
     "evaluateDerivedAppUpgrade": "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>",

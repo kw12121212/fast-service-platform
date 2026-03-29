@@ -143,15 +143,15 @@
 再执行：
 
 ```bash
-node scripts/scaffold-derived-app.mjs \
-  --manifest docs/ai/manifests/core-admin-app.json \
-  --output ../core-admin-console
+./scripts/platform-tool.sh assembly scaffold node \
+  docs/ai/manifests/core-admin-app.json \
+  ../core-admin-console
 ```
 
 或者走 Java CLI 路径：
 
 ```bash
-./scripts/scaffold-derived-app-java.sh \
+./scripts/platform-tool.sh assembly scaffold java \
   docs/ai/manifests/core-admin-app.json \
   ../core-admin-console
 ```
@@ -159,7 +159,7 @@ node scripts/scaffold-derived-app.mjs \
 验证装配系统本身：
 
 ```bash
-./scripts/verify-app-assembly.sh
+./scripts/platform-tool.sh assembly verify
 ```
 
 它现在验证的是“compatibility suite + Node/Java 两个兼容实现”，不是仅仅检查某一个脚本还能否跑通。
@@ -167,47 +167,47 @@ node scripts/scaffold-derived-app.mjs \
 验证某个已生成应用骨架：
 
 ```bash
-./scripts/verify-derived-app.sh ../core-admin-console
+./scripts/platform-tool.sh generated-app verify ../core-admin-console
 ```
 
 如果你要看当前 reference verifier 的直接入口：
 
 ```bash
-node scripts/verify-derived-app.mjs ../core-admin-console
+./scripts/platform-tool.sh generated-app verify-reference ../core-admin-console
 ```
 
 如果你要走 Java verifier 路径：
 
 ```bash
-./scripts/verify-derived-app-java.sh ../core-admin-console
+./scripts/platform-tool.sh generated-app verify-java ../core-admin-console
 ```
 
 如果你要评估一个已派生应用能否进入升级流程：
 
 ```bash
-./scripts/evaluate-derived-app-upgrade.sh ../core-admin-console
+./scripts/platform-tool.sh upgrade evaluate ../core-admin-console
 ```
 
 如果你要先看这个派生应用有哪些仓库支持的升级目标：
 
 ```bash
-./scripts/list-platform-upgrade-targets.sh ../core-admin-console
+./scripts/platform-tool.sh upgrade targets ../core-admin-console
 ```
 
 如果你要看当前平台发布的 advisory：
 
 ```bash
-./scripts/show-platform-release-advisory.sh ../core-admin-console
+./scripts/platform-tool.sh upgrade advisory ../core-admin-console
 ```
 
 如果你要先看 upgrade dry-run plan：
 
 ```bash
-./scripts/execute-derived-app-upgrade.sh ../core-admin-console
+./scripts/platform-tool.sh upgrade execute ../core-admin-console
 ```
 
 如果你要应用仓库拥有的升级动作：
 
 ```bash
-./scripts/execute-derived-app-upgrade.sh ../core-admin-console --apply
+./scripts/platform-tool.sh upgrade execute ../core-admin-console --apply
 ```

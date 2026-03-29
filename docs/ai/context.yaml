@@ -121,15 +121,16 @@ high_frequency_change_playbooks:
   - docs/ai/playbooks/integration-demo-and-smoke.md
 
 validation_entrypoints:
-  assembly: ./scripts/verify-app-assembly.sh
-  assembly_compatibility: node ./scripts/verify-app-assembly-compatibility.mjs
-  assembly_java_scaffold: ./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>
-  derived_app_upgrade_evaluation: ./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>
-  derived_app_upgrade_targets: ./scripts/list-platform-upgrade-targets.sh [generated-app-dir]
-  platform_release_advisory: ./scripts/show-platform-release-advisory.sh [generated-app-dir]
-  derived_app_upgrade_execution: ./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]
-  generated_app_reference_verifier: node ./scripts/verify-derived-app.mjs <generated-app-dir>
-  generated_app_java_verifier: ./scripts/verify-derived-app-java.sh <generated-app-dir>
+  platform_tool: ./scripts/platform-tool.sh <group> <command> [...]
+  assembly: ./scripts/platform-tool.sh assembly verify
+  assembly_compatibility: ./scripts/platform-tool.sh assembly compatibility
+  assembly_java_scaffold: ./scripts/platform-tool.sh assembly scaffold java <manifest-path> <absolute-output-dir>
+  derived_app_upgrade_evaluation: ./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>
+  derived_app_upgrade_targets: ./scripts/platform-tool.sh upgrade targets [generated-app-dir]
+  platform_release_advisory: ./scripts/platform-tool.sh upgrade advisory [generated-app-dir]
+  derived_app_upgrade_execution: ./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]
+  generated_app_reference_verifier: ./scripts/platform-tool.sh generated-app verify-reference <generated-app-dir>
+  generated_app_java_verifier: ./scripts/platform-tool.sh generated-app verify-java <generated-app-dir>
   backend: ./scripts/verify-backend.sh
   frontend: ./scripts/verify-frontend.sh
   fullstack: ./scripts/verify-fullstack.sh

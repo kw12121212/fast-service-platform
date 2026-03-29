@@ -23,7 +23,7 @@
 如果还没确认 target release，先执行：
 
 ```bash
-./scripts/list-platform-upgrade-targets.sh /absolute/path/to/derived-app
+./scripts/platform-tool.sh upgrade targets /absolute/path/to/derived-app
 ```
 
 ## 标准执行路径
@@ -31,13 +31,13 @@
 先看 dry-run plan：
 
 ```bash
-./scripts/execute-derived-app-upgrade.sh /absolute/path/to/derived-app
+./scripts/platform-tool.sh upgrade execute /absolute/path/to/derived-app
 ```
 
 确认后再应用仓库拥有的升级动作：
 
 ```bash
-./scripts/execute-derived-app-upgrade.sh /absolute/path/to/derived-app --apply
+./scripts/platform-tool.sh upgrade execute /absolute/path/to/derived-app --apply
 ```
 
 ## 第一版会做什么
@@ -57,8 +57,8 @@
 ## 执行后必须复验
 
 ```bash
-./scripts/list-platform-upgrade-targets.sh /absolute/path/to/derived-app
-./scripts/verify-derived-app.sh /absolute/path/to/derived-app
-./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/derived-app
-./scripts/show-platform-release-advisory.sh /absolute/path/to/derived-app
+./scripts/platform-tool.sh upgrade targets /absolute/path/to/derived-app
+./scripts/platform-tool.sh generated-app verify /absolute/path/to/derived-app
+./scripts/platform-tool.sh upgrade evaluate /absolute/path/to/derived-app
+./scripts/platform-tool.sh upgrade advisory /absolute/path/to/derived-app
 ```

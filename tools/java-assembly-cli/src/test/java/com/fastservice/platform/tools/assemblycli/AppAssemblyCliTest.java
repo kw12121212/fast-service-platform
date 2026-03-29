@@ -66,6 +66,7 @@ public class AppAssemblyCliTest {
             String context = Files.readString(outputDir.resolve("docs/ai/context.json"));
             assertTrue(context.contains("\"selectedModules\":[\"admin-shell\",\"user-management\",\"role-permission-management\"]"));
             assertTrue(context.contains("\"platformReleaseHistory\":\"docs/ai/platform-release-history.json\""));
+            assertTrue(context.contains("\"repositoryOwned\":\"./scripts/platform-tool.sh generated-app verify <generated-app-dir>\""));
             assertTrue(Files.exists(outputDir.resolve("scripts/app-assembly-lib.mjs")));
             assertTrue(Files.exists(outputDir.resolve("scripts/verify-derived-app.mjs")));
             assertTrue(Files.exists(outputDir.resolve("scripts/verify-derived-app.sh")));
