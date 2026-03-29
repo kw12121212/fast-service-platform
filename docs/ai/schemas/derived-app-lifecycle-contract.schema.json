@@ -23,6 +23,8 @@
         "lifecycleContractSchema",
         "lifecycleMetadataSchema",
         "platformReleaseMetadata",
+        "platformReleaseAdvisory",
+        "platformReleaseAdvisorySchema",
         "moduleRegistry"
       ],
       "properties": {
@@ -39,6 +41,14 @@
           "minLength": 1
         },
         "platformReleaseMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseAdvisory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseAdvisorySchema": {
           "type": "string",
           "minLength": 1
         },
@@ -85,12 +95,17 @@
       "additionalProperties": false,
       "required": [
         "repositoryOwnedEntrypoint",
+        "repositoryOwnedAdvisoryEntrypoint",
         "requiredGeneratedInputs",
         "compatibilitySignals",
         "resultShape"
       ],
       "properties": {
         "repositoryOwnedEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repositoryOwnedAdvisoryEntrypoint": {
           "type": "string",
           "minLength": 1
         },

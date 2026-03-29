@@ -11,9 +11,11 @@
 1. `docs/ai/context.yaml`
 2. `docs/ai/derived-app-lifecycle-contract.json`
 3. `docs/ai/platform-release.json`
-4. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
-5. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
-6. 派生应用里的：
+4. `docs/ai/platform-release-advisory.json`
+5. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
+6. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
+7. `docs/ai/schemas/platform-release-advisory.schema.json`
+8. 派生应用里的：
    - `app-manifest.json`
    - `docs/ai/context.json`
    - `docs/ai/derived-app-lifecycle.json`
@@ -21,6 +23,7 @@
 优先级：
 
 - 规范事实来源是 lifecycle contract、platform release metadata 和生成应用自带的 lifecycle metadata
+- release advisory 是“当前平台发布改了什么、影响哪些模块、建议先检查什么”的机器可读说明
 - 这一步的目标是“评估升级兼容性”，不是直接做自动代码合并
 - repository-owned evaluator 是默认入口，不要把某个实现内部逻辑当成规范
 
@@ -36,6 +39,12 @@
 
 ```bash
 node scripts/evaluate-derived-app-upgrade.mjs /absolute/path/to/derived-app
+```
+
+查看当前平台发布的 advisory：
+
+```bash
+./scripts/show-platform-release-advisory.sh /absolute/path/to/derived-app
 ```
 
 ## evaluator 会检查什么
@@ -54,6 +63,12 @@ node scripts/evaluate-derived-app-upgrade.mjs /absolute/path/to/derived-app
   表示至少有一项 contract 级输入不满足，通常需要先补 lifecycle metadata、手工迁移，或重新派生。
 - `recommendedAction`
   表示仓库建议的下一步动作，不等于自动执行升级。
+
+advisory 输出补充回答：
+
+- 当前 release 相对前一个 release 改了什么
+- 哪些模块和 contract 被影响
+- 仓库建议先做哪些检查
 
 ## 当前边界
 

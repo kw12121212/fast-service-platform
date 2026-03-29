@@ -5,6 +5,8 @@
     "lifecycleContractSchema": "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
     "lifecycleMetadataSchema": "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
     "platformReleaseMetadata": "docs/ai/platform-release.json",
+    "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
+    "platformReleaseAdvisorySchema": "docs/ai/schemas/platform-release-advisory.schema.json",
     "moduleRegistry": "docs/ai/module-registry.json"
   },
   "generatedOutput": {
@@ -29,6 +31,7 @@
   ],
   "upgradeEvaluation": {
     "repositoryOwnedEntrypoint": "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>",
+    "repositoryOwnedAdvisoryEntrypoint": "./scripts/show-platform-release-advisory.sh [generated-app-dir]",
     "requiredGeneratedInputs": [
       "app-manifest.json",
       "docs/ai/context.json",

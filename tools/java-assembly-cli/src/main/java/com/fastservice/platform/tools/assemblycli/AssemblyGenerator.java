@@ -515,7 +515,9 @@ final class AssemblyGenerator {
                 .append("```bash\n./scripts/verify-derived-app-java.sh /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("## Upgrade Evaluation\n\n")
                 .append("Evaluate this derived application against the current platform release from the source repository:\n\n")
-                .append("```bash\n./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/").append(appId).append("\n```\n");
+                .append("```bash\n./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("Read the current platform release advisory from the source repository:\n\n")
+                .append("```bash\n./scripts/show-platform-release-advisory.sh /absolute/path/to/").append(appId).append("\n```\n");
         return builder.toString();
     }
 
@@ -564,6 +566,7 @@ final class AssemblyGenerator {
         contractInputs.put("derivedAppLifecycleContract", "docs/ai/derived-app-lifecycle-contract.json");
         contractInputs.put("derivedAppLifecycleMetadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
         contractInputs.put("platformReleaseMetadata", "docs/ai/platform-release.json");
+        contractInputs.put("platformReleaseAdvisory", "docs/ai/platform-release-advisory.json");
         contractInputs.put("generatedAppVerificationContract", "docs/ai/generated-app-verification-contract.json");
         context.put("contractInputs", contractInputs);
 
@@ -577,6 +580,7 @@ final class AssemblyGenerator {
         Map<String, Object> lifecycle = new LinkedHashMap<>();
         lifecycle.put("metadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
         lifecycle.put("repositoryOwnedUpgradeEvaluation", "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>");
+        lifecycle.put("repositoryOwnedReleaseAdvisory", "./scripts/show-platform-release-advisory.sh [generated-app-dir]");
         lifecycle.put("derivedProfile", deriveProfileId(registry, selectedModules));
         context.put("lifecycle", lifecycle);
 
@@ -609,9 +613,15 @@ final class AssemblyGenerator {
         upgradeEvaluation.put("repositoryOwnedEntrypoint",
                 asString(asMap(lifecycleContract.get("upgradeEvaluation"), "lifecycle contract must include upgradeEvaluation")
                         .get("repositoryOwnedEntrypoint")));
+        upgradeEvaluation.put("repositoryOwnedAdvisoryEntrypoint",
+                asString(asMap(lifecycleContract.get("upgradeEvaluation"), "lifecycle contract must include upgradeEvaluation")
+                        .get("repositoryOwnedAdvisoryEntrypoint")));
         upgradeEvaluation.put("platformReleaseMetadata",
                 asString(asMap(lifecycleContract.get("normativeAssets"), "lifecycle contract must include normativeAssets")
                         .get("platformReleaseMetadata")));
+        upgradeEvaluation.put("platformReleaseAdvisory",
+                asString(asMap(lifecycleContract.get("normativeAssets"), "lifecycle contract must include normativeAssets")
+                        .get("platformReleaseAdvisory")));
         metadata.put("upgradeEvaluation", upgradeEvaluation);
 
         return SimpleJson.stringify(metadata);

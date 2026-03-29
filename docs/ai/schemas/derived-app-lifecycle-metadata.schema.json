@@ -109,14 +109,24 @@
       "additionalProperties": false,
       "required": [
         "repositoryOwnedEntrypoint",
-        "platformReleaseMetadata"
+        "repositoryOwnedAdvisoryEntrypoint",
+        "platformReleaseMetadata",
+        "platformReleaseAdvisory"
       ],
       "properties": {
         "repositoryOwnedEntrypoint": {
           "type": "string",
           "minLength": 1
         },
+        "repositoryOwnedAdvisoryEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
         "platformReleaseMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseAdvisory": {
           "type": "string",
           "minLength": 1
         }

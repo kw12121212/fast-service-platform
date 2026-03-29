@@ -13,8 +13,10 @@ import {
   loadDerivedAppLifecycleContract,
   loadGeneratedAppVerificationContract,
   loadModuleRegistry,
+  loadPlatformReleaseAdvisory,
   loadPlatformReleaseMetadata,
   readJson,
+  readPlatformReleaseAdvisory,
   runCompatibilitySuite,
   scaffoldDerivedApp,
   validateManifest,
@@ -81,6 +83,7 @@ test('compatibility suite fixtures match module registry profiles', async () => 
 test('generated app verification contract is exposed as a normative asset', async () => {
   const assemblyContract = await loadAssemblyContract()
   const lifecycleContract = await loadDerivedAppLifecycleContract()
+  const platformAdvisory = await loadPlatformReleaseAdvisory()
   const platformRelease = await loadPlatformReleaseMetadata()
   const verificationContract = await loadGeneratedAppVerificationContract()
 
@@ -100,8 +103,14 @@ test('generated app verification contract is exposed as a normative asset', asyn
     assemblyContract.normativeAssets.platformReleaseMetadata,
     'docs/ai/platform-release.json'
   )
+  assert.equal(
+    assemblyContract.normativeAssets.platformReleaseAdvisory,
+    'docs/ai/platform-release-advisory.json'
+  )
   assert.equal(lifecycleContract.schemaVersion, 'fsp-derived-app-lifecycle-contract/v1')
   assert.equal(platformRelease.currentRelease.lifecycleContractVersion, lifecycleContract.schemaVersion)
+  assert.equal(platformAdvisory.schemaVersion, 'fsp-platform-release-advisory/v1')
+  assert.equal(platformRelease.currentRelease.releaseAdvisory, 'docs/ai/platform-release-advisory.json')
   assert.deepEqual(verificationContract.checks, [
     'required-files-present',
     'verification-inputs-present',
@@ -182,7 +191,16 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
       context.lifecycle.repositoryOwnedUpgradeEvaluation,
       './scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>'
     )
+    assert.equal(
+      context.lifecycle.repositoryOwnedReleaseAdvisory,
+      './scripts/show-platform-release-advisory.sh [generated-app-dir]'
+    )
+    assert.equal(
+      lifecycle.upgradeEvaluation.platformReleaseAdvisory,
+      'docs/ai/platform-release-advisory.json'
+    )
     assert.ok(readme.includes('./scripts/evaluate-derived-app-upgrade.sh'))
+    assert.ok(readme.includes('./scripts/show-platform-release-advisory.sh'))
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }
@@ -290,4 +308,46 @@ test('evaluateDerivedAppUpgrade reports unsupported source platform ids', async 
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }
+})
+
+test('readPlatformReleaseAdvisory returns release delta and relevant checks for a derived app', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-advisory-read-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const advisory = await readPlatformReleaseAdvisory(outputDir)
+    assert.equal(advisory.releaseId, 'fast-service-platform/0.1.0-dev')
+    assert.equal(advisory.previousReleaseId, 'fast-service-platform/0.0.0-bootstrap')
+    assert.equal(advisory.overallCompatibilityPosture, 'compatible-with-review')
+    assert.deepEqual(advisory.selectedModules, [
+      'admin-shell',
+      'user-management',
+      'role-permission-management'
+    ])
+    assert.ok(advisory.relevantChanges.length > 0)
+    assert.ok(advisory.recommendedChecks.includes('review-platform-release-advisory'))
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('platform release advisory wrapper returns machine-readable output', async () => {
+  const result = spawnSync(
+    path.join(REPO_ROOT, 'scripts/show-platform-release-advisory.sh'),
+    [],
+    {
+      cwd: REPO_ROOT,
+      encoding: 'utf8'
+    }
+  )
+
+  assert.equal(result.status, 0, result.stderr || result.stdout)
+  const payload = JSON.parse(result.stdout.trim().split('\n').at(-1))
+  assert.equal(payload.releaseId, 'fast-service-platform/0.1.0-dev')
+  assert.equal(payload.previousReleaseId, 'fast-service-platform/0.0.0-bootstrap')
+  assert.equal(payload.overallCompatibilityPosture, 'compatible-with-review')
 })

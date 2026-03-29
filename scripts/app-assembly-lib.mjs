@@ -366,6 +366,10 @@ export async function loadPlatformReleaseMetadata(rootDir = REPO_ROOT) {
   return readJson(path.join(rootDir, 'docs', 'ai', 'platform-release.json'))
 }
 
+export async function loadPlatformReleaseAdvisory(rootDir = REPO_ROOT) {
+  return readJson(path.join(rootDir, 'docs', 'ai', 'platform-release-advisory.json'))
+}
+
 export async function loadGeneratedAppVerificationContract(rootDir = REPO_ROOT) {
   return readJson(path.join(rootDir, 'docs', 'ai', 'generated-app-verification-contract.json'))
 }
@@ -1013,6 +1017,12 @@ Evaluate this derived application against the current platform release from the 
 \`\`\`bash
 ./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/${manifest.application.id}
 \`\`\`
+
+Read the current platform release advisory from the source repository:
+
+\`\`\`bash
+./scripts/show-platform-release-advisory.sh /absolute/path/to/${manifest.application.id}
+\`\`\`
 `
 }
 
@@ -1059,6 +1069,7 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
         derivedAppLifecycleContract: 'docs/ai/derived-app-lifecycle-contract.json',
         derivedAppLifecycleMetadata: DERIVED_APP_LIFECYCLE_METADATA_PATH,
         platformReleaseMetadata: 'docs/ai/platform-release.json',
+        platformReleaseAdvisory: 'docs/ai/platform-release-advisory.json',
         generatedAppVerificationContract: 'docs/ai/generated-app-verification-contract.json'
       },
       validation: {
@@ -1071,6 +1082,8 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
         metadata: DERIVED_APP_LIFECYCLE_METADATA_PATH,
         repositoryOwnedUpgradeEvaluation:
           './scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>',
+        repositoryOwnedReleaseAdvisory:
+          './scripts/show-platform-release-advisory.sh [generated-app-dir]',
         derivedProfile: deriveProfileId(registry, selectedModules)
       }
     },
@@ -1101,7 +1114,10 @@ function buildDerivedAppLifecycle(manifest, selectedModules, registry, assemblyC
       upgradeEvaluation: {
         repositoryOwnedEntrypoint:
           lifecycleContract.upgradeEvaluation.repositoryOwnedEntrypoint,
-        platformReleaseMetadata: lifecycleContract.normativeAssets.platformReleaseMetadata
+        repositoryOwnedAdvisoryEntrypoint:
+          lifecycleContract.upgradeEvaluation.repositoryOwnedAdvisoryEntrypoint,
+        platformReleaseMetadata: lifecycleContract.normativeAssets.platformReleaseMetadata,
+        platformReleaseAdvisory: lifecycleContract.normativeAssets.platformReleaseAdvisory
       }
     },
     null,
@@ -1568,6 +1584,41 @@ export async function evaluateDerivedAppUpgrade(targetDir, rootDir = REPO_ROOT) 
     sourcePlatformRelease: sourceRelease,
     targetPlatformRelease: targetRelease,
     recommendedAction
+  }
+}
+
+export async function readPlatformReleaseAdvisory(targetDir = null, rootDir = REPO_ROOT) {
+  const resolvedRootDir = path.resolve(rootDir)
+  const advisory = await loadPlatformReleaseAdvisory(resolvedRootDir)
+  let selectedModules = null
+
+  if (targetDir) {
+    const lifecycle = await readJson(path.join(path.resolve(targetDir), DERIVED_APP_LIFECYCLE_METADATA_PATH))
+    selectedModules = lifecycle.selectedModules ?? []
+  }
+
+  const changes = advisory.changes ?? []
+  const relevantChanges =
+    selectedModules === null
+      ? changes
+      : changes.filter((change) =>
+          (change.impactedModules ?? []).some((moduleId) => selectedModules.includes(moduleId))
+        )
+
+  const recommendedChecks = [
+    ...new Set(relevantChanges.flatMap((change) => change.recommendedChecks ?? []))
+  ]
+
+  return {
+    releaseId: advisory.currentRelease?.releaseId ?? 'unavailable',
+    previousReleaseId: advisory.previousRelease?.releaseId ?? 'unavailable',
+    overallCompatibilityPosture: advisory.overallCompatibilityPosture ?? 'unknown',
+    selectedModules,
+    summary: advisory.summary ?? '',
+    changes,
+    relevantChanges,
+    recommendedChecks,
+    recommendedNextActions: advisory.recommendedNextActions ?? []
   }
 }
 

@@ -10,7 +10,12 @@
     "lifecycleContractVersion": "fsp-derived-app-lifecycle-contract/v1",
     "lifecycleMetadataVersion": "fsp-derived-app-lifecycle/v1",
     "assemblyContractVersion": "fsp-app-assembly-contract/v2",
-    "generatedAppVerificationContractVersion": "fsp-generated-app-verification-contract/v1"
+    "generatedAppVerificationContractVersion": "fsp-generated-app-verification-contract/v1",
+    "releaseAdvisory": "docs/ai/platform-release-advisory.json"
+  },
+  "previousRelease": {
+    "releaseId": "fast-service-platform/0.0.0-bootstrap",
+    "version": "0.0.0-bootstrap"
   },
   "upgradeSupport": {
     "supportedSourcePlatformIds": [
@@ -26,6 +31,7 @@
       "fsp-app-assembly-contract/v2"
     ],
     "knownModuleRegistry": "docs/ai/module-registry.json",
+    "releaseAdvisory": "docs/ai/platform-release-advisory.json",
     "recommendedCompatibleAction": "review-platform-delta-and-run-generated-app-verifiers",
     "recommendedIncompatibleAction": "manual-migration-or-re-derive-required"
   }
