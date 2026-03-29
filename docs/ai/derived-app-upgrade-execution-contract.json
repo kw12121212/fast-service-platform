@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "fsp-derived-app-upgrade-execution-contract/v1",
+  "repositoryOwnedEntrypoint": "./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]",
+  "dryRunDefault": true,
+  "normativeAssets": {
+    "executionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
+    "executionContractSchema": "docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
+    "assemblyContract": "docs/ai/app-assembly-contract.json",
+    "lifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
+    "platformReleaseMetadata": "docs/ai/platform-release.json",
+    "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
+    "moduleRegistry": "docs/ai/module-registry.json"
+  },
+  "supportedAutoApplyCategories": [
+    "managed-doc-asset",
+    "managed-schema-asset",
+    "managed-verifier-script",
+    "generated-context-refresh",
+    "generated-lifecycle-refresh"
+  ],
+  "planResultShape": {
+    "planVersion": "string",
+    "contractVersion": "string",
+    "dryRun": "boolean",
+    "compatible": "boolean",
+    "sourcePlatformRelease": "string",
+    "targetPlatformRelease": "string",
+    "selectedModules": "string[]",
+    "autoApplyItems": "object[]",
+    "manualInterventionItems": "object[]",
+    "postUpgradeValidation": "string[]",
+    "recommendedNextActions": "string[]"
+  },
+  "postUpgradeValidation": [
+    "./scripts/verify-derived-app.sh <generated-app-dir>",
+    "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>",
+    "./scripts/show-platform-release-advisory.sh [generated-app-dir]"
+  ]
+}

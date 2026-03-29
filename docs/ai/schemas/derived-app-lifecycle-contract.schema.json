@@ -22,6 +22,8 @@
         "lifecycleContract",
         "lifecycleContractSchema",
         "lifecycleMetadataSchema",
+        "upgradeExecutionContract",
+        "upgradeExecutionContractSchema",
         "platformReleaseMetadata",
         "platformReleaseAdvisory",
         "platformReleaseAdvisorySchema",
@@ -37,6 +39,14 @@
           "minLength": 1
         },
         "lifecycleMetadataSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upgradeExecutionContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upgradeExecutionContractSchema": {
           "type": "string",
           "minLength": 1
         },
@@ -96,6 +106,7 @@
       "required": [
         "repositoryOwnedEntrypoint",
         "repositoryOwnedAdvisoryEntrypoint",
+        "repositoryOwnedExecutionEntrypoint",
         "requiredGeneratedInputs",
         "compatibilitySignals",
         "resultShape"
@@ -106,6 +117,10 @@
           "minLength": 1
         },
         "repositoryOwnedAdvisoryEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repositoryOwnedExecutionEntrypoint": {
           "type": "string",
           "minLength": 1
         },

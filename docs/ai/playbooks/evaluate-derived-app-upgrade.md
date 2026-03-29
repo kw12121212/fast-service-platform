@@ -70,6 +70,10 @@ advisory 输出补充回答：
 - 哪些模块和 contract 被影响
 - 仓库建议先做哪些检查
 
+如果决定继续执行受控升级，转到：
+
+- `docs/ai/playbooks/execute-derived-app-upgrade.md`
+
 ## 当前边界
 
 - 这条路径只负责评估和准备升级输入

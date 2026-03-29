@@ -517,7 +517,11 @@ final class AssemblyGenerator {
                 .append("Evaluate this derived application against the current platform release from the source repository:\n\n")
                 .append("```bash\n./scripts/evaluate-derived-app-upgrade.sh /absolute/path/to/").append(appId).append("\n```\n\n")
                 .append("Read the current platform release advisory from the source repository:\n\n")
-                .append("```bash\n./scripts/show-platform-release-advisory.sh /absolute/path/to/").append(appId).append("\n```\n");
+                .append("```bash\n./scripts/show-platform-release-advisory.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("Preview the repository-owned upgrade plan:\n\n")
+                .append("```bash\n./scripts/execute-derived-app-upgrade.sh /absolute/path/to/").append(appId).append("\n```\n\n")
+                .append("Apply the supported repository-owned upgrade actions:\n\n")
+                .append("```bash\n./scripts/execute-derived-app-upgrade.sh /absolute/path/to/").append(appId).append(" --apply\n```\n");
         return builder.toString();
     }
 
@@ -564,6 +568,7 @@ final class AssemblyGenerator {
         contractInputs.put("moduleRegistry", "docs/ai/module-registry.json");
         contractInputs.put("assemblyContract", "docs/ai/app-assembly-contract.json");
         contractInputs.put("derivedAppLifecycleContract", "docs/ai/derived-app-lifecycle-contract.json");
+        contractInputs.put("derivedAppUpgradeExecutionContract", "docs/ai/derived-app-upgrade-execution-contract.json");
         contractInputs.put("derivedAppLifecycleMetadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
         contractInputs.put("platformReleaseMetadata", "docs/ai/platform-release.json");
         contractInputs.put("platformReleaseAdvisory", "docs/ai/platform-release-advisory.json");
@@ -581,6 +586,7 @@ final class AssemblyGenerator {
         lifecycle.put("metadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
         lifecycle.put("repositoryOwnedUpgradeEvaluation", "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>");
         lifecycle.put("repositoryOwnedReleaseAdvisory", "./scripts/show-platform-release-advisory.sh [generated-app-dir]");
+        lifecycle.put("repositoryOwnedUpgradeExecution", "./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]");
         lifecycle.put("derivedProfile", deriveProfileId(registry, selectedModules));
         context.put("lifecycle", lifecycle);
 
@@ -616,12 +622,18 @@ final class AssemblyGenerator {
         upgradeEvaluation.put("repositoryOwnedAdvisoryEntrypoint",
                 asString(asMap(lifecycleContract.get("upgradeEvaluation"), "lifecycle contract must include upgradeEvaluation")
                         .get("repositoryOwnedAdvisoryEntrypoint")));
+        upgradeEvaluation.put("repositoryOwnedExecutionEntrypoint",
+                asString(asMap(lifecycleContract.get("upgradeEvaluation"), "lifecycle contract must include upgradeEvaluation")
+                        .get("repositoryOwnedExecutionEntrypoint")));
         upgradeEvaluation.put("platformReleaseMetadata",
                 asString(asMap(lifecycleContract.get("normativeAssets"), "lifecycle contract must include normativeAssets")
                         .get("platformReleaseMetadata")));
         upgradeEvaluation.put("platformReleaseAdvisory",
                 asString(asMap(lifecycleContract.get("normativeAssets"), "lifecycle contract must include normativeAssets")
                         .get("platformReleaseAdvisory")));
+        upgradeEvaluation.put("upgradeExecutionContract",
+                asString(asMap(lifecycleContract.get("normativeAssets"), "lifecycle contract must include normativeAssets")
+                        .get("upgradeExecutionContract")));
         metadata.put("upgradeEvaluation", upgradeEvaluation);
 
         return SimpleJson.stringify(metadata);

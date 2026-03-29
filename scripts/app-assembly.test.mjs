@@ -7,14 +7,17 @@ import test from 'node:test'
 
 import {
   REPO_ROOT,
+  executeDerivedAppUpgrade,
   evaluateDerivedAppUpgrade,
   loadAssemblyContract,
   loadCompatibilitySuite,
   loadDerivedAppLifecycleContract,
+  loadDerivedAppUpgradeExecutionContract,
   loadGeneratedAppVerificationContract,
   loadModuleRegistry,
   loadPlatformReleaseAdvisory,
   loadPlatformReleaseMetadata,
+  planDerivedAppUpgrade,
   readJson,
   readPlatformReleaseAdvisory,
   runCompatibilitySuite,
@@ -83,6 +86,7 @@ test('compatibility suite fixtures match module registry profiles', async () => 
 test('generated app verification contract is exposed as a normative asset', async () => {
   const assemblyContract = await loadAssemblyContract()
   const lifecycleContract = await loadDerivedAppLifecycleContract()
+  const executionContract = await loadDerivedAppUpgradeExecutionContract()
   const platformAdvisory = await loadPlatformReleaseAdvisory()
   const platformRelease = await loadPlatformReleaseMetadata()
   const verificationContract = await loadGeneratedAppVerificationContract()
@@ -107,7 +111,12 @@ test('generated app verification contract is exposed as a normative asset', asyn
     assemblyContract.normativeAssets.platformReleaseAdvisory,
     'docs/ai/platform-release-advisory.json'
   )
+  assert.equal(
+    assemblyContract.normativeAssets.derivedAppUpgradeExecutionContract,
+    'docs/ai/derived-app-upgrade-execution-contract.json'
+  )
   assert.equal(lifecycleContract.schemaVersion, 'fsp-derived-app-lifecycle-contract/v1')
+  assert.equal(executionContract.schemaVersion, 'fsp-derived-app-upgrade-execution-contract/v1')
   assert.equal(platformRelease.currentRelease.lifecycleContractVersion, lifecycleContract.schemaVersion)
   assert.equal(platformAdvisory.schemaVersion, 'fsp-platform-release-advisory/v1')
   assert.equal(platformRelease.currentRelease.releaseAdvisory, 'docs/ai/platform-release-advisory.json')
@@ -196,11 +205,20 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
       './scripts/show-platform-release-advisory.sh [generated-app-dir]'
     )
     assert.equal(
+      context.lifecycle.repositoryOwnedUpgradeExecution,
+      './scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]'
+    )
+    assert.equal(
       lifecycle.upgradeEvaluation.platformReleaseAdvisory,
       'docs/ai/platform-release-advisory.json'
     )
+    assert.equal(
+      lifecycle.upgradeEvaluation.upgradeExecutionContract,
+      'docs/ai/derived-app-upgrade-execution-contract.json'
+    )
     assert.ok(readme.includes('./scripts/evaluate-derived-app-upgrade.sh'))
     assert.ok(readme.includes('./scripts/show-platform-release-advisory.sh'))
+    assert.ok(readme.includes('./scripts/execute-derived-app-upgrade.sh'))
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }
@@ -350,4 +368,88 @@ test('platform release advisory wrapper returns machine-readable output', async 
   assert.equal(payload.releaseId, 'fast-service-platform/0.1.0-dev')
   assert.equal(payload.previousReleaseId, 'fast-service-platform/0.0.0-bootstrap')
   assert.equal(payload.overallCompatibilityPosture, 'compatible-with-review')
+})
+
+test('planDerivedAppUpgrade reports dry-run auto-apply items for stale managed assets', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-upgrade-plan-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    await writeFile(
+      path.join(outputDir, 'docs/ai/platform-release-advisory.json'),
+      '{"schemaVersion":"stale"}\n'
+    )
+
+    const plan = await planDerivedAppUpgrade(outputDir)
+    assert.equal(plan.dryRun, true)
+    assert.equal(plan.compatible, true)
+    assert.ok(
+      plan.autoApplyItems.some((item) => item.path === 'docs/ai/platform-release-advisory.json'),
+      JSON.stringify(plan.autoApplyItems)
+    )
+    assert.ok(plan.manualInterventionItems.length > 0)
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('executeDerivedAppUpgrade applies supported managed asset updates', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-upgrade-apply-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    await writeFile(
+      path.join(outputDir, 'docs/ai/platform-release-advisory.json'),
+      '{"schemaVersion":"stale"}\n'
+    )
+
+    const result = await executeDerivedAppUpgrade(outputDir, { apply: true })
+    assert.equal(result.dryRun, false)
+    assert.equal(result.applied, true)
+    assert.ok(
+      result.appliedItems.some((item) => item.path === 'docs/ai/platform-release-advisory.json'),
+      JSON.stringify(result.appliedItems)
+    )
+
+    const refreshedAdvisory = await readJson(path.join(outputDir, 'docs/ai/platform-release-advisory.json'))
+    assert.equal(refreshedAdvisory.schemaVersion, 'fsp-platform-release-advisory/v1')
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('upgrade execution wrapper returns machine-readable dry-run output', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-upgrade-wrapper-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/core-admin-app.json'),
+      outputDir
+    })
+
+    const result = spawnSync(
+      path.join(REPO_ROOT, 'scripts/execute-derived-app-upgrade.sh'),
+      [outputDir],
+      {
+        cwd: REPO_ROOT,
+        encoding: 'utf8'
+      }
+    )
+
+    assert.equal(result.status, 0, result.stderr || result.stdout)
+    const payload = JSON.parse(result.stdout.trim().split('\n').at(-1))
+    assert.equal(payload.planVersion, 'fsp-derived-app-upgrade-plan/v1')
+    assert.equal(payload.dryRun, true)
+    assert.equal(payload.compatible, true)
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
 })

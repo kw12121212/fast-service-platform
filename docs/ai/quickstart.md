@@ -112,10 +112,12 @@
 - `docs/ai/schemas/app-manifest.schema.json`
 - `docs/ai/schemas/module-registry.schema.json`
 - `docs/ai/derived-app-lifecycle-contract.json`
+- `docs/ai/derived-app-upgrade-execution-contract.json`
 - `docs/ai/platform-release.json`
 - `docs/ai/platform-release-advisory.json`
 - `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
 - `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
+- `docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json`
 - `docs/ai/schemas/platform-release-advisory.schema.json`
 - `docs/ai/generated-app-verification-contract.json`
 - `docs/ai/schemas/generated-app-verification-contract.schema.json`
@@ -129,7 +131,7 @@
 
 - `docs/ai/app-assembly-contract.json`、schema 和 compatibility suite 才是规范事实来源
 - `docs/ai/generated-app-verification-contract.json` 定义生成后验证的标准输入、检查项和结果语义
-- `docs/ai/derived-app-lifecycle-contract.json`、`docs/ai/platform-release.json` 和 `docs/ai/platform-release-advisory.json` 定义生成后生命周期、升级评估和当前发布差异说明的事实来源
+- `docs/ai/derived-app-lifecycle-contract.json`、`docs/ai/derived-app-upgrade-execution-contract.json`、`docs/ai/platform-release.json` 和 `docs/ai/platform-release-advisory.json` 定义生成后生命周期、升级评估、升级执行和当前发布差异说明的事实来源
 - `scripts/scaffold-derived-app.mjs` 是当前的 `Node` 参考实现，不应被当成唯一标准
 - `tools/java-assembly-cli/` 提供第二个兼容实现；它要通过同一套 compatibility suite，而不是复用 Node 内部逻辑
 - `scripts/verify-derived-app.mjs` 是当前的 `Node` reference verifier，不是 generated-app verification contract 本身
@@ -187,4 +189,16 @@ node scripts/verify-derived-app.mjs ../core-admin-console
 
 ```bash
 ./scripts/show-platform-release-advisory.sh ../core-admin-console
+```
+
+如果你要先看 upgrade dry-run plan：
+
+```bash
+./scripts/execute-derived-app-upgrade.sh ../core-admin-console
+```
+
+如果你要应用仓库拥有的升级动作：
+
+```bash
+./scripts/execute-derived-app-upgrade.sh ../core-admin-console --apply
 ```

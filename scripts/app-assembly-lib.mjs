@@ -362,6 +362,10 @@ export async function loadDerivedAppLifecycleContract(rootDir = REPO_ROOT) {
   return readJson(path.join(rootDir, 'docs', 'ai', 'derived-app-lifecycle-contract.json'))
 }
 
+export async function loadDerivedAppUpgradeExecutionContract(rootDir = REPO_ROOT) {
+  return readJson(path.join(rootDir, 'docs', 'ai', 'derived-app-upgrade-execution-contract.json'))
+}
+
 export async function loadPlatformReleaseMetadata(rootDir = REPO_ROOT) {
   return readJson(path.join(rootDir, 'docs', 'ai', 'platform-release.json'))
 }
@@ -1023,6 +1027,18 @@ Read the current platform release advisory from the source repository:
 \`\`\`bash
 ./scripts/show-platform-release-advisory.sh /absolute/path/to/${manifest.application.id}
 \`\`\`
+
+Preview the repository-owned upgrade plan:
+
+\`\`\`bash
+./scripts/execute-derived-app-upgrade.sh /absolute/path/to/${manifest.application.id}
+\`\`\`
+
+Apply the supported repository-owned upgrade actions:
+
+\`\`\`bash
+./scripts/execute-derived-app-upgrade.sh /absolute/path/to/${manifest.application.id} --apply
+\`\`\`
 `
 }
 
@@ -1067,6 +1083,7 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
         moduleRegistry: 'docs/ai/module-registry.json',
         assemblyContract: 'docs/ai/app-assembly-contract.json',
         derivedAppLifecycleContract: 'docs/ai/derived-app-lifecycle-contract.json',
+        derivedAppUpgradeExecutionContract: 'docs/ai/derived-app-upgrade-execution-contract.json',
         derivedAppLifecycleMetadata: DERIVED_APP_LIFECYCLE_METADATA_PATH,
         platformReleaseMetadata: 'docs/ai/platform-release.json',
         platformReleaseAdvisory: 'docs/ai/platform-release-advisory.json',
@@ -1084,6 +1101,8 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
           './scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>',
         repositoryOwnedReleaseAdvisory:
           './scripts/show-platform-release-advisory.sh [generated-app-dir]',
+        repositoryOwnedUpgradeExecution:
+          './scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]',
         derivedProfile: deriveProfileId(registry, selectedModules)
       }
     },
@@ -1116,8 +1135,11 @@ function buildDerivedAppLifecycle(manifest, selectedModules, registry, assemblyC
           lifecycleContract.upgradeEvaluation.repositoryOwnedEntrypoint,
         repositoryOwnedAdvisoryEntrypoint:
           lifecycleContract.upgradeEvaluation.repositoryOwnedAdvisoryEntrypoint,
+        repositoryOwnedExecutionEntrypoint:
+          lifecycleContract.upgradeEvaluation.repositoryOwnedExecutionEntrypoint,
         platformReleaseMetadata: lifecycleContract.normativeAssets.platformReleaseMetadata,
-        platformReleaseAdvisory: lifecycleContract.normativeAssets.platformReleaseAdvisory
+        platformReleaseAdvisory: lifecycleContract.normativeAssets.platformReleaseAdvisory,
+        upgradeExecutionContract: lifecycleContract.normativeAssets.upgradeExecutionContract
       }
     },
     null,
@@ -1619,6 +1641,201 @@ export async function readPlatformReleaseAdvisory(targetDir = null, rootDir = RE
     relevantChanges,
     recommendedChecks,
     recommendedNextActions: advisory.recommendedNextActions ?? []
+  }
+}
+
+function getManagedUpgradeAssetPaths(assemblyContract) {
+  return getRequiredGeneratedFiles(assemblyContract).filter(
+    (relativePath) =>
+      relativePath.startsWith('docs/ai/') ||
+      relativePath === 'scripts/app-assembly-lib.mjs' ||
+      relativePath === 'scripts/verify-derived-app.mjs' ||
+      relativePath === 'scripts/verify-derived-app.sh'
+  )
+}
+
+async function buildDerivedAppManagedAssetMap(targetDir, rootDir = REPO_ROOT) {
+  const resolvedRootDir = path.resolve(rootDir)
+  const resolvedTargetDir = path.resolve(targetDir)
+  const assemblyContract = await loadAssemblyContract(resolvedRootDir)
+  const lifecycleContract = await loadDerivedAppLifecycleContract(resolvedRootDir)
+  const executionContract = await loadDerivedAppUpgradeExecutionContract(resolvedRootDir)
+  const platformRelease = await loadPlatformReleaseMetadata(resolvedRootDir)
+  const verificationContract = await loadGeneratedAppVerificationContract(resolvedRootDir)
+  const registry = await loadModuleRegistry(resolvedRootDir)
+  const manifest = await readJson(path.join(resolvedTargetDir, 'app-manifest.json'))
+  const { selectedModules } = validateManifest(manifest, registry, assemblyContract)
+
+  const managedAssets = new Map()
+  for (const relativePath of getManagedUpgradeAssetPaths(assemblyContract)) {
+    if (relativePath === 'docs/ai/context.json') {
+      managedAssets.set(
+        relativePath,
+        `${buildGeneratedContext(manifest, selectedModules, registry, platformRelease)}\n`
+      )
+      continue
+    }
+
+    if (relativePath === DERIVED_APP_LIFECYCLE_METADATA_PATH) {
+      managedAssets.set(
+        relativePath,
+        `${buildDerivedAppLifecycle(
+          manifest,
+          selectedModules,
+          registry,
+          assemblyContract,
+          verificationContract,
+          lifecycleContract,
+          platformRelease
+        )}\n`
+      )
+      continue
+    }
+
+    if (relativePath === 'scripts/verify-derived-app.sh') {
+      managedAssets.set(relativePath, buildLocalVerifyScript())
+      continue
+    }
+
+    managedAssets.set(relativePath, await readFile(path.join(resolvedRootDir, relativePath), 'utf8'))
+  }
+
+  managedAssets.set(
+    'docs/ai/derived-app-upgrade-execution-contract.json',
+    await readFile(
+      path.join(resolvedRootDir, 'docs/ai/derived-app-upgrade-execution-contract.json'),
+      'utf8'
+    )
+  )
+  managedAssets.set(
+    'docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json',
+    await readFile(
+      path.join(
+        resolvedRootDir,
+        'docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json'
+      ),
+      'utf8'
+    )
+  )
+
+  return {
+    managedAssets,
+    selectedModules,
+    executionContract
+  }
+}
+
+function buildManualInterventionItems(advisory, evaluation) {
+  const items = []
+
+  if (!evaluation.compatible) {
+    items.push({
+      id: 'compatibility-blocker',
+      reason: 'upgrade-evaluation-blocked',
+      issues: evaluation.issues
+    })
+  }
+
+  for (const change of advisory.relevantChanges ?? []) {
+    if ((change.compatibility ?? 'unknown') === 'additive') {
+      continue
+    }
+    items.push({
+      id: change.id,
+      reason: change.summary,
+      compatibility: change.compatibility,
+      impactedModules: change.impactedModules ?? [],
+      recommendedChecks: change.recommendedChecks ?? []
+    })
+  }
+
+  return items
+}
+
+export async function planDerivedAppUpgrade(targetDir, rootDir = REPO_ROOT) {
+  const resolvedTargetDir = path.resolve(targetDir)
+  const evaluation = await evaluateDerivedAppUpgrade(resolvedTargetDir, rootDir)
+  const advisory = await readPlatformReleaseAdvisory(resolvedTargetDir, rootDir)
+  const { managedAssets, selectedModules, executionContract } =
+    await buildDerivedAppManagedAssetMap(resolvedTargetDir, rootDir)
+  const autoApplyItems = []
+
+  for (const [relativePath, desiredContents] of managedAssets) {
+    let currentContents = null
+    try {
+      currentContents = await readFile(path.join(resolvedTargetDir, relativePath), 'utf8')
+    } catch {
+      currentContents = null
+    }
+
+    if (currentContents === desiredContents) {
+      continue
+    }
+
+    let category = 'managed-doc-asset'
+    if (relativePath.startsWith('docs/ai/schemas/')) {
+      category = 'managed-schema-asset'
+    } else if (relativePath.startsWith('scripts/')) {
+      category = 'managed-verifier-script'
+    } else if (relativePath === 'docs/ai/context.json') {
+      category = 'generated-context-refresh'
+    } else if (relativePath === DERIVED_APP_LIFECYCLE_METADATA_PATH) {
+      category = 'generated-lifecycle-refresh'
+    }
+
+    autoApplyItems.push({
+      path: relativePath,
+      action: currentContents === null ? 'create' : 'update',
+      category
+    })
+  }
+
+  return {
+    planVersion: 'fsp-derived-app-upgrade-plan/v1',
+    contractVersion: executionContract.schemaVersion,
+    dryRun: true,
+    compatible: evaluation.compatible,
+    sourcePlatformRelease: evaluation.sourcePlatformRelease,
+    targetPlatformRelease: evaluation.targetPlatformRelease,
+    selectedModules,
+    autoApplyItems,
+    manualInterventionItems: buildManualInterventionItems(advisory, evaluation),
+    postUpgradeValidation: executionContract.postUpgradeValidation,
+    recommendedNextActions: advisory.recommendedNextActions ?? []
+  }
+}
+
+export async function executeDerivedAppUpgrade(targetDir, { apply = false } = {}, rootDir = REPO_ROOT) {
+  const resolvedTargetDir = path.resolve(targetDir)
+  const plan = await planDerivedAppUpgrade(resolvedTargetDir, rootDir)
+
+  if (!apply || !plan.compatible) {
+    return {
+      ...plan,
+      dryRun: !apply,
+      applied: false,
+      appliedItems: []
+    }
+  }
+
+  const { managedAssets } = await buildDerivedAppManagedAssetMap(resolvedTargetDir, rootDir)
+  const appliedItems = []
+
+  for (const item of plan.autoApplyItems) {
+    const targetPath = path.join(resolvedTargetDir, item.path)
+    await mkdir(path.dirname(targetPath), { recursive: true })
+    await writeFile(targetPath, managedAssets.get(item.path))
+    if (item.path === 'scripts/verify-derived-app.sh') {
+      await chmod(targetPath, 0o755)
+    }
+    appliedItems.push(item)
+  }
+
+  return {
+    ...plan,
+    dryRun: false,
+    applied: true,
+    appliedItems
   }
 }
 

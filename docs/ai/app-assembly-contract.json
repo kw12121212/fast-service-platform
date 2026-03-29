@@ -16,6 +16,8 @@
     "derivedAppLifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
     "derivedAppLifecycleContractSchema": "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
     "derivedAppLifecycleMetadataSchema": "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
+    "derivedAppUpgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
+    "derivedAppUpgradeExecutionContractSchema": "docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
     "platformReleaseMetadata": "docs/ai/platform-release.json",
     "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
     "platformReleaseAdvisorySchema": "docs/ai/schemas/platform-release-advisory.schema.json",
@@ -37,6 +39,7 @@
       "docs/ai/context.json",
       "docs/ai/derived-app-lifecycle.json",
       "docs/ai/derived-app-lifecycle-contract.json",
+      "docs/ai/derived-app-upgrade-execution-contract.json",
       "docs/ai/module-registry.json",
       "docs/ai/app-assembly-contract.json",
       "docs/ai/platform-release.json",
@@ -50,6 +53,7 @@
       "docs/ai/schemas/module-registry.schema.json",
       "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
       "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
+      "docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
       "docs/ai/schemas/platform-release-advisory.schema.json",
       "docs/ai/schemas/generated-app-verification-contract.schema.json",
       "docs/ai/schemas/app-assembly-compatibility-suite.schema.json",
@@ -72,6 +76,7 @@
     ],
     "moduleRegistry": "docs/ai/module-registry.json",
     "derivedAppLifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
+    "derivedAppUpgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
     "platformReleaseMetadata": "docs/ai/platform-release.json",
     "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
     "schemas": [
@@ -79,6 +84,7 @@
       "docs/ai/schemas/module-registry.schema.json",
       "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
       "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
+      "docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
       "docs/ai/schemas/platform-release-advisory.schema.json",
       "docs/ai/schemas/generated-app-verification-contract.schema.json",
       "docs/ai/schemas/app-assembly-compatibility-suite.schema.json"
@@ -121,6 +127,7 @@
     "verifyGeneratedApp": "./scripts/verify-derived-app.sh <generated-app-dir>",
     "verifyGeneratedAppJava": "./scripts/verify-derived-app-java.sh <generated-app-dir>",
     "evaluateDerivedAppUpgrade": "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>",
-    "showPlatformReleaseAdvisory": "./scripts/show-platform-release-advisory.sh [generated-app-dir]"
+    "showPlatformReleaseAdvisory": "./scripts/show-platform-release-advisory.sh [generated-app-dir]",
+    "executeDerivedAppUpgrade": "./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]"
   }
 }

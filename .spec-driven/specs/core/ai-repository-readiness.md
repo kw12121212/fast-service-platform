@@ -14,7 +14,7 @@ The repository MUST provide an AI-oriented quickstart that identifies required r
 - THEN it can find the derivation workflow, the relevant machine-readable indexes, and the validation entrypoints for generated output
 
 ### Requirement: Repository Provides Machine-Readable AI Context
-The repository MUST provide a machine-readable AI context manifest that exposes the current stack baseline, required guidance files, workspace boundaries, verification commands, hard repository constraints, the machine-readable assets used for application derivation, the lifecycle / upgrade assets needed to evaluate existing derived applications, and the advisory assets needed to explain current platform release deltas.
+The repository MUST provide a machine-readable AI context manifest that exposes the current stack baseline, required guidance files, workspace boundaries, verification commands, hard repository constraints, the machine-readable assets used for application derivation, the lifecycle / upgrade assets needed to evaluate existing derived applications, the advisory assets needed to explain current platform release deltas, and the execution assets needed to plan or apply derived-app upgrades.
 
 #### Scenario: A tool-driven agent loads repository context
 - GIVEN an AI agent can consume structured repository metadata
@@ -31,8 +31,13 @@ The repository MUST provide a machine-readable AI context manifest that exposes 
 - WHEN it reads the machine-readable AI context asset
 - THEN it can identify the release advisory assets, schemas, playbooks, and repository-owned advisory entrypoints without inferring them from prose alone
 
+#### Scenario: A tool-driven agent loads upgrade execution context
+- GIVEN an AI agent needs to prepare or run a derived-app upgrade
+- WHEN it reads the machine-readable AI context asset
+- THEN it can identify the upgrade plan contract, playbooks, repository-owned execution entrypoints, and post-upgrade validation paths without inferring them from prose alone
+
 ### Requirement: Repository Provides High-Frequency Change Playbooks
-The repository MUST provide repository-owned playbooks for the current high-frequency change scenarios, including derived-application lifecycle, release advisory, and upgrade evaluation, so contributors can follow repeatable extension patterns instead of reconstructing them from scattered source files.
+The repository MUST provide repository-owned playbooks for the current high-frequency change scenarios, including derived-application lifecycle, release advisory, upgrade evaluation, and upgrade execution, so contributors can follow repeatable extension patterns instead of reconstructing them from scattered source files.
 
 #### Scenario: A contributor plans a common repository change
 - GIVEN a contributor needs to perform a common backend, frontend, integration-oriented, or app-derivation change
@@ -48,6 +53,11 @@ The repository MUST provide repository-owned playbooks for the current high-freq
 - GIVEN a contributor needs to understand what changed in the current platform release before upgrading a derived application
 - WHEN they read the corresponding repository playbook
 - THEN they can identify the relevant release advisory assets, the expected repository-owned advisory entrypoints, and the recommended follow-up checks
+
+#### Scenario: A contributor prepares a derived-app upgrade execution
+- GIVEN a contributor needs to apply a repository-owned upgrade path to a derived application
+- WHEN they read the corresponding repository playbook
+- THEN they can identify the machine-readable plan inputs, execution entrypoints, manual-intervention checkpoints, and post-upgrade verification steps
 
 ### Requirement: Repository Provides Automated Validation Entrypoints
 The repository MUST provide stable automated entrypoints for backend validation, frontend validation, full-stack validation, and derived-application assembly validation.
