@@ -1121,7 +1121,7 @@ import com.lealone.db.value.Value;
 import com.lealone.db.value.ValueLong;
 import com.lealone.db.value.ValueNull;
 import com.lealone.db.value.ValueString;
-import com.lealone.plugins.orm.json.JsonArray;
+import com.lealone.orm.json.JsonArray;
 
 public class ProjectServiceExecutor implements ServiceExecutor {
 

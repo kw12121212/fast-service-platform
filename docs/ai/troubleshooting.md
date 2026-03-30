@@ -2,7 +2,7 @@
 
 这个文档只覆盖当前仓库最常见的本地失败，不替代完整日志分析。
 
-## `vendor/lealone` 或 `vendor/lealone-platform` 缺失
+## `vendor/lealone` 缺失
 
 症状：
 
@@ -13,7 +13,6 @@
 
 1. 把源码仓库 clone 到：
    - `vendor/lealone`
-   - `vendor/lealone-platform`
 2. 执行：
 
 ```bash

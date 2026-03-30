@@ -13,15 +13,7 @@ if [[ ! -d "$ROOT_DIR/vendor/lealone/.git" ]]; then
   exit 1
 fi
 
-if [[ ! -d "$ROOT_DIR/vendor/lealone-platform/.git" ]]; then
-  echo "Missing vendor/lealone-platform clone" >&2
-  exit 1
-fi
-
 echo "Installing Lealone core from source..."
 "$MVN_BIN" -f "$ROOT_DIR/vendor/lealone/pom.xml" -DskipTests install
-
-echo "Installing Lealone Platform from source..."
-"$MVN_BIN" -f "$ROOT_DIR/vendor/lealone-platform/pom.xml" -DskipTests install
 
 echo "Local Lealone source dependencies installed."

@@ -1,6 +1,6 @@
 # Fast Service Platform
 
-Fast Service Platform is an AI-oriented repository of reusable enterprise application components built on top of `Lealone-Platform`.
+Fast Service Platform is an AI-oriented repository of reusable enterprise application components built on top of `Lealone`.
 
 This repository is not a generic business application and not an end-user AI chat product. Its purpose is to provide a reliable, AI-friendly backend and frontend baseline that AI agents can reuse under explicit constraints to assemble internal enterprise management systems.
 
@@ -10,7 +10,7 @@ This repository is not a generic business application and not an end-user AI cha
 - The repository does not directly provide `AI chat`, `prompt intake`, prototype upload, or reference-site ingestion.
 - V1 targets `internal enterprise management applications`.
 - V1 targets a `monolithic application` shape.
-- The platform boundary is `Lealone-Platform + built-in repository components + existing repository dependencies`.
+- The platform boundary is `Lealone + built-in repository components + existing repository dependencies`.
 - Avoiding new external software libraries is a product principle.
 
 ## What Exists Today
@@ -110,7 +110,7 @@ Useful commands:
 | --- | --- | --- |
 | Backend runtime | Java 25 LTS | Unified Java baseline |
 | Backend build | Maven 3.9.x | Managed locally through SDKMAN in this repository |
-| Backend foundation | [Lealone-Platform](https://github.com/lealone/Lealone-Platform) | Service-oriented backend foundation |
+| Backend foundation | [Lealone](https://github.com/lealone/Lealone) | Service-oriented backend foundation |
 | Frontend runtime | Node 24 | Managed locally through `nvm` |
 | Frontend package manager | bun | Frontend dependency and script runner |
 | Frontend build tool | Vite 8 | Dev and build entrypoint |
@@ -121,12 +121,11 @@ Useful commands:
 
 ## Prerequisites
 
-The backend expects source checkouts of `Lealone` and `Lealone-Platform` under `vendor/`.
+The backend expects a source checkout of `Lealone` under `vendor/`.
 
 Expected paths:
 
 - `vendor/lealone`
-- `vendor/lealone-platform`
 
 After cloning those repositories, install the local source dependencies:
 
@@ -243,12 +242,12 @@ The V1 platform baseline must still provide:
 ```text
 .
 ├── .spec-driven/     # specs, change proposals, tasks, and archived changes
-├── backend/          # Java 25 + Lealone-Platform backend core
+├── backend/          # Java 25 + Lealone backend core
 ├── demo/             # baseline demo manifest and committed demo app
 ├── docs/ai/          # AI-facing contracts, schemas, context, and playbooks
 ├── frontend/         # Vite + React + shadcn/ui + Tailwind CSS admin frontend
 ├── scripts/          # install, verification, and platform tooling scripts
-├── vendor/           # Lealone and Lealone-Platform source dependencies
+├── vendor/           # Lealone source dependency
 ├── AGENTS.md         # repository agent instructions
 ├── RTK.md            # repository technical knowledge
 ├── ROADMAP.md        # future directions and prioritization

@@ -1,7 +1,7 @@
 schema: spec-driven
 context: |
   This repository bootstraps an AI-friendly fast-service platform for rapidly building full-stack applications.
-  The backend baseline is Java 25 LTS with Lealone-Platform as the technical foundation for fast API and service creation.
+  The backend baseline is Java 25 LTS with Lealone as the technical foundation for fast API and service creation.
   The frontend baseline is the current Vite 8 + React 19 + Tailwind CSS 4 + shadcn/ui stack for fast UI delivery and iterative interaction design.
   The project uses spec-driven changes, agent-readable documentation, and clear repository conventions so AI agents can safely scaffold, extend, test, and verify work.
 rules:

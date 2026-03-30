@@ -6,7 +6,7 @@ This document gives both humans and AI agents a shared technical view of the rep
 
 ## Positioning
 
-This project is an AI-oriented enterprise application component platform built on top of `Lealone-Platform`.
+This project is an AI-oriented enterprise application component platform built on top of `Lealone`.
 
 The main reuser is `AI`. In external workflows, AI may combine requirements and visual references, but the job of this repository is narrower: provide reliable, AI-friendly backend and frontend components that can be reused to assemble internal enterprise management systems.
 
@@ -20,12 +20,12 @@ The main reuser is `AI`. In external workflows, AI may combine requirements and 
 ## Backend Baseline
 
 - `Java 25 LTS` is the unified backend language and runtime baseline.
-- [Lealone-Platform](https://github.com/lealone/Lealone-Platform) is the backend foundation.
+- [Lealone](https://github.com/lealone/Lealone) is the backend foundation.
 - The goal is not to expose raw Lealone primitives directly, but to build higher-level enterprise components on top of Lealone in a form AI agents can reuse predictably.
 
 ## Lealone Assessment
 
-The current implementation still follows the recommended Lealone-Platform path:
+The current implementation still follows the current Lealone path:
 
 - Maven-managed dependencies
 - SQL-defined tables and services
@@ -34,7 +34,7 @@ The current implementation still follows the recommended Lealone-Platform path:
 
 At the same time, real integration work exposed practical friction around source builds, Tomcat runtime dependencies, smoke validation, and startup predictability. The working conclusion is:
 
-- `Lealone-Platform` is structurally friendly to AI because the service and schema model is explicit.
+- `Lealone` is structurally friendly to AI because the service and schema model is explicit.
 - It still needs repository-owned engineering support around build, verification, and operational predictability to serve as a solid platform base for AI-generated enterprise systems.
 
 ## Frontend Baseline

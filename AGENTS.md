@@ -11,7 +11,7 @@
 
 ## Repository Defaults
 
-- 后端基线是 `Java 25 LTS + Maven 3.9.x + Lealone-Platform`。
+- 后端基线是 `Java 25 LTS + Maven 3.9.x + Lealone`。
 - 前端基线是 `Node 24 + bun + Vite 8 + React 19 + shadcn/ui + Tailwind CSS 4`。
 - 文档默认优先使用中文；技术标识、命令、路径和协议名保留英文原文。
 
@@ -26,9 +26,8 @@
 
 ## Dependency Rules
 
-- `Lealone` 和 `Lealone-Platform` 需要以源码形式存在于 `vendor/`：
+- `Lealone` 需要以源码形式存在于 `vendor/`：
   - `vendor/lealone`
-  - `vendor/lealone-platform`
 - 本地安装使用 `scripts/install-lealone-source-deps.sh`。
 - 不要随意把产品原则改成依赖额外外部软件库。
 
@@ -71,7 +70,7 @@
 ## Backend Expectations
 
 - 后端按领域组织包结构，不要回退成大杂烩式分层。
-- 服务主路径继续遵循 Lealone-Platform 的推荐模型：SQL 定义表和服务，Java 实现服务，`LealoneApplication` 启动。
+- 服务主路径继续遵循当前 Lealone 的推荐模型：SQL 定义表和服务，Java 实现服务，`LealoneApplication` 启动。
 - 如果为了测试或稳定性做工程化补充，保留主路径一致性，不要把 backend 演化成完全脱离 Lealone 的实现。
 
 ## Verification Baseline

@@ -11,7 +11,7 @@ import com.fastservice.platform.backend.common.db.JdbcSupport;
 import com.fastservice.platform.backend.demo.DemoDataSupport;
 import com.lealone.db.SysProperties;
 import com.lealone.main.Lealone;
-import com.lealone.plugins.boot.LealoneApplication;
+import com.lealone.main.LealoneApplication;
 
 public final class BackendBootstrap {
 

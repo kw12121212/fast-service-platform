@@ -21,7 +21,7 @@ required_reading:
 repository_constraints:
   dependency_boundary:
     allowed:
-      - Lealone-Platform
+      - Lealone
       - repository-internal-dependencies
     forbidden:
       - additional-external-software-libraries-without-spec
@@ -161,7 +161,6 @@ smoke_path:
 local_dependencies:
   required_source_repositories:
     - vendor/lealone
-    - vendor/lealone-platform
   install_script: ./scripts/install-lealone-source-deps.sh
 
 troubleshooting:

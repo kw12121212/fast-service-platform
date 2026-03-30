@@ -33,7 +33,7 @@
 - V1 只面向 `企业内部管理应用`。
 - V1 只生成 `单体应用`。
 - 输入边界仍然是 `自然语言 + 可选原型图片 + 仅用于 UI 的参考网站`。
-- 平台依赖边界仍然是 `Lealone-Platform + 本项目已有依赖`，不要自行引入新的外部软件库。
+- 平台依赖边界仍然是 `Lealone + 本项目已有依赖`，不要自行引入新的外部软件库。
 - 非平凡改动先进入 `.spec-driven/`，不要跳过 proposal 扩范围。
 - 如果目标是派生新应用，先区分两层输入：
   - `solution input` 用来描述业务意图
@@ -129,7 +129,7 @@
 
 重点覆盖：
 
-- `vendor/lealone` 或 `vendor/lealone-platform` 缺失
+- `vendor/lealone` 缺失
 - Java / Maven / Node / bun 版本和路径不一致
 - backend 运行时 classpath 没准备好
 - `8080` 或 `4173` 端口冲突

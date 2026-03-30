@@ -38,8 +38,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.lealone.plugins</groupId>
-      <artifactId>lealone-boot</artifactId>
+      <groupId>com.lealone</groupId>
+      <artifactId>lealone-main</artifactId>
       <version>${lealone.version}</version>
     </dependency>
     <dependency>
