@@ -9,7 +9,8 @@ record ProjectRepositorySummary(
         boolean dirty,
         String latestCommitSummary,
         List<String> availableBranches,
-        List<ProjectGitCommitSummary> recentCommits) {
+        List<ProjectGitCommitSummary> recentCommits,
+        List<ProjectWorktreeSummary> worktrees) {
 
     String workingTreeState() {
         return dirty ? "DIRTY" : "CLEAN";

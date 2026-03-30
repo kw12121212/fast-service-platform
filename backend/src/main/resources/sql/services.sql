@@ -27,6 +27,10 @@ create service if not exists project_service (
   createProject(projectKey varchar, projectName varchar, description varchar) long,
   bindProjectRepository(projectId long, repositoryPath varchar) varchar,
   switchProjectBranch(projectId long, branchName varchar) varchar,
+  createProjectWorktree(projectId long, branchName varchar) varchar,
+  deleteProjectWorktree(projectId long, worktreePath varchar) varchar,
+  repairProjectWorktrees(projectId long) varchar,
+  pruneProjectWorktrees(projectId long) varchar,
   listProjects() varchar
 )
 package @packageName

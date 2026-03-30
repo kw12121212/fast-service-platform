@@ -54,6 +54,19 @@ export type GitCommitSummary = {
   summary: string
 }
 
+export type ProjectWorktreeSummary = {
+  path: string
+  main: boolean
+  headState: 'BRANCH' | 'DETACHED' | string
+  branch: string | null
+  workingTreeState: 'CLEAN' | 'DIRTY' | 'UNAVAILABLE' | string
+  hasUpstream: boolean
+  hasUnpushedCommits: boolean
+  stale: boolean
+  deletionAllowed: boolean
+  deletionRestriction: string | null
+}
+
 export type ProjectRepositorySummary = {
   rootPath: string
   headState: 'BRANCH' | 'DETACHED' | string
@@ -62,6 +75,7 @@ export type ProjectRepositorySummary = {
   latestCommitSummary: string
   availableBranches: string[]
   recentCommits: GitCommitSummary[]
+  worktrees: ProjectWorktreeSummary[]
 }
 
 export type SoftwareProject = {

@@ -36,6 +36,26 @@ public class ProjectServiceExecutor implements ServiceExecutor {
                     methodArgs[1].getString());
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
         }
+        case "CREATEPROJECTWORKTREE" -> {
+            String result = service.createprojectworktree(
+                    methodArgs[0].getLong(),
+                    methodArgs[1].getString());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "DELETEPROJECTWORKTREE" -> {
+            String result = service.deleteprojectworktree(
+                    methodArgs[0].getLong(),
+                    methodArgs[1].getString());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "REPAIRPROJECTWORKTREES" -> {
+            String result = service.repairprojectworktrees(methodArgs[0].getLong());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "PRUNEPROJECTWORKTREES" -> {
+            String result = service.pruneprojectworktrees(methodArgs[0].getLong());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
         case "LISTPROJECTS" -> {
             String result = service.listprojects();
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
@@ -57,6 +77,16 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "SWITCHPROJECTBRANCH" -> service.switchprojectbranch(
                 toLong("PROJECTID", methodArgs),
                 toString("BRANCHNAME", methodArgs));
+        case "CREATEPROJECTWORKTREE" -> service.createprojectworktree(
+                toLong("PROJECTID", methodArgs),
+                toString("BRANCHNAME", methodArgs));
+        case "DELETEPROJECTWORKTREE" -> service.deleteprojectworktree(
+                toLong("PROJECTID", methodArgs),
+                toString("WORKTREEPATH", methodArgs));
+        case "REPAIRPROJECTWORKTREES" -> service.repairprojectworktrees(
+                toLong("PROJECTID", methodArgs));
+        case "PRUNEPROJECTWORKTREES" -> service.pruneprojectworktrees(
+                toLong("PROJECTID", methodArgs));
         case "LISTPROJECTS" -> service.listprojects();
         default -> throw noMethodException(methodName);
         };
@@ -76,6 +106,22 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "SWITCHPROJECTBRANCH" -> {
             JsonArray ja = new JsonArray(json);
             yield service.switchprojectbranch(ja.getLong(0), ja.getString(1));
+        }
+        case "CREATEPROJECTWORKTREE" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.createprojectworktree(ja.getLong(0), ja.getString(1));
+        }
+        case "DELETEPROJECTWORKTREE" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.deleteprojectworktree(ja.getLong(0), ja.getString(1));
+        }
+        case "REPAIRPROJECTWORKTREES" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.repairprojectworktrees(ja.getLong(0));
+        }
+        case "PRUNEPROJECTWORKTREES" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.pruneprojectworktrees(ja.getLong(0));
         }
         case "LISTPROJECTS" -> service.listprojects();
         default -> throw noMethodException(methodName);

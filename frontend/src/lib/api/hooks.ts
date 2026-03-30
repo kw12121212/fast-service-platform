@@ -333,6 +333,40 @@ export function useSwitchProjectBranchAction() {
   })
 }
 
+export function useCreateProjectWorktreeAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+      branchName: string
+    }) => invokeService<string>('project_service/createProjectWorktree', args),
+  })
+}
+
+export function useDeleteProjectWorktreeAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+      worktreePath: string
+    }) => invokeService<string>('project_service/deleteProjectWorktree', args),
+  })
+}
+
+export function useRepairProjectWorktreesAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+    }) => invokeService<string>('project_service/repairProjectWorktrees', args),
+  })
+}
+
+export function usePruneProjectWorktreesAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+    }) => invokeService<string>('project_service/pruneProjectWorktrees', args),
+  })
+}
+
 export function useCreateRoleAction() {
   return useBackendMutation({
     run: (args: {

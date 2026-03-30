@@ -28,6 +28,18 @@ type MockProject = {
       hash: string
       summary: string
     }>
+    worktrees: Array<{
+      path: string
+      main: boolean
+      headState: 'BRANCH' | 'DETACHED'
+      branch: string | null
+      workingTreeState: 'CLEAN' | 'DIRTY' | 'UNAVAILABLE'
+      hasUpstream: boolean
+      hasUnpushedCommits: boolean
+      stale: boolean
+      deletionAllowed: boolean
+      deletionRestriction: string | null
+    }>
   } | null
 }
 
@@ -153,6 +165,30 @@ function textResponse(body: string) {
   })
 }
 
+function errorResponse(status: number, body: string) {
+  return new Response(body, {
+    status,
+    headers: {
+      'Content-Type': 'text/plain',
+    },
+  })
+}
+
+function createMainWorktree(path: string, branch: string): NonNullable<MockProject['repository']>['worktrees'][number] {
+  return {
+    path,
+    main: true,
+    headState: 'BRANCH',
+    branch,
+    workingTreeState: 'CLEAN',
+    hasUpstream: true,
+    hasUnpushedCommits: false,
+    stale: false,
+    deletionAllowed: false,
+    deletionRestriction: 'Main repository worktree cannot be removed from the project view',
+  }
+}
+
 function installBackendMock() {
   const state = createBackendState()
 
@@ -208,13 +244,19 @@ function installBackendMock() {
       const repositoryPath = url.searchParams.get('repositoryPath') ?? ''
       const project = state.projects.find((entry) => entry.id === projectId)
       if (project) {
+        const detached = repositoryPath.includes('detached')
         project.repository = {
           rootPath: repositoryPath,
-          headState: 'BRANCH',
-          branch: 'repo-test',
+          headState: detached ? 'DETACHED' : 'BRANCH',
+          branch: detached ? null : 'repo-test',
           workingTreeState: 'CLEAN',
           latestCommitSummary: 'a1b2c3d Initial platform repo',
-          availableBranches: ['feature-preview', 'repo-test'],
+          availableBranches: [
+            'feature/api-preview',
+            'feature-preview',
+            'feature/error',
+            'repo-test',
+          ],
           recentCommits: [
             {
               hash: 'a1b2c3d',
@@ -225,6 +267,7 @@ function installBackendMock() {
               summary: 'Add Git management baseline',
             },
           ],
+          worktrees: [createMainWorktree(repositoryPath, 'repo-test')],
         }
       }
       return jsonResponse(repositoryPath)
@@ -248,9 +291,99 @@ function installBackendMock() {
             },
             ...project.repository.recentCommits,
           ].slice(0, 3),
+          worktrees: project.repository.worktrees.map((worktree) =>
+            worktree.main
+              ? {
+                  ...worktree,
+                  branch: branchName,
+                }
+              : worktree,
+          ),
         }
       }
       return textResponse(branchName)
+    }
+
+    if (path === '/service/project_service/createProjectWorktree') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const branchName = url.searchParams.get('branchName') ?? ''
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (!project?.repository) {
+        return errorResponse(409, 'Project repository is not bound')
+      }
+      if (branchName === 'feature/error') {
+        return errorResponse(409, 'Worktree creation rejected by backend')
+      }
+      if (project.repository.worktrees.some((worktree) => worktree.branch === branchName)) {
+        return errorResponse(409, `Branch already has a worktree: ${branchName}`)
+      }
+      const sanitizedBranch = branchName.replaceAll(/[^A-Za-z0-9._-]+/g, '-')
+      const worktreePath = `${project.repository.rootPath}-worktrees/${sanitizedBranch}`
+      const deletable = branchName !== 'feature-preview'
+      project.repository.worktrees.push({
+        path: worktreePath,
+        main: false,
+        headState: 'BRANCH',
+        branch: branchName,
+        workingTreeState: 'CLEAN',
+        hasUpstream: deletable,
+        hasUnpushedCommits: false,
+        stale: false,
+        deletionAllowed: deletable,
+        deletionRestriction: deletable ? null : 'Worktree has no upstream branch',
+      })
+      return textResponse(worktreePath)
+    }
+
+    if (path === '/service/project_service/deleteProjectWorktree') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const worktreePath = url.searchParams.get('worktreePath') ?? ''
+      const project = state.projects.find((entry) => entry.id === projectId)
+      const worktree = project?.repository?.worktrees.find(
+        (entry) => entry.path === worktreePath,
+      )
+      if (!project?.repository || !worktree) {
+        return errorResponse(404, 'Worktree is not managed by the bound repository')
+      }
+      if (!worktree.deletionAllowed) {
+        return errorResponse(
+          409,
+          worktree.deletionRestriction ?? 'This linked worktree must be handled manually before deletion.',
+        )
+      }
+      project.repository.worktrees = project.repository.worktrees.filter(
+        (entry) => entry.path !== worktreePath,
+      )
+      return textResponse(worktreePath)
+    }
+
+    if (path === '/service/project_service/repairProjectWorktrees') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (!project?.repository) {
+        return errorResponse(409, 'Project repository is not bound')
+      }
+      if (project.repository.headState === 'DETACHED') {
+        return errorResponse(
+          409,
+          'Cannot repair worktrees while repository is in detached HEAD state',
+        )
+      }
+      project.repository.latestCommitSummary = 'repair worktree metadata'
+      return textResponse(project.repository.rootPath)
+    }
+
+    if (path === '/service/project_service/pruneProjectWorktrees') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (!project?.repository) {
+        return errorResponse(409, 'Project repository is not bound')
+      }
+      project.repository.worktrees = project.repository.worktrees.filter(
+        (entry) => !entry.stale,
+      )
+      project.repository.latestCommitSummary = 'pruned stale worktree records'
+      return textResponse(project.repository.rootPath)
     }
 
     if (path === '/service/kanban_service/listKanbansByProject') {
@@ -479,13 +612,15 @@ describe('admin write workflows', () => {
       ),
     ).toBeInTheDocument()
     expect(
-      await screen.findByText('/workspace/fast-service-platform'),
-    ).toBeInTheDocument()
+      await screen.findAllByText('/workspace/fast-service-platform'),
+    ).not.toHaveLength(0)
     expect(await screen.findByDisplayValue('repo-test')).toBeInTheDocument()
     expect(await screen.findByText('a1b2c3d Initial platform repo')).toBeInTheDocument()
     expect(
-      await screen.findByRole('option', { name: 'feature-preview' }),
-    ).toBeInTheDocument()
+      await screen.findAllByRole('option', { name: 'feature-preview' }),
+    ).not.toHaveLength(0)
+    expect(await screen.findByText('Worktree inventory')).toBeInTheDocument()
+    expect(await screen.findByText('Main worktree')).toBeInTheDocument()
     expect(await screen.findByText('Add Git management baseline')).toBeInTheDocument()
   })
 
@@ -499,7 +634,9 @@ describe('admin write workflows', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
 
-    await screen.findByText('/workspace/fast-service-platform')
+    expect(
+      await screen.findAllByText('/workspace/fast-service-platform'),
+    ).not.toHaveLength(0)
 
     fireEvent.change(screen.getByLabelText('Local branch'), {
       target: { value: 'feature-preview' },
@@ -510,6 +647,120 @@ describe('admin write workflows', () => {
       await screen.findByText('Branch switched and the project list has been refreshed.'),
     ).toBeInTheDocument()
     expect(await screen.findByText('Switch to feature-preview')).toBeInTheDocument()
+  })
+
+  it('creates and deletes a worktree from the projects page', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(
+      await screen.findAllByText('/workspace/fast-service-platform'),
+    ).not.toHaveLength(0)
+
+    fireEvent.change(screen.getByLabelText('Worktree branch'), {
+      target: { value: 'feature/api-preview' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create worktree' }))
+
+    expect(
+      await screen.findByText('Worktree created and the project list has been refreshed.'),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText('/workspace/fast-service-platform-worktrees/feature-api-preview'),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete worktree' }))
+
+    expect(
+      await screen.findByText('Worktree removed and the project list has been refreshed.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText('/workspace/fast-service-platform-worktrees/feature-api-preview'),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows restricted deletion state and rejected worktree mutations', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(
+      await screen.findAllByText('/workspace/fast-service-platform'),
+    ).not.toHaveLength(0)
+
+    fireEvent.change(screen.getByLabelText('Worktree branch'), {
+      target: { value: 'feature-preview' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create worktree' }))
+
+    expect(
+      await screen.findByText('/workspace/fast-service-platform-worktrees/feature-preview'),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Worktree has no upstream branch')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Worktree branch'), {
+      target: { value: 'feature/error' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create worktree' }))
+
+    expect(
+      await screen.findByText('Backend request failed with 409: Worktree creation rejected by backend'),
+    ).toBeInTheDocument()
+  })
+
+  it('shows detached repair restrictions and supports prune from the projects page', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/detached-project' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(await screen.findAllByText('/workspace/detached-project')).not.toHaveLength(
+      0,
+    )
+
+    expect(
+      await screen.findByText(
+        'Worktree creation is unavailable while the repository is in detached HEAD state.',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        'Repair is unavailable while the repository is in detached HEAD state, but prune remains available for stale records.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Repair metadata' })).toBeDisabled()
+
+    const bindAgainInput = screen.getByLabelText('Repository path')
+    fireEvent.change(bindAgainInput, {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(
+      await screen.findAllByText('/workspace/fast-service-platform'),
+    ).not.toHaveLength(0)
+    fireEvent.click(screen.getByRole('button', { name: 'Prune stale records' }))
+
+    expect(
+      await screen.findByText(
+        'Stale worktree records pruned and the project list has been refreshed.',
+      ),
+    ).toBeInTheDocument()
   })
 
   it('creates a kanban board from the kanban page', async () => {

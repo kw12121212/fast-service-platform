@@ -2,6 +2,7 @@ package com.fastservice.platform.backend.project;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +17,45 @@ final class GitRepositoryInspector {
     ProjectRepositorySummary inspect(String repositoryPath) {
         Path repositoryRootPath = resolveRepositoryRoot(repositoryPath);
         return inspectResolvedRepositoryRoot(repositoryRootPath);
+    }
+
+    String createWorktree(String repositoryPath, String branchName) {
+        if (branchName == null || branchName.isBlank()) {
+            throw new IllegalArgumentException("Branch name is required");
+        }
+
+        Path repositoryRootPath = resolveRepositoryRoot(repositoryPath);
+        ProjectRepositorySummary repositorySummary = inspectResolvedRepositoryRoot(repositoryRootPath);
+        requireNonDetachedWorktreeState(repositorySummary, "Cannot create worktrees while repository is in detached HEAD state");
+
+        if (!repositorySummary.availableBranches().contains(branchName)) {
+            throw new IllegalArgumentException("Branch does not exist locally: " + branchName);
+        }
+
+        if (repositorySummary.worktrees().stream().anyMatch(worktree -> branchName.equals(worktree.branch()))) {
+            throw new IllegalStateException("Branch already has a worktree: " + branchName);
+        }
+
+        Path worktreeRoot = repositoryRootPath.resolveSibling(repositoryRootPath.getFileName() + "-worktrees");
+        Path worktreePath = worktreeRoot.resolve(sanitizeBranchName(branchName)).normalize().toAbsolutePath();
+        if (Files.exists(worktreePath)) {
+            throw new IllegalStateException("Worktree path already exists: " + worktreePath);
+        }
+
+        try {
+            Files.createDirectories(worktreeRoot);
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to create worktree root directory", e);
+        }
+
+        runGitCommandOrThrow(
+                repositoryRootPath,
+                "Unable to create project worktree",
+                "worktree",
+                "add",
+                worktreePath.toString(),
+                branchName);
+        return worktreePath.toString();
     }
 
     String switchBranch(String repositoryPath, String branchName) {
@@ -47,15 +87,61 @@ final class GitRepositoryInspector {
         return updatedRepository.branch();
     }
 
-    private Path resolveRepositoryRoot(String repositoryPath) {
-        if (repositoryPath == null || repositoryPath.isBlank()) {
-            throw new IllegalArgumentException("Repository path is required");
+    String deleteWorktree(String repositoryPath, String worktreePath) {
+        Path repositoryRootPath = resolveRepositoryRoot(repositoryPath);
+        ProjectRepositorySummary repositorySummary = inspectResolvedRepositoryRoot(repositoryRootPath);
+        Path requestedWorktreePath = normalizeAbsolutePath(worktreePath, "Worktree path");
+        ProjectWorktreeSummary selectedWorktree = repositorySummary.worktrees().stream()
+                .filter(worktree -> Path.of(worktree.path()).normalize().toAbsolutePath().equals(requestedWorktreePath))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Worktree is not managed by the bound repository: " + worktreePath));
+
+        if (selectedWorktree.main()) {
+            throw new IllegalArgumentException("Cannot delete the main repository worktree");
+        }
+        if (selectedWorktree.stale()) {
+            throw new IllegalStateException("Cannot delete stale worktree records; run prune instead");
+        }
+        if (selectedWorktree.dirty()) {
+            throw new IllegalStateException("Cannot delete worktree while it has uncommitted changes");
+        }
+        if (!selectedWorktree.hasUpstream()) {
+            throw new IllegalStateException("Cannot delete worktree without an upstream branch");
+        }
+        if (selectedWorktree.hasUnpushedCommits()) {
+            throw new IllegalStateException("Cannot delete worktree while it has unpushed commits");
         }
 
-        Path requestedPath = Path.of(repositoryPath).normalize();
-        if (!requestedPath.isAbsolute()) {
-            throw new IllegalArgumentException("Repository path must be absolute: " + repositoryPath);
-        }
+        runGitCommandOrThrow(
+                repositoryRootPath,
+                "Unable to delete project worktree",
+                "worktree",
+                "remove",
+                requestedWorktreePath.toString());
+        return requestedWorktreePath.toString();
+    }
+
+    String repairWorktrees(String repositoryPath) {
+        Path repositoryRootPath = resolveRepositoryRoot(repositoryPath);
+        ProjectRepositorySummary repositorySummary = inspectResolvedRepositoryRoot(repositoryRootPath);
+        requireNonDetachedWorktreeState(repositorySummary, "Cannot repair worktrees while repository is in detached HEAD state");
+        runGitCommandOrThrow(repositoryRootPath, "Unable to repair project worktree metadata", "worktree", "repair");
+        return repositoryRootPath.toString();
+    }
+
+    String pruneWorktrees(String repositoryPath) {
+        Path repositoryRootPath = resolveRepositoryRoot(repositoryPath);
+        runGitCommandOrThrow(
+                repositoryRootPath,
+                "Unable to prune stale project worktree metadata",
+                "worktree",
+                "prune",
+                "--expire=now");
+        return repositoryRootPath.toString();
+    }
+
+    private Path resolveRepositoryRoot(String repositoryPath) {
+        Path requestedPath = normalizeAbsolutePath(repositoryPath, "Repository path");
 
         String repositoryRoot = runGitCommand(requestedPath, false, "rev-parse", "--show-toplevel");
         return Path.of(repositoryRoot).normalize().toAbsolutePath();
@@ -69,6 +155,7 @@ final class GitRepositoryInspector {
         List<String> availableBranches = splitNonBlankLines(
                 runGitCommand(repositoryRootPath, false, "for-each-ref", "--format=%(refname:short)", "refs/heads"));
         List<ProjectGitCommitSummary> recentCommits = readRecentCommits(repositoryRootPath);
+        List<ProjectWorktreeSummary> worktrees = readWorktrees(repositoryRootPath);
         String latestCommitSummary = recentCommits.isEmpty() ? "No commits yet"
                 : recentCommits.getFirst().hash() + " " + recentCommits.getFirst().summary();
         if (latestCommitSummary.isBlank()) {
@@ -82,7 +169,8 @@ final class GitRepositoryInspector {
                 dirty,
                 latestCommitSummary,
                 availableBranches,
-                recentCommits);
+                recentCommits,
+                worktrees);
     }
 
     private String runGitCommand(Path workingPath, boolean allowFailure, String... args) {
@@ -120,6 +208,46 @@ final class GitRepositoryInspector {
                 return "";
             }
             throw new IllegalArgumentException("Repository path is not a valid Git repository: " + workingPath);
+        }
+
+        return output;
+    }
+
+    private String runGitCommandOrThrow(Path workingPath, String failurePrefix, String... args) {
+        List<String> command = new ArrayList<>();
+        command.add("git");
+        command.add("-C");
+        command.add(workingPath.toString());
+        command.addAll(List.of(args));
+
+        Process process;
+        try {
+            process = new ProcessBuilder(command)
+                    .redirectErrorStream(true)
+                    .start();
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to start git command", e);
+        }
+
+        String output;
+        try {
+            output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+            if (!process.waitFor(GIT_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                process.destroyForcibly();
+                throw new IllegalStateException("Git command timed out for path: " + workingPath);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to read git command output", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while waiting for git command", e);
+        }
+
+        if (process.exitValue() != 0) {
+            if (output.isBlank()) {
+                throw new IllegalStateException(failurePrefix);
+            }
+            throw new IllegalStateException(failurePrefix + ": " + output);
         }
 
         return output;
@@ -163,5 +291,124 @@ final class GitRepositoryInspector {
             }
         }
         return Collections.unmodifiableList(values);
+    }
+
+    private List<ProjectWorktreeSummary> readWorktrees(Path repositoryRootPath) {
+        String output = runGitCommand(repositoryRootPath, false, "worktree", "list", "--porcelain");
+        if (output.isBlank()) {
+            return List.of();
+        }
+
+        List<ProjectWorktreeSummary> worktrees = new ArrayList<>();
+        Path worktreePath = null;
+        String branch = null;
+        ProjectGitHeadState headState = ProjectGitHeadState.BRANCH;
+        boolean stale = false;
+
+        for (String line : output.split("\\R")) {
+            if (line.isBlank()) {
+                if (worktreePath != null) {
+                    worktrees.add(buildWorktreeSummary(repositoryRootPath, worktreePath, branch, headState, stale));
+                }
+                worktreePath = null;
+                branch = null;
+                headState = ProjectGitHeadState.BRANCH;
+                stale = false;
+                continue;
+            }
+
+            if (line.startsWith("worktree ")) {
+                worktreePath = Path.of(line.substring("worktree ".length())).normalize().toAbsolutePath();
+                continue;
+            }
+            if (line.startsWith("branch ")) {
+                String branchRef = line.substring("branch ".length()).trim();
+                branch = branchRef.startsWith("refs/heads/") ? branchRef.substring("refs/heads/".length()) : branchRef;
+                continue;
+            }
+            if ("detached".equals(line)) {
+                headState = ProjectGitHeadState.DETACHED;
+                branch = null;
+                continue;
+            }
+            if (line.startsWith("prunable")) {
+                stale = true;
+            }
+        }
+
+        if (worktreePath != null) {
+            worktrees.add(buildWorktreeSummary(repositoryRootPath, worktreePath, branch, headState, stale));
+        }
+        return Collections.unmodifiableList(worktrees);
+    }
+
+    private ProjectWorktreeSummary buildWorktreeSummary(
+            Path repositoryRootPath,
+            Path worktreePath,
+            String branch,
+            ProjectGitHeadState headState,
+            boolean stale) {
+        boolean main = repositoryRootPath.equals(worktreePath);
+        boolean pathExists = Files.exists(worktreePath);
+        if (!pathExists) {
+            stale = true;
+        }
+
+        String workingTreeState = "UNAVAILABLE";
+        boolean hasUpstream = false;
+        boolean hasUnpushedCommits = false;
+        if (!stale) {
+            workingTreeState = runGitCommand(worktreePath, false, "status", "--porcelain").isBlank() ? "CLEAN" : "DIRTY";
+            if (headState == ProjectGitHeadState.BRANCH && branch != null) {
+                String upstreamRef = runGitCommand(
+                        worktreePath,
+                        true,
+                        "rev-parse",
+                        "--abbrev-ref",
+                        "--symbolic-full-name",
+                        "@{upstream}");
+                hasUpstream = !upstreamRef.isBlank();
+                if (hasUpstream) {
+                    String aheadCount = runGitCommand(worktreePath, true, "rev-list", "--count", "@{upstream}..HEAD");
+                    hasUnpushedCommits = !aheadCount.isBlank() && Integer.parseInt(aheadCount) > 0;
+                }
+            }
+        }
+
+        return new ProjectWorktreeSummary(
+                worktreePath.toString(),
+                main,
+                headState,
+                branch,
+                workingTreeState,
+                hasUpstream,
+                hasUnpushedCommits,
+                stale);
+    }
+
+    private Path normalizeAbsolutePath(String pathValue, String label) {
+        if (pathValue == null || pathValue.isBlank()) {
+            throw new IllegalArgumentException(label + " is required");
+        }
+
+        Path path = Path.of(pathValue).normalize();
+        if (!path.isAbsolute()) {
+            throw new IllegalArgumentException(label + " must be absolute: " + pathValue);
+        }
+        return path.toAbsolutePath();
+    }
+
+    private void requireNonDetachedWorktreeState(ProjectRepositorySummary repositorySummary, String message) {
+        if (repositorySummary.headState() == ProjectGitHeadState.DETACHED) {
+            throw new IllegalStateException(message);
+        }
+    }
+
+    private String sanitizeBranchName(String branchName) {
+        String sanitized = branchName.replaceAll("[^A-Za-z0-9._-]+", "-");
+        if (sanitized.isBlank()) {
+            throw new IllegalArgumentException("Branch name cannot be converted into a filesystem-safe worktree path");
+        }
+        return sanitized;
     }
 }

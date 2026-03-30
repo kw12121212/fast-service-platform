@@ -27,6 +27,22 @@ public class ProjectServiceImpl {
         return switchProjectBranch(projectId, branchName);
     }
 
+    public String createprojectworktree(long projectId, String branchName) {
+        return createProjectWorktree(projectId, branchName);
+    }
+
+    public String deleteprojectworktree(long projectId, String worktreePath) {
+        return deleteProjectWorktree(projectId, worktreePath);
+    }
+
+    public String repairprojectworktrees(long projectId) {
+        return repairProjectWorktrees(projectId);
+    }
+
+    public String pruneprojectworktrees(long projectId) {
+        return pruneProjectWorktrees(projectId);
+    }
+
     public String listprojects() {
         return listProjects();
     }
@@ -84,6 +100,30 @@ public class ProjectServiceImpl {
         return gitRepositoryInspector.switchBranch(repositoryRootPath, branchName);
     }
 
+    public String createProjectWorktree(long projectId, String branchName) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return gitRepositoryInspector.createWorktree(repositoryRootPath, branchName);
+    }
+
+    public String deleteProjectWorktree(long projectId, String worktreePath) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return gitRepositoryInspector.deleteWorktree(repositoryRootPath, worktreePath);
+    }
+
+    public String repairProjectWorktrees(long projectId) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return gitRepositoryInspector.repairWorktrees(repositoryRootPath);
+    }
+
+    public String pruneProjectWorktrees(long projectId) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return gitRepositoryInspector.pruneWorktrees(repositoryRootPath);
+    }
+
     public String listProjects() {
         String sql = """
                 SELECT p.id, p.project_key, p.project_name, p.active, b.repository_root_path
@@ -133,6 +173,8 @@ public class ProjectServiceImpl {
         appendStringArray(builder, repositorySummary.availableBranches());
         builder.append(",\"recentCommits\":");
         appendRecentCommits(builder, repositorySummary.recentCommits());
+        builder.append(",\"worktrees\":");
+        appendWorktrees(builder, repositorySummary.worktrees());
         builder.append('}');
     }
 
@@ -173,6 +215,29 @@ public class ProjectServiceImpl {
             builder.append('{');
             builder.append("\"hash\":").append(JsonStrings.quote(commit.hash()));
             builder.append(",\"summary\":").append(JsonStrings.quote(commit.summary()));
+            builder.append('}');
+        }
+        builder.append(']');
+    }
+
+    private void appendWorktrees(StringBuilder builder, List<ProjectWorktreeSummary> worktrees) {
+        builder.append('[');
+        for (int i = 0; i < worktrees.size(); i++) {
+            if (i > 0) {
+                builder.append(',');
+            }
+            ProjectWorktreeSummary worktree = worktrees.get(i);
+            builder.append('{');
+            builder.append("\"path\":").append(JsonStrings.quote(worktree.path()));
+            builder.append(",\"main\":").append(worktree.main());
+            builder.append(",\"headState\":").append(JsonStrings.quote(worktree.headState().name()));
+            builder.append(",\"branch\":").append(JsonStrings.quote(worktree.branch()));
+            builder.append(",\"workingTreeState\":").append(JsonStrings.quote(worktree.workingTreeState()));
+            builder.append(",\"hasUpstream\":").append(worktree.hasUpstream());
+            builder.append(",\"hasUnpushedCommits\":").append(worktree.hasUnpushedCommits());
+            builder.append(",\"stale\":").append(worktree.stale());
+            builder.append(",\"deletionAllowed\":").append(worktree.deletionAllowed());
+            builder.append(",\"deletionRestriction\":").append(JsonStrings.quote(worktree.deletionRestriction()));
             builder.append('}');
         }
         builder.append(']');

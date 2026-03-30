@@ -11,11 +11,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   useBindProjectRepositoryAction,
+  useCreateProjectWorktreeAction,
   useCreateProjectAction,
+  useDeleteProjectWorktreeAction,
   useProjectsResource,
+  usePruneProjectWorktreesAction,
+  useRepairProjectWorktreesAction,
   useSwitchProjectBranchAction,
 } from '@/lib/api/hooks'
-import type { SoftwareProject } from '@/lib/api/types'
+import type { ProjectRepositorySummary, ProjectWorktreeSummary, SoftwareProject } from '@/lib/api/types'
 
 function repositoryStateTone(
   workingTreeState: string,
@@ -64,6 +68,71 @@ function branchSwitchRestriction(project: SoftwareProject) {
   return null
 }
 
+function availableWorktreeBranches(repository: ProjectRepositorySummary) {
+  const assignedBranches = new Set(
+    repository.worktrees
+      .map((worktree) => worktree.branch)
+      .filter((branch): branch is string => branch !== null),
+  )
+
+  return repository.availableBranches.filter((branch) => !assignedBranches.has(branch))
+}
+
+function worktreeCreationRestriction(repository: ProjectRepositorySummary | null) {
+  if (!repository) {
+    return 'Bind a repository first to create and maintain project worktrees.'
+  }
+
+  if (repository.headState === 'DETACHED') {
+    return 'Worktree creation is unavailable while the repository is in detached HEAD state.'
+  }
+
+  if (availableWorktreeBranches(repository).length === 0) {
+    return 'Every visible local branch already has a worktree.'
+  }
+
+  return null
+}
+
+function worktreeTone(worktree: ProjectWorktreeSummary) {
+  if (worktree.main) {
+    return 'bg-primary/12 text-primary'
+  }
+  if (worktree.stale) {
+    return 'bg-rose-500/12 text-rose-700'
+  }
+  if (worktree.workingTreeState === 'DIRTY' || worktree.hasUnpushedCommits) {
+    return 'bg-amber-500/14 text-amber-700'
+  }
+  return 'bg-emerald-500/12 text-emerald-700'
+}
+
+function worktreeStatusLabel(worktree: ProjectWorktreeSummary) {
+  if (worktree.main) {
+    return 'Main worktree'
+  }
+  if (worktree.stale) {
+    return 'Stale record'
+  }
+  if (worktree.workingTreeState === 'DIRTY') {
+    return 'Dirty'
+  }
+  if (worktree.hasUnpushedCommits) {
+    return 'Unpushed commits'
+  }
+  if (!worktree.hasUpstream) {
+    return 'No upstream'
+  }
+  return 'Linked worktree'
+}
+
+function worktreeRefLabel(worktree: ProjectWorktreeSummary) {
+  if (worktree.headState === 'DETACHED') {
+    return 'Detached HEAD'
+  }
+  return worktree.branch ?? 'Unknown ref'
+}
+
 type ProjectRepositoryCardProps = {
   project: SoftwareProject
   onRepositoryBound: () => void
@@ -75,12 +144,30 @@ function ProjectRepositoryCard({
 }: ProjectRepositoryCardProps) {
   const bindProjectRepository = useBindProjectRepositoryAction()
   const switchProjectBranch = useSwitchProjectBranchAction()
+  const createProjectWorktree = useCreateProjectWorktreeAction()
+  const deleteProjectWorktree = useDeleteProjectWorktreeAction()
+  const repairProjectWorktrees = useRepairProjectWorktreesAction()
+  const pruneProjectWorktrees = usePruneProjectWorktreesAction()
   const [repositoryPath, setRepositoryPath] = useState(
     project.repository?.rootPath ?? '',
   )
   const [targetBranch, setTargetBranch] = useState(
     project.repository?.branch ?? project.repository?.availableBranches[0] ?? '',
   )
+  const [worktreeBranch, setWorktreeBranch] = useState(
+    project.repository ? availableWorktreeBranches(project.repository)[0] ?? '' : '',
+  )
+  const repositoryPathValue = repositoryPath || project.repository?.rootPath || ''
+  const targetBranchValue =
+    project.repository && project.repository.availableBranches.includes(targetBranch)
+      ? targetBranch
+      : project.repository?.branch ?? project.repository?.availableBranches[0] ?? ''
+  const creatableWorktreeBranches = project.repository
+    ? availableWorktreeBranches(project.repository)
+    : []
+  const worktreeBranchValue = creatableWorktreeBranches.includes(worktreeBranch)
+    ? worktreeBranch
+    : (creatableWorktreeBranches[0] ?? '')
 
   async function handleBindRepository(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -88,7 +175,7 @@ function ProjectRepositoryCard({
     try {
       const boundRootPath = await bindProjectRepository.submit({
         projectId: project.id,
-        repositoryPath: repositoryPath.trim(),
+        repositoryPath: repositoryPathValue.trim(),
       })
       setRepositoryPath(boundRootPath)
       onRepositoryBound()
@@ -100,14 +187,66 @@ function ProjectRepositoryCard({
   async function handleSwitchBranch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    if (!targetBranch.trim()) {
+    if (!targetBranchValue.trim()) {
       return
     }
 
     try {
       await switchProjectBranch.submit({
         projectId: project.id,
-        branchName: targetBranch,
+        branchName: targetBranchValue,
+      })
+      onRepositoryBound()
+    } catch {
+      return
+    }
+  }
+
+  async function handleCreateWorktree(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!worktreeBranchValue.trim()) {
+      return
+    }
+
+    try {
+      await createProjectWorktree.submit({
+        projectId: project.id,
+        branchName: worktreeBranchValue,
+      })
+      onRepositoryBound()
+    } catch {
+      return
+    }
+  }
+
+  async function handleDeleteWorktree(worktreePath: string) {
+    try {
+      await deleteProjectWorktree.submit({
+        projectId: project.id,
+        worktreePath,
+      })
+      onRepositoryBound()
+    } catch {
+      return
+    }
+  }
+
+  async function handleRepairWorktrees() {
+    try {
+      await repairProjectWorktrees.submit({
+        projectId: project.id,
+      })
+      onRepositoryBound()
+    } catch {
+      return
+    }
+  }
+
+  async function handlePruneWorktrees() {
+    try {
+      await pruneProjectWorktrees.submit({
+        projectId: project.id,
       })
       onRepositoryBound()
     } catch {
@@ -117,6 +256,7 @@ function ProjectRepositoryCard({
 
   const branchRestriction = branchSwitchRestriction(project)
   const currentRef = currentRefLabel(project)
+  const createRestriction = worktreeCreationRestriction(project.repository)
 
   return (
     <Card className="overflow-hidden border-border/70 bg-[linear-gradient(155deg,rgba(255,255,255,0.96),rgba(246,245,238,0.92))]">
@@ -257,7 +397,7 @@ function ProjectRepositoryCard({
                     <select
                       id={`switch-project-branch-${project.id}`}
                       className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none ring-0 transition-colors focus-visible:border-ring"
-                      value={targetBranch}
+                      value={targetBranchValue}
                       onChange={(event) => setTargetBranch(event.target.value)}
                     >
                       {project.repository.availableBranches.map((branch) => (
@@ -284,6 +424,185 @@ function ProjectRepositoryCard({
                 </form>
               )}
             </div>
+
+            <div className="space-y-4 rounded-[20px] border border-border/60 bg-background/80 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                    Worktree inventory
+                  </div>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Inspect linked worktrees, create branch-specific workspaces,
+                    and run repair or prune from the current Projects experience.
+                  </div>
+                </div>
+                <Badge className="bg-primary/10 text-primary">
+                  {project.repository.worktrees.length} worktrees
+                </Badge>
+              </div>
+
+              <div className="space-y-3">
+                {project.repository.worktrees.map((worktree) => (
+                  <div
+                    key={`${project.id}:${worktree.path}`}
+                    className="rounded-[18px] border border-border/60 bg-muted/24 p-4"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-medium text-foreground">
+                          {worktreeRefLabel(worktree)}
+                        </div>
+                        <div className="mt-1 break-all text-sm text-muted-foreground">
+                          {worktree.path}
+                        </div>
+                      </div>
+                      <Badge className={worktreeTone(worktree)}>
+                        {worktreeStatusLabel(worktree)}
+                      </Badge>
+                    </div>
+
+                    <div className="mt-3 grid gap-2 text-sm text-muted-foreground">
+                      <div>
+                        Working tree{' '}
+                        <span className="font-medium text-foreground">
+                          {worktree.workingTreeState}
+                        </span>
+                      </div>
+                      <div>
+                        Upstream{' '}
+                        <span className="font-medium text-foreground">
+                          {worktree.hasUpstream ? 'Configured' : 'Missing'}
+                        </span>
+                      </div>
+                      <div>
+                        Push state{' '}
+                        <span className="font-medium text-foreground">
+                          {worktree.hasUnpushedCommits ? 'Ahead of upstream' : 'Fully pushed'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {worktree.main ? (
+                      <div className="mt-3 rounded-[16px] border border-dashed border-border/70 bg-background/60 px-3 py-2 text-sm text-muted-foreground">
+                        The main repository worktree stays attached to the project and
+                        cannot be removed from this view.
+                      </div>
+                    ) : worktree.deletionAllowed ? (
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                        <div className="text-sm text-muted-foreground">
+                          This linked worktree is clean and fully pushed.
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleDeleteWorktree(worktree.path)}
+                          disabled={deleteProjectWorktree.status === 'submitting'}
+                        >
+                          Delete worktree
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                        <div className="text-sm text-muted-foreground">
+                          {worktree.deletionRestriction ??
+                            'This linked worktree must be handled manually before deletion.'}
+                        </div>
+                        <Button variant="outline" disabled>
+                          Delete worktree
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleRepairWorktrees}
+                  disabled={
+                    repairProjectWorktrees.status === 'submitting' ||
+                    project.repository.headState === 'DETACHED'
+                  }
+                >
+                  Repair metadata
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handlePruneWorktrees}
+                  disabled={pruneProjectWorktrees.status === 'submitting'}
+                >
+                  Prune stale records
+                </Button>
+              </div>
+
+              {project.repository.headState === 'DETACHED' ? (
+                <div className="rounded-[18px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+                  Repair is unavailable while the repository is in detached HEAD
+                  state, but prune remains available for stale records.
+                </div>
+              ) : null}
+
+              <MutationStatus
+                status={repairProjectWorktrees.status}
+                error={repairProjectWorktrees.error}
+                submittingMessage="Repairing project worktree metadata through the backend project service..."
+                successMessage="Worktree metadata repaired and the project list has been refreshed."
+              />
+
+              <MutationStatus
+                status={pruneProjectWorktrees.status}
+                error={pruneProjectWorktrees.error}
+                submittingMessage="Pruning stale worktree records through the backend project service..."
+                successMessage="Stale worktree records pruned and the project list has been refreshed."
+              />
+
+              {createRestriction ? (
+                <div className="rounded-[18px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+                  {createRestriction}
+                </div>
+              ) : (
+                <form className="space-y-4" onSubmit={handleCreateWorktree}>
+                  <div className="space-y-2">
+                    <Label htmlFor={`create-project-worktree-${project.id}`}>
+                      Worktree branch
+                    </Label>
+                    <select
+                      id={`create-project-worktree-${project.id}`}
+                      className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none ring-0 transition-colors focus-visible:border-ring"
+                      value={worktreeBranchValue}
+                      onChange={(event) => setWorktreeBranch(event.target.value)}
+                    >
+                      {creatableWorktreeBranches.map((branch) => (
+                        <option key={branch} value={branch}>
+                          {branch}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <MutationStatus
+                    status={createProjectWorktree.status}
+                    error={createProjectWorktree.error}
+                    submittingMessage="Creating project worktree through the backend project service..."
+                    successMessage="Worktree created and the project list has been refreshed."
+                  />
+
+                  <MutationStatus
+                    status={deleteProjectWorktree.status}
+                    error={deleteProjectWorktree.error}
+                    submittingMessage="Deleting project worktree through the backend project service..."
+                    successMessage="Worktree removed and the project list has been refreshed."
+                  />
+
+                  <Button
+                    type="submit"
+                    disabled={createProjectWorktree.status === 'submitting'}
+                  >
+                    Create worktree
+                  </Button>
+                </form>
+              )}
+            </div>
           </div>
         ) : (
           <div className="rounded-[22px] border border-dashed border-border/70 bg-background/55 p-4 text-sm leading-6 text-muted-foreground">
@@ -299,7 +618,7 @@ function ProjectRepositoryCard({
             </Label>
             <Input
               id={`bind-project-repository-${project.id}`}
-              value={repositoryPath}
+              value={repositoryPathValue}
               onChange={(event) => setRepositoryPath(event.target.value)}
               placeholder="/absolute/path/to/repository"
               required
@@ -430,7 +749,7 @@ export function ProjectsPage() {
           <div className="grid gap-4 xl:grid-cols-2">
             {projects.data.map((project) => (
               <ProjectRepositoryCard
-                key={`${project.id}:${project.repository?.rootPath ?? 'unbound'}`}
+                key={project.id}
                 project={project}
                 onRepositoryBound={projects.reload}
               />

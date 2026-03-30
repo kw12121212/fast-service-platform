@@ -29,7 +29,9 @@ public final class BackendBootstrap {
         try {
             Files.createDirectories(baseDir);
             System.setProperty(DATABASE_PROPERTY, databaseName);
-            System.setProperty(JDBC_URL_TEMPLATE_PROPERTY, "jdbc:lealone:tcp://127.0.0.1:9210/%s");
+            // Service implementations run in-process with the Lealone runtime, so they should
+            // keep using embed JDBC instead of looping back through the TCP listener.
+            System.setProperty(JDBC_URL_TEMPLATE_PROPERTY, "jdbc:lealone:embed:%s");
             SysProperties.setBaseDir(baseDir.toAbsolutePath().toString(), true);
 
             if (STARTED_DATABASES.add(databaseName)) {
