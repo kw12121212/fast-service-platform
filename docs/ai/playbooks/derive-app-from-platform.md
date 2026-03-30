@@ -9,23 +9,28 @@
 ## 先读什么
 
 1. `docs/ai/context.yaml`
-2. `docs/ai/ai-tool-orchestration-contract.json`
-3. `docs/ai/app-assembly-contract.json`
-4. `docs/ai/schemas/app-manifest.schema.json`
-5. `docs/ai/module-registry.json`
-6. `docs/ai/generated-app-verification-contract.json`
-7. `docs/ai/derived-app-lifecycle-contract.json`
-8. `docs/ai/platform-release.json`
-9. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
-10. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
-11. `docs/ai/compatibility/app-assembly-suite.json`
-12. 一个示例 manifest：
+2. `docs/ai/ai-solution-input-contract.json`
+3. `docs/ai/schemas/ai-solution-input.schema.json`
+4. `docs/ai/ai-tool-orchestration-contract.json`
+5. `docs/ai/app-assembly-contract.json`
+6. `docs/ai/schemas/app-manifest.schema.json`
+7. `docs/ai/module-registry.json`
+8. `docs/ai/generated-app-verification-contract.json`
+9. `docs/ai/derived-app-lifecycle-contract.json`
+10. `docs/ai/platform-release.json`
+11. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
+12. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
+13. `docs/ai/compatibility/app-assembly-suite.json`
+14. 一个示例 solution input：
+   - `docs/ai/solution-inputs/core-admin-console.solution-input.json`
+15. 一个示例 manifest：
    - `docs/ai/manifests/default-baseline-app.json`
    - `docs/ai/manifests/core-admin-app.json`
 
 优先级：
 
 - 规范事实来源是 `contract + schema + compatibility suite`
+- 如果当前输入还是业务目标，先用 `ai-solution-input-contract` 收敛为 solution input，再映射成 `app-manifest`
 - AI 默认先读 orchestration contract，再决定走 `platform-tool.sh` 的哪个 workflow
 - generated app 的验证标准事实来源是 `generated-app verification contract`
 - generated app 的生命周期和升级评估事实来源是 `derived-app lifecycle contract + platform release metadata`
@@ -39,9 +44,11 @@
 AI 编排顺序：
 
 1. 读 `docs/ai/ai-tool-orchestration-contract.json`
-2. 读 assembly contract 和 module registry
-3. 通过 `platform-tool.sh assembly scaffold ...` 执行装配
-4. 装配完成后立刻执行 `platform-tool.sh generated-app verify ...`
+2. 如果当前还没有 manifest，先读 `docs/ai/playbooks/define-ai-solution-input.md`
+3. 读 assembly contract 和 module registry
+4. 先把 solution input 映射成 `app-manifest`
+5. 通过 `platform-tool.sh assembly scaffold ...` 执行装配
+6. 装配完成后立刻执行 `platform-tool.sh generated-app verify ...`
 
 只有在 orchestration contract 明确允许时，才回退到具体 wrapper 或实现专用路径。
 
@@ -58,6 +65,7 @@ AI 编排顺序：
 - `--output` 必须是仓库外的绝对路径
 - 生成目标仍然是 `企业内部管理单体应用`
 - 不要引入超出平台边界的新外部软件库
+- `solution input` 不是 assembly runtime contract；真正传给 tooling 的仍然是 `app-manifest`
 
 ## 模块选择规则
 

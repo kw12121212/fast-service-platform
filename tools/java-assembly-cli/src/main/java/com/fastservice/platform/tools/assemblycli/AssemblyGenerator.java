@@ -580,6 +580,7 @@ final class AssemblyGenerator {
 
         Map<String, Object> contractInputs = new LinkedHashMap<>();
         contractInputs.put("manifest", "app-manifest.json");
+        contractInputs.put("aiSolutionInputContract", "docs/ai/ai-solution-input-contract.json");
         contractInputs.put("moduleRegistry", "docs/ai/module-registry.json");
         contractInputs.put("aiToolOrchestrationContract", "docs/ai/ai-tool-orchestration-contract.json");
         contractInputs.put("assemblyContract", "docs/ai/app-assembly-contract.json");

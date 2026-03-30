@@ -66,6 +66,7 @@ public class AppAssemblyCliTest {
             String context = Files.readString(outputDir.resolve("docs/ai/context.json"));
             String readme = Files.readString(outputDir.resolve("README.md"));
             assertTrue(context.contains("\"selectedModules\":[\"admin-shell\",\"user-management\",\"role-permission-management\"]"));
+            assertTrue(context.contains("\"aiSolutionInputContract\":\"docs/ai/ai-solution-input-contract.json\""));
             assertTrue(context.contains("\"platformReleaseHistory\":\"docs/ai/platform-release-history.json\""));
             assertTrue(context.contains("\"aiToolOrchestrationContract\":\"docs/ai/ai-tool-orchestration-contract.json\""));
             assertTrue(context.contains("\"repositoryOwned\":\"./scripts/platform-tool.sh generated-app verify <generated-app-dir>\""));

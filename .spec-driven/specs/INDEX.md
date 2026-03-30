@@ -12,6 +12,7 @@
 - `component/minimum-platform-baseline.md` - Minimum reusable enterprise component baseline and baseline management workflow contract.
 - `core/app-assembly-compatibility-suite.md` - Compatibility fixtures and observable output validation rules for language-neutral app assembly implementations.
 - `core/ai-repository-readiness.md` - AI-first quickstart, machine-readable context, change playbooks, automated validation entrypoints, and troubleshooting guidance for repository contribution.
+- `core/ai-solution-input-model.md` - Machine-readable structured AI solution input, required/optional field boundaries, and mapping guidance into manifest-driven assembly.
 - `core/ai-tool-orchestration-contract.md` - Machine-readable AI tool-selection, workflow ordering, fallback behavior, and blocker semantics for repository-owned platform tooling.
 - `core/derived-app-lifecycle-and-upgrade-contract.md` - Machine-readable lifecycle metadata, platform-origin semantics, upgrade compatibility inputs, and repository-owned upgrade evaluation for derived applications.
 - `core/generated-app-verification-contract.md` - Machine-readable verifier inputs, observable checks, result semantics, and reference-verifier role for generated applications.

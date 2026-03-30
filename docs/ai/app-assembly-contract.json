@@ -10,6 +10,8 @@
   ],
   "normativeAssets": {
     "assemblyContract": "docs/ai/app-assembly-contract.json",
+    "aiSolutionInputContract": "docs/ai/ai-solution-input-contract.json",
+    "aiSolutionInputSchema": "docs/ai/schemas/ai-solution-input.schema.json",
     "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
     "aiToolOrchestrationContractSchema": "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
     "manifestSchema": "docs/ai/schemas/app-manifest.schema.json",
@@ -41,6 +43,7 @@
       "AGENTS.md",
       "app-manifest.json",
       "docs/ai/context.json",
+      "docs/ai/ai-solution-input-contract.json",
       "docs/ai/ai-tool-orchestration-contract.json",
       "docs/ai/derived-app-lifecycle.json",
       "docs/ai/derived-app-lifecycle-contract.json",
@@ -63,6 +66,8 @@
       "docs/ai/compatibility/fixtures/project-admin.manifest.json",
       "docs/ai/compatibility/fixtures/project-repository.manifest.json",
       "docs/ai/compatibility/fixtures/project-kanban.manifest.json",
+      "docs/ai/solution-inputs/core-admin-console.solution-input.json",
+      "docs/ai/schemas/ai-solution-input.schema.json",
       "docs/ai/schemas/app-manifest.schema.json",
       "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
       "docs/ai/schemas/module-registry.schema.json",
@@ -89,6 +94,7 @@
       "docs/ai/quickstart.md",
       "docs/ai/context.yaml"
     ],
+    "solutionInputContract": "docs/ai/ai-solution-input-contract.json",
     "moduleRegistry": "docs/ai/module-registry.json",
     "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
     "derivedAppLifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
@@ -110,10 +116,23 @@
     ],
     "generatedAppVerificationContract": "docs/ai/generated-app-verification-contract.json",
     "compatibilitySuite": "docs/ai/compatibility/app-assembly-suite.json",
+    "solutionInputExamples": [
+      "docs/ai/solution-inputs/core-admin-console.solution-input.json"
+    ],
     "assemblyExamples": [
       "docs/ai/manifests/default-baseline-app.json",
       "docs/ai/manifests/core-admin-app.json"
     ]
+  },
+  "inputLayers": {
+    "solutionInput": {
+      "contract": "docs/ai/ai-solution-input-contract.json",
+      "role": "capture-business-intent-before-assembly"
+    },
+    "assemblyManifest": {
+      "contract": "docs/ai/schemas/app-manifest.schema.json",
+      "role": "direct-input-to-repository-owned-assembly-tooling"
+    }
   },
   "referenceImplementations": [
     {
@@ -141,6 +160,7 @@
   "aiToolingGuidance": {
     "defaultRole": "tool-orchestrator",
     "preferredWorkflow": "use-repository-owned-platform-tooling-before-direct-reimplementation",
+    "solutionInputPlaybook": "docs/ai/playbooks/define-ai-solution-input.md",
     "orchestrationContract": "docs/ai/ai-tool-orchestration-contract.json"
   },
   "legacyCommands": {

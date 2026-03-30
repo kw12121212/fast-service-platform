@@ -8,13 +8,15 @@
 
 当前仓库已经具备这些能力：
 
-- `Node` 与 `Java` 两条 app assembly 兼容实现
-- `Node` 与 `Java` 两条 generated-app verifier 路径
+- Java-owned 的 repository platform tooling 主路径
+- `Java CLI` app assembly 实现与兼容验证路径
+- repository-owned Java generated-app verifier 与兼容 Java verifier 路径
 - 语言无关的 `contract + schemas + compatibility suite`
 - machine-readable 的 derived-app lifecycle / upgrade evaluation / upgrade execution contract
 - machine-readable 的 platform release advisory、release history 和 version lineage
 - repository-owned 的 upgrade target lookup、upgrade evaluation、advisory 和 execution 入口
 - machine-readable 的 AI tool orchestration contract，以及统一 façade 优先的 AI 使用路径
+- 更细粒度的可选业务模块边界：`project-management`、`project-repository-management`、`kanban-management`、`ticket-management`
 
 下一阶段的重点不再只是“再增加一种实现语言”，而是继续提高平台的长期可演进性、兼容性可信度和 AI 可消费性。
 
@@ -30,6 +32,8 @@
 - [x] `add-derived-app-upgrade-execution-path`
 - [x] `standardize-platform-release-history-and-version-lineage`
 - [x] `define-ai-tool-orchestration-contract`
+- [x] `decompose-optional-business-modules`
+- [x] `consolidate-platform-tooling-on-java`
 
 ## 建议优先级
 
@@ -67,7 +71,7 @@
 
 ### P2
 
-#### [ ] 5. 模块边界继续下沉
+#### [x] 5. 模块边界继续下沉
 
 - 方向：把可选业务模块进一步拆细，明确更稳定的模块边界、依赖声明和裁剪规则。
 - 价值：中高。会让平台更像真正可组合的基础库。
@@ -99,6 +103,7 @@
 3. [x] `unify-platform-tooling-entrypoints`
 4. [x] `define-ai-tool-orchestration-contract`
 5. [ ] `decompose-optional-business-modules`
+6. [ ] `standardize-ai-solution-input-model`
 
 原因：
 
@@ -107,6 +112,7 @@
 - compatibility suite 和 tooling entrypoints 能优先提高标准可信度和日常可用性。
 - AI tool orchestration 让 AI 优先复用仓库已有工具，而不是绕开它们重做 workflow。
 - 下一步更适合继续收紧模块边界，把平台进一步做成可组合的基础库。
+- 该步骤完成后，下一阶段更适合把 AI 输入从基础 manifest 继续收敛为更结构化的需求 / 领域 / UI 输入模型。
 
 ## 使用方式
 

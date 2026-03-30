@@ -2,12 +2,18 @@
 
 ### Requirement: Derived Applications Use A Machine-Readable Application Manifest
 The system MUST define a machine-readable application manifest contract for derived applications.
-The manifest MUST let a contributor identify the target application and the selected platform modules for assembly.
+The manifest MUST let a contributor identify the target application and the selected platform modules for assembly, and it MUST remain the direct input consumed by repository-owned assembly tooling even when a higher-level AI solution input model is present.
 
 #### Scenario: An AI agent describes a new application to be derived
 - GIVEN an AI agent needs to derive an independent application from the platform
 - WHEN it prepares the application-assembly input
 - THEN it can express the target application identity and selected modules through the repository's machine-readable manifest contract
+
+#### Scenario: An AI contributor maps structured solution input into assembly input
+- GIVEN an AI contributor starts from a repository-defined structured solution input
+- WHEN it prepares the actual assembly request
+- THEN it produces an `app-manifest` that remains the direct input to repository-owned assembly tooling
+- AND it does not bypass the manifest layer by treating the higher-level solution input as the assembly runtime contract
 
 ### Requirement: Platform Provides A Machine-Readable Module Registry
 The system MUST provide a machine-readable module registry that exposes the available platform core and optional modules, their assembly roles, their dependency expectations, and the finer-grained optional business capability units that may be selected during application assembly.
@@ -60,7 +66,7 @@ The system MUST define its app assembly contract independently from any single i
 - THEN they can identify the required machine-readable assets and observable behaviors without depending on Node-specific internal implementation details
 
 ### Requirement: Machine-Readable Contract Distinguishes Normative Inputs From Reference Implementations
-The system MUST identify which machine-readable assets are normative assembly and verification inputs and which repository-owned Java tooling paths implement those workflows, without treating Node implementation scripts as the repository-owned platform tooling runtime.
+The system MUST identify which machine-readable assets are normative assembly and verification inputs, which higher-level AI solution input assets may precede assembly, and which repository-owned Java tooling paths implement those workflows, without treating the higher-level solution input as the assembly runtime contract itself.
 
 #### Scenario: An AI or multi-language implementer reads the assembly assets
 - GIVEN a contributor wants to build a compatible implementation in another language

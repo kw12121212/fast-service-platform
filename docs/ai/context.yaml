@@ -38,6 +38,7 @@ ai_indexes:
     - docs/ai/quickstart.md
     - docs/ai/context.yaml
   schemas:
+    - docs/ai/schemas/ai-solution-input.schema.json
     - docs/ai/schemas/ai-tool-orchestration-contract.schema.json
     - docs/ai/schemas/app-manifest.schema.json
     - docs/ai/schemas/module-registry.schema.json
@@ -49,6 +50,7 @@ ai_indexes:
     - docs/ai/schemas/generated-app-verification-contract.schema.json
     - docs/ai/schemas/app-assembly-compatibility-suite.schema.json
   module_registry: docs/ai/module-registry.json
+  ai_solution_input_contract: docs/ai/ai-solution-input-contract.json
   ai_tool_orchestration_contract: docs/ai/ai-tool-orchestration-contract.json
   assembly_contract: docs/ai/app-assembly-contract.json
   derived_app_lifecycle_contract: docs/ai/derived-app-lifecycle-contract.json
@@ -58,6 +60,8 @@ ai_indexes:
   platform_release_advisory: docs/ai/platform-release-advisory.json
   generated_app_verification_contract: docs/ai/generated-app-verification-contract.json
   compatibility_suite: docs/ai/compatibility/app-assembly-suite.json
+  example_solution_inputs:
+    - docs/ai/solution-inputs/core-admin-console.solution-input.json
   example_manifests:
     - docs/ai/manifests/default-baseline-app.json
     - docs/ai/manifests/core-admin-app.json
@@ -116,6 +120,7 @@ workspaces:
 high_frequency_change_playbooks:
   - docs/ai/playbooks/ai-tool-orchestration.md
   - docs/ai/playbooks/backend-domain-change.md
+  - docs/ai/playbooks/define-ai-solution-input.md
   - docs/ai/playbooks/derive-app-from-platform.md
   - docs/ai/playbooks/evaluate-derived-app-upgrade.md
   - docs/ai/playbooks/execute-derived-app-upgrade.md

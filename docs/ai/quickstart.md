@@ -35,6 +35,9 @@
 - 输入边界仍然是 `自然语言 + 可选原型图片 + 仅用于 UI 的参考网站`。
 - 平台依赖边界仍然是 `Lealone-Platform + 本项目已有依赖`，不要自行引入新的外部软件库。
 - 非平凡改动先进入 `.spec-driven/`，不要跳过 proposal 扩范围。
+- 如果目标是派生新应用，先区分两层输入：
+  - `solution input` 用来描述业务意图
+  - `app-manifest` 用来驱动实际 assembly
 
 ## 常见任务去哪里改
 
@@ -116,6 +119,8 @@
 
 先读这些机器可读资产：
 
+- `docs/ai/ai-solution-input-contract.json`
+- `docs/ai/schemas/ai-solution-input.schema.json`
 - `docs/ai/ai-tool-orchestration-contract.json`
 - `docs/ai/schemas/ai-tool-orchestration-contract.schema.json`
 - `docs/ai/schemas/app-manifest.schema.json`
@@ -135,12 +140,14 @@
 - `docs/ai/compatibility/app-assembly-suite.json`
 - `docs/ai/module-registry.json`
 - `docs/ai/app-assembly-contract.json`
+- `docs/ai/solution-inputs/core-admin-console.solution-input.json`
 - `docs/ai/manifests/default-baseline-app.json`
 - `docs/ai/manifests/core-admin-app.json`
 
 注意：
 
 - `docs/ai/app-assembly-contract.json`、schema 和 compatibility suite 才是规范事实来源
+- `docs/ai/ai-solution-input-contract.json` 定义更高层的结构化业务输入；它要先映射成 `app-manifest`，再进入 assembly tooling
 - `docs/ai/ai-tool-orchestration-contract.json` 定义 AI 应该怎样优先使用 repository-owned tooling，而不是直接重做 assembly / verification / upgrade 逻辑
 - `docs/ai/generated-app-verification-contract.json` 定义生成后验证的标准输入、检查项和结果语义
 - `docs/ai/derived-app-lifecycle-contract.json`、`docs/ai/derived-app-upgrade-execution-contract.json`、`docs/ai/platform-release.json`、`docs/ai/platform-release-history.json` 和 `docs/ai/platform-release-advisory.json` 定义生成后生命周期、升级目标选择、升级评估、升级执行和当前发布差异说明的事实来源
@@ -151,7 +158,13 @@
 - `scripts/VerifyDerivedApp.java` 是 generated-app repository-owned verifier 入口，不是 contract 本身
 - `tools/java-generated-app-verifier/` 保留为 compatible generated-app verifier；它读取生成应用自带资产，而不是读取 repository-owned verifier 内部状态
 
-再执行：
+如果你当前只有业务目标，还没有 manifest，先读：
+
+```text
+docs/ai/playbooks/define-ai-solution-input.md
+```
+
+把 solution input 收敛成 manifest 之后，再执行：
 
 ```bash
 ./scripts/platform-tool.sh assembly scaffold \

@@ -1,13 +1,18 @@
 # AI Tool Orchestration Contract
 
 ### Requirement: Repository Defines AI Tool-Orchestration Contract
-The repository MUST define a machine-readable contract that teaches AI contributors how to orchestrate repository-owned tooling for supported platform workflows.
+The repository MUST define a machine-readable contract that teaches AI contributors how to orchestrate repository-owned tooling for supported platform workflows, including the step that maps structured solution input into manifest-driven assembly.
 
 #### Scenario: An AI contributor chooses a workflow entrypoint
 - GIVEN an AI contributor needs to perform a supported platform workflow
 - WHEN it reads the repository-owned AI tool-orchestration contract
 - THEN it can identify the default repository-owned entrypoint for that workflow
 - AND it can determine what prerequisite assets or guidance it should inspect before invoking the tool
+
+#### Scenario: An AI contributor starts from a structured solution input
+- GIVEN an AI contributor has prepared a repository-defined solution input
+- WHEN it reads the orchestration contract
+- THEN it can identify the expected sequence from solution definition to manifest preparation and then to repository-owned assembly tooling
 
 ### Requirement: AI Orchestration Contract Prefers Repository-Owned Tooling
 The AI tool-orchestration contract MUST state that AI contributors SHOULD prefer repository-owned Java tooling entrypoints and compatible wrappers before attempting to reconstruct workflow behavior themselves.

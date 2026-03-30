@@ -114,10 +114,29 @@ test('generated app verification contract is exposed as a normative asset', asyn
   const platformHistory = await loadPlatformReleaseHistory()
   const platformRelease = await loadPlatformReleaseMetadata()
   const verificationContract = await loadGeneratedAppVerificationContract()
+  const solutionInputContract = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/ai-solution-input-contract.json')
+  )
+  const solutionInputSchema = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/schemas/ai-solution-input.schema.json')
+  )
+  const solutionInputExample = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/solution-inputs/core-admin-console.solution-input.json')
+  )
   const orchestrationContract = await readJson(
     path.join(REPO_ROOT, 'docs/ai/ai-tool-orchestration-contract.json')
   )
+  const aiContextText = await readFile(path.join(REPO_ROOT, 'docs/ai/context.yaml'), 'utf8')
+  const quickstartText = await readFile(path.join(REPO_ROOT, 'docs/ai/quickstart.md'), 'utf8')
 
+  assert.equal(
+    assemblyContract.normativeAssets.aiSolutionInputContract,
+    'docs/ai/ai-solution-input-contract.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.aiSolutionInputSchema,
+    'docs/ai/schemas/ai-solution-input.schema.json'
+  )
   assert.equal(
     assemblyContract.normativeAssets.aiToolOrchestrationContract,
     'docs/ai/ai-tool-orchestration-contract.json'
@@ -169,6 +188,20 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(platformAdvisory.schemaVersion, 'fsp-platform-release-advisory/v1')
   assert.equal(platformRelease.currentRelease.releaseAdvisory, 'docs/ai/platform-release-advisory.json')
   assert.equal(platformRelease.currentRelease.releaseHistory, 'docs/ai/platform-release-history.json')
+  assert.equal(solutionInputContract.schemaVersion, 'fsp-ai-solution-input-contract/v1')
+  assert.equal(solutionInputSchema.title, 'Fast Service Platform AI Solution Input')
+  assert.equal(
+    solutionInputContract.inputLayering.assemblyManifestRole,
+    'direct-input-to-repository-owned-assembly-tooling'
+  )
+  assert.deepEqual(solutionInputContract.exampleInputs, [
+    'docs/ai/solution-inputs/core-admin-console.solution-input.json'
+  ])
+  assert.deepEqual(solutionInputExample.constraints.requiredModules, [
+    'admin-shell',
+    'user-management',
+    'role-permission-management'
+  ])
   assert.equal(orchestrationContract.aiRole, 'tool-orchestrator')
   assert.equal(orchestrationContract.defaultFacade, './scripts/platform-tool.sh <group> <command> [...]')
   assert.deepEqual(
@@ -209,6 +242,15 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(
     executionContract.normativeAssets.aiToolOrchestrationContract,
     'docs/ai/ai-tool-orchestration-contract.json'
+  )
+  assert.equal(aiContextText.includes('ai_solution_input_contract: docs/ai/ai-solution-input-contract.json'), true)
+  assert.equal(
+    aiContextText.includes('- docs/ai/playbooks/define-ai-solution-input.md'),
+    true
+  )
+  assert.equal(
+    quickstartText.includes('docs/ai/ai-solution-input-contract.json'),
+    true
   )
 })
 
@@ -391,6 +433,10 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
     assert.equal(
       context.contractInputs.platformReleaseHistory,
       'docs/ai/platform-release-history.json'
+    )
+    assert.equal(
+      context.contractInputs.aiSolutionInputContract,
+      'docs/ai/ai-solution-input-contract.json'
     )
     assert.equal(
       context.lifecycle.repositoryOwnedUpgradeEvaluation,

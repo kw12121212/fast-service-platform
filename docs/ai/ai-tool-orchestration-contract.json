@@ -21,6 +21,9 @@
       "id": "assembly",
       "readBefore": [
         "docs/ai/context.yaml",
+        "docs/ai/ai-solution-input-contract.json",
+        "docs/ai/schemas/ai-solution-input.schema.json",
+        "docs/ai/playbooks/define-ai-solution-input.md",
         "docs/ai/app-assembly-contract.json",
         "docs/ai/module-registry.json",
         "docs/ai/compatibility/app-assembly-suite.json"
@@ -30,6 +33,7 @@
         "./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>"
       ],
       "successSignals": [
+        "solution-input-has-been-mapped-to-app-manifest",
         "generated-app-output-created-outside-repository-workspace",
         "generated-app-verification-ready"
       ],

@@ -1420,6 +1420,7 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
         .map((module) => module.id),
       contractInputs: {
         manifest: 'app-manifest.json',
+        aiSolutionInputContract: 'docs/ai/ai-solution-input-contract.json',
         moduleRegistry: 'docs/ai/module-registry.json',
         aiToolOrchestrationContract: 'docs/ai/ai-tool-orchestration-contract.json',
         assemblyContract: 'docs/ai/app-assembly-contract.json',

@@ -10,10 +10,11 @@
 
 1. `docs/ai/context.yaml`
 2. `docs/ai/ai-tool-orchestration-contract.json`
-3. `docs/ai/playbooks/derive-app-from-platform.md`
-4. `docs/ai/playbooks/select-derived-app-upgrade-target.md`
-5. `docs/ai/playbooks/evaluate-derived-app-upgrade.md`
-6. `docs/ai/playbooks/execute-derived-app-upgrade.md`
+3. `docs/ai/playbooks/define-ai-solution-input.md`
+4. `docs/ai/playbooks/derive-app-from-platform.md`
+5. `docs/ai/playbooks/select-derived-app-upgrade-target.md`
+6. `docs/ai/playbooks/evaluate-derived-app-upgrade.md`
+7. `docs/ai/playbooks/execute-derived-app-upgrade.md`
 
 ## 默认原则
 
@@ -26,14 +27,15 @@
 
 ### 派生一个新应用
 
-1. 读 `docs/ai/app-assembly-contract.json` 和 `docs/ai/module-registry.json`
-2. 执行：
+1. 如果当前输入还是业务意图，先读 `docs/ai/ai-solution-input-contract.json`，并按 `docs/ai/playbooks/define-ai-solution-input.md` 产出 `app-manifest`
+2. 再读 `docs/ai/app-assembly-contract.json` 和 `docs/ai/module-registry.json`
+3. 执行：
 
 ```bash
 ./scripts/platform-tool.sh assembly scaffold <manifest-path> <absolute-output-dir>
 ```
 
-3. 生成后立即执行：
+4. 生成后立即执行：
 
 ```bash
 ./scripts/platform-tool.sh generated-app verify <generated-app-dir>
