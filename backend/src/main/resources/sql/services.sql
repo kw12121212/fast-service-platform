@@ -30,6 +30,9 @@ create service if not exists project_service (
   createProjectWorktree(projectId long, branchName varchar) varchar,
   mergeProjectWorktree(projectId long, worktreePath varchar, targetBranch varchar) varchar,
   deleteProjectWorktree(projectId long, worktreePath varchar) varchar,
+  createProjectSandboxImage(projectId long, worktreePath varchar) varchar,
+  createProjectSandboxContainer(projectId long, worktreePath varchar) varchar,
+  deleteProjectSandboxContainer(projectId long, worktreePath varchar) varchar,
   repairProjectWorktrees(projectId long) varchar,
   pruneProjectWorktrees(projectId long) varchar,
   listProjects() varchar

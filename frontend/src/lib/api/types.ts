@@ -68,6 +68,26 @@ export type ProjectWorktreeSummary = {
   mergeAllowed: boolean
   mergeRestriction: string | null
   mergeTargetBranches: string[]
+  sandbox: {
+    supported: boolean
+    restriction: string | null
+    imageStatus: 'MISSING' | 'READY' | 'FAILED' | string
+    imageReference: string
+    imageFailureMessage: string | null
+    imageInitScriptPath: string
+    imageInitScriptSource: 'DEFAULT' | 'WORKTREE_PROPERTY' | string
+    imageActionAllowed: boolean
+    imageActionRestriction: string | null
+    containerStatus: 'INACTIVE' | 'ACTIVE' | 'FAILED' | string
+    containerName: string
+    containerFailureMessage: string | null
+    projectInitScriptPath: string
+    projectInitScriptSource: 'DEFAULT' | 'WORKTREE_PROPERTY' | string
+    containerCreateAllowed: boolean
+    containerCreateRestriction: string | null
+    containerDeleteAllowed: boolean
+    containerDeleteRestriction: string | null
+  }
 }
 
 export type ProjectRepositorySummary = {

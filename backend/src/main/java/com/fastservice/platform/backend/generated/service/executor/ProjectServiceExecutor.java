@@ -55,6 +55,24 @@ public class ProjectServiceExecutor implements ServiceExecutor {
                     methodArgs[1].getString());
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
         }
+        case "CREATEPROJECTSANDBOXIMAGE" -> {
+            String result = service.createprojectsandboximage(
+                    methodArgs[0].getLong(),
+                    methodArgs[1].getString());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "CREATEPROJECTSANDBOXCONTAINER" -> {
+            String result = service.createprojectsandboxcontainer(
+                    methodArgs[0].getLong(),
+                    methodArgs[1].getString());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "DELETEPROJECTSANDBOXCONTAINER" -> {
+            String result = service.deleteprojectsandboxcontainer(
+                    methodArgs[0].getLong(),
+                    methodArgs[1].getString());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
         case "REPAIRPROJECTWORKTREES" -> {
             String result = service.repairprojectworktrees(methodArgs[0].getLong());
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
@@ -94,6 +112,15 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "DELETEPROJECTWORKTREE" -> service.deleteprojectworktree(
                 toLong("PROJECTID", methodArgs),
                 toString("WORKTREEPATH", methodArgs));
+        case "CREATEPROJECTSANDBOXIMAGE" -> service.createprojectsandboximage(
+                toLong("PROJECTID", methodArgs),
+                toString("WORKTREEPATH", methodArgs));
+        case "CREATEPROJECTSANDBOXCONTAINER" -> service.createprojectsandboxcontainer(
+                toLong("PROJECTID", methodArgs),
+                toString("WORKTREEPATH", methodArgs));
+        case "DELETEPROJECTSANDBOXCONTAINER" -> service.deleteprojectsandboxcontainer(
+                toLong("PROJECTID", methodArgs),
+                toString("WORKTREEPATH", methodArgs));
         case "REPAIRPROJECTWORKTREES" -> service.repairprojectworktrees(
                 toLong("PROJECTID", methodArgs));
         case "PRUNEPROJECTWORKTREES" -> service.pruneprojectworktrees(
@@ -129,6 +156,18 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "DELETEPROJECTWORKTREE" -> {
             JsonArray ja = new JsonArray(json);
             yield service.deleteprojectworktree(ja.getLong(0), ja.getString(1));
+        }
+        case "CREATEPROJECTSANDBOXIMAGE" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.createprojectsandboximage(ja.getLong(0), ja.getString(1));
+        }
+        case "CREATEPROJECTSANDBOXCONTAINER" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.createprojectsandboxcontainer(ja.getLong(0), ja.getString(1));
+        }
+        case "DELETEPROJECTSANDBOXCONTAINER" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.deleteprojectsandboxcontainer(ja.getLong(0), ja.getString(1));
         }
         case "REPAIRPROJECTWORKTREES" -> {
             JsonArray ja = new JsonArray(json);

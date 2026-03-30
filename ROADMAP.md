@@ -15,12 +15,14 @@ The repository is no longer blocked on basic platform definition. It already has
 - software-project repository binding
 - bound-project Git branch inspection and safe branch switching
 - project-scoped worktree management
+- project-scoped merge support from managed linked worktrees
+- project-scoped sandbox environments for managed linked worktrees
 
 That changes the next priority.
 
 The platform does not most urgently need another language implementation or more contract surface area. The next bottlenecks are:
 
-- completing engineering-support workflows around real project repositories
+- completing the remaining engineering-support workflow gaps around real project repositories
 - increasing trust that derived applications are runnable, verifiable, and maintainable
 - making optional platform modules more operationally composable, not just conceptually separated
 
@@ -42,6 +44,8 @@ The platform does not most urgently need another language implementation or more
 - [x] `introduce-structured-app-template-system`
 - [x] `add-repository-owned-baseline-demo`
 - [x] `project-worktree-management`
+- [x] `project-merge-support`
+- [x] `project-sandbox-environment`
 
 ## Roadmap Principles
 
@@ -55,36 +59,7 @@ The platform does not most urgently need another language implementation or more
 
 ### P0
 
-#### 1. Project-Scoped Merge Support
-
-- Why now:
-  Worktree management is implemented, but the next natural engineering step is still missing. Contributors can create and maintain parallel workspaces, but they cannot complete the project-scoped merge workflow inside the platform boundary.
-- Scope direction:
-  - expose merge-ready repository state from the project context
-  - allow controlled branch-to-branch merge execution
-  - surface conflict, refusal, and dirty-state restrictions clearly
-  - keep the scope project-bound instead of turning the platform into a general Git client
-- Main risk:
-  Merge semantics can expand quickly into conflict resolution UX, force strategies, and recovery logic.
-- Suggested change name:
-  `project-merge-support`
-
-### P1
-
-#### 2. Project-Scoped Sandbox Environment
-
-- Why next:
-  After merge support, the next missing engineering-support component is sandbox execution. The platform already models sandbox environments as a built-in capability, but it still has no concrete lifecycle.
-- Scope direction:
-  - define sandbox creation and teardown around a bound project or worktree
-  - define execution boundaries, filesystem scope, and lifecycle ownership
-  - keep the first version operationally narrow and deterministic
-- Main risk:
-  Sandbox work can sprawl into process management, isolation semantics, and host-environment assumptions if not tightly bounded.
-- Suggested change name:
-  `project-sandbox-environment`
-
-#### 3. Dynamic Form Component
+#### 1. Dynamic Form Component
 
 - Why next:
   The platform already has runnable admin pages and backend-backed management workflows, but it still lacks a reusable component for turning structured business descriptions plus table definitions into editable, savable forms.
@@ -98,7 +73,9 @@ The platform does not most urgently need another language implementation or more
 - Suggested change name:
   `dynamic-form-component`
 
-#### 4. Dynamic Report Component
+### P1
+
+#### 2. Dynamic Report Component
 
 - Why next:
   Once the platform can generate structured data-entry experiences, the next adjacent reusable capability is reporting. AI-generated enterprise systems need a controlled way to turn business descriptions plus live data into platform-owned report views.
@@ -112,7 +89,7 @@ The platform does not most urgently need another language implementation or more
 - Suggested change name:
   `dynamic-report-component`
 
-#### 5. Derived-App Runtime Smoke Validation
+#### 3. Derived-App Runtime Smoke Validation
 
 - Why next:
   The repository already validates contracts and generated-app structure well. The next trust gap is runtime proof: a derived app should be demonstrably buildable and smokable, not just structurally compatible.
@@ -127,7 +104,7 @@ The platform does not most urgently need another language implementation or more
 
 ### P2
 
-#### 6. Operational Module Assembly Completion
+#### 5. Operational Module Assembly Completion
 
 - Why later:
   The platform already describes optional modules well, but optionality should become more operationally real. A module should be removable or selectable without hidden baseline assumptions leaking through routes, navigation, dependencies, or verification flow.
@@ -140,7 +117,7 @@ The platform does not most urgently need another language implementation or more
 - Suggested change name:
   `complete-optional-module-assembly`
 
-#### 7. Platform Release And Upgrade Smoke Hardening
+#### 6. Platform Release And Upgrade Smoke Hardening
 
 - Why later:
   Release history, upgrade targets, and advisory flows are already defined. The next maturity step is proving those flows against real repository-owned fixtures rather than mostly contract-level guarantees.
@@ -155,7 +132,7 @@ The platform does not most urgently need another language implementation or more
 
 ### P3
 
-#### 8. Template Variant Expansion
+#### 7. Template Variant Expansion
 
 - Why last:
   The structured template system now exists. It should expand only after merge, sandbox, derived-app runtime proof, and operational module assembly are stronger, otherwise new template variants will amplify shaky foundations.
@@ -170,14 +147,12 @@ The platform does not most urgently need another language implementation or more
 
 ## Recommended Order
 
-1. [ ] `project-merge-support`
-2. [ ] `project-sandbox-environment`
-3. [ ] `dynamic-form-component`
-4. [ ] `dynamic-report-component`
-5. [ ] `add-derived-app-runtime-smoke`
-6. [ ] `complete-optional-module-assembly`
-7. [ ] `harden-release-upgrade-smoke`
-8. [ ] `expand-structured-template-variants`
+1. [ ] `dynamic-form-component`
+2. [ ] `dynamic-report-component`
+3. [ ] `add-derived-app-runtime-smoke`
+4. [ ] `complete-optional-module-assembly`
+5. [ ] `harden-release-upgrade-smoke`
+6. [ ] `expand-structured-template-variants`
 
 ## Explicitly Not A Near-Term Priority
 

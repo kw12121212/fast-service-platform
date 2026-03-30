@@ -118,6 +118,15 @@ The repository MUST provide stable automated entrypoints for backend validation,
 - WHEN they run the documented validation entrypoints
 - THEN they can execute backend checks, frontend checks, the expected full-stack validation path, and the derived-application assembly checks through repository-owned commands
 
+### Requirement: Repository Distinguishes Fast Backend Validation From Heavy Runtime Validation
+The repository MUST document which backend validation entrypoint is the default fast-feedback baseline and which separate entrypoint exercises heavier engineering-runtime behavior such as real sandbox execution.
+
+#### Scenario: A contributor chooses a backend validation path
+- GIVEN a contributor needs to validate a repository change
+- WHEN they inspect the documented repository-owned validation commands
+- THEN they can distinguish the default backend baseline from the heavier sandbox-runtime validation path
+- AND they can determine which path includes real sandbox runtime execution
+
 ### Requirement: Repository Provides Automated Full-Stack Smoke Path
 The repository MUST provide an automated smoke-validation path that exercises the current backend-frontend integration boundary through the active `/service/*` route contract.
 

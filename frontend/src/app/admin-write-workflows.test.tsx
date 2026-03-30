@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -42,6 +42,26 @@ type MockProject = {
       mergeAllowed: boolean
       mergeRestriction: string | null
       mergeTargetBranches: string[]
+      sandbox: {
+        supported: boolean
+        restriction: string | null
+        imageStatus: 'MISSING' | 'READY' | 'FAILED'
+        imageReference: string
+        imageFailureMessage: string | null
+        imageInitScriptPath: string
+        imageInitScriptSource: 'DEFAULT' | 'WORKTREE_PROPERTY'
+        imageActionAllowed: boolean
+        imageActionRestriction: string | null
+        containerStatus: 'INACTIVE' | 'ACTIVE' | 'FAILED'
+        containerName: string
+        containerFailureMessage: string | null
+        projectInitScriptPath: string
+        projectInitScriptSource: 'DEFAULT' | 'WORKTREE_PROPERTY'
+        containerCreateAllowed: boolean
+        containerCreateRestriction: string | null
+        containerDeleteAllowed: boolean
+        containerDeleteRestriction: string | null
+      }
     }>
   } | null
 }
@@ -192,6 +212,38 @@ function createMainWorktree(path: string, branch: string): NonNullable<MockProje
     mergeAllowed: false,
     mergeRestriction: 'Main repository worktree cannot be used as a merge source',
     mergeTargetBranches: [],
+    sandbox: createSandboxState(path, branch),
+  }
+}
+
+function sanitizeRef(value: string) {
+  return value.replaceAll(/[^A-Za-z0-9._-]+/g, '-')
+}
+
+function createSandboxState(
+  worktreePath: string,
+  branch: string | null,
+): NonNullable<MockProject['repository']>['worktrees'][number]['sandbox'] {
+  const suffix = sanitizeRef(branch ?? worktreePath.split('/').at(-1) ?? 'worktree')
+  return {
+    supported: false,
+    restriction: null,
+    imageStatus: 'MISSING',
+    imageReference: `localhost/fsp-sandbox-${suffix}:latest`,
+    imageFailureMessage: null,
+    imageInitScriptPath: 'init-image.sh',
+    imageInitScriptSource: 'DEFAULT',
+    imageActionAllowed: false,
+    imageActionRestriction: null,
+    containerStatus: 'INACTIVE',
+    containerName: `fsp-sandbox-${suffix}`,
+    containerFailureMessage: null,
+    projectInitScriptPath: 'init-project.sh',
+    projectInitScriptSource: 'DEFAULT',
+    containerCreateAllowed: false,
+    containerCreateRestriction: null,
+    containerDeleteAllowed: false,
+    containerDeleteRestriction: null,
   }
 }
 
@@ -220,6 +272,62 @@ function withMergeSupport(repository: NonNullable<MockProject['repository']>) {
       mergeAllowed: mergeRestriction === null,
       mergeRestriction,
       mergeTargetBranches,
+    }
+  })
+
+  return repository
+}
+
+function withSandboxSupport(repository: NonNullable<MockProject['repository']>) {
+  repository.worktrees = repository.worktrees.map((worktree) => {
+    const currentSandbox = worktree.sandbox ?? createSandboxState(worktree.path, worktree.branch)
+    let restriction: string | null = null
+    if (worktree.main) {
+      restriction = 'Main repository worktree cannot be used as a sandbox source'
+    } else if (worktree.stale) {
+      restriction = 'Stale worktree records cannot be used as a sandbox source'
+    } else if (worktree.headState !== 'BRANCH' || !worktree.branch) {
+      restriction = 'Detached HEAD worktree cannot be used as a sandbox source'
+    }
+
+    const imageActionAllowed = restriction === null && currentSandbox.containerStatus !== 'ACTIVE'
+    const imageActionRestriction =
+      imageActionAllowed
+        ? null
+        : restriction ?? 'Destroy the active sandbox container before rebuilding the image'
+
+    const containerCreateAllowed =
+      restriction === null &&
+      currentSandbox.imageStatus === 'READY' &&
+      currentSandbox.containerStatus !== 'ACTIVE'
+    const containerCreateRestriction =
+      containerCreateAllowed
+        ? null
+        : restriction ??
+          (currentSandbox.imageStatus !== 'READY'
+            ? 'Create or rebuild the sandbox image before starting a container'
+            : 'A sandbox container is already active for this worktree')
+
+    const containerDeleteAllowed =
+      restriction === null && currentSandbox.containerStatus === 'ACTIVE'
+    const containerDeleteRestriction =
+      containerDeleteAllowed
+        ? null
+        : restriction ?? 'No active sandbox container exists for this worktree'
+
+    return {
+      ...worktree,
+      sandbox: {
+        ...currentSandbox,
+        supported: restriction === null,
+        restriction,
+        imageActionAllowed,
+        imageActionRestriction,
+        containerCreateAllowed,
+        containerCreateRestriction,
+        containerDeleteAllowed,
+        containerDeleteRestriction,
+      },
     }
   })
 
@@ -292,6 +400,8 @@ function installBackendMock() {
             'feature/api-preview',
             'feature-preview',
             'feature/error',
+            'feature/image-fail',
+            'feature/project-fail',
             'repo-test',
           ],
           recentCommits: [
@@ -307,6 +417,7 @@ function installBackendMock() {
           worktrees: [createMainWorktree(repositoryPath, 'repo-test')],
         }
         withMergeSupport(project.repository)
+        withSandboxSupport(project.repository)
       }
       return jsonResponse(repositoryPath)
     }
@@ -339,6 +450,7 @@ function installBackendMock() {
           ),
         }
         withMergeSupport(project.repository)
+        withSandboxSupport(project.repository)
       }
       return textResponse(branchName)
     }
@@ -373,8 +485,10 @@ function installBackendMock() {
         mergeAllowed: false,
         mergeRestriction: null,
         mergeTargetBranches: [],
+        sandbox: createSandboxState(worktreePath, branchName),
       })
       withMergeSupport(project.repository)
+      withSandboxSupport(project.repository)
       return textResponse(worktreePath)
     }
 
@@ -427,6 +541,7 @@ function installBackendMock() {
           : entry,
       )
       withMergeSupport(repository)
+      withSandboxSupport(repository)
       return textResponse(targetBranch)
     }
 
@@ -450,7 +565,86 @@ function installBackendMock() {
         (entry) => entry.path !== worktreePath,
       )
       withMergeSupport(project.repository)
+      withSandboxSupport(project.repository)
       return textResponse(worktreePath)
+    }
+
+    if (path === '/service/project_service/createProjectSandboxImage') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const worktreePath = url.searchParams.get('worktreePath') ?? ''
+      const project = state.projects.find((entry) => entry.id === projectId)
+      const worktree = project?.repository?.worktrees.find((entry) => entry.path === worktreePath)
+      if (!project?.repository || !worktree) {
+        return errorResponse(404, 'Worktree is not managed by the bound repository')
+      }
+      if (!worktree.sandbox.imageActionAllowed) {
+        return errorResponse(
+          409,
+          worktree.sandbox.imageActionRestriction ?? 'Sandbox image creation is unavailable for this worktree',
+        )
+      }
+      if (worktree.branch === 'feature/image-fail') {
+        worktree.sandbox.imageStatus = 'FAILED'
+        worktree.sandbox.imageFailureMessage =
+          'Sandbox image initialization failed: init-image.sh exited with status 7'
+        withSandboxSupport(project.repository)
+        return errorResponse(409, 'Sandbox image initialization failed: init-image.sh exited with status 7')
+      }
+      worktree.sandbox.imageStatus = 'READY'
+      worktree.sandbox.imageFailureMessage = null
+      worktree.sandbox.containerStatus =
+        worktree.sandbox.containerStatus === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE'
+      withSandboxSupport(project.repository)
+      return textResponse(worktree.sandbox.imageReference)
+    }
+
+    if (path === '/service/project_service/createProjectSandboxContainer') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const worktreePath = url.searchParams.get('worktreePath') ?? ''
+      const project = state.projects.find((entry) => entry.id === projectId)
+      const worktree = project?.repository?.worktrees.find((entry) => entry.path === worktreePath)
+      if (!project?.repository || !worktree) {
+        return errorResponse(404, 'Worktree is not managed by the bound repository')
+      }
+      if (!worktree.sandbox.containerCreateAllowed) {
+        return errorResponse(
+          409,
+          worktree.sandbox.containerCreateRestriction ??
+            'Sandbox container creation is unavailable for this worktree',
+        )
+      }
+      if (worktree.branch === 'feature/project-fail') {
+        worktree.sandbox.containerStatus = 'FAILED'
+        worktree.sandbox.containerFailureMessage =
+          'Sandbox container initialization failed: init-project.sh exited with status 9'
+        withSandboxSupport(project.repository)
+        return errorResponse(409, 'Sandbox container initialization failed: init-project.sh exited with status 9')
+      }
+      worktree.sandbox.containerStatus = 'ACTIVE'
+      worktree.sandbox.containerFailureMessage = null
+      withSandboxSupport(project.repository)
+      return textResponse(worktree.sandbox.containerName)
+    }
+
+    if (path === '/service/project_service/deleteProjectSandboxContainer') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const worktreePath = url.searchParams.get('worktreePath') ?? ''
+      const project = state.projects.find((entry) => entry.id === projectId)
+      const worktree = project?.repository?.worktrees.find((entry) => entry.path === worktreePath)
+      if (!project?.repository || !worktree) {
+        return errorResponse(404, 'Worktree is not managed by the bound repository')
+      }
+      if (!worktree.sandbox.containerDeleteAllowed) {
+        return errorResponse(
+          409,
+          worktree.sandbox.containerDeleteRestriction ??
+            'Sandbox container deletion is unavailable for this worktree',
+        )
+      }
+      worktree.sandbox.containerStatus = 'INACTIVE'
+      worktree.sandbox.containerFailureMessage = null
+      withSandboxSupport(project.repository)
+      return textResponse(worktree.sandbox.containerName)
     }
 
     if (path === '/service/project_service/repairProjectWorktrees') {
@@ -480,6 +674,7 @@ function installBackendMock() {
       )
       project.repository.latestCommitSummary = 'pruned stale worktree records'
       withMergeSupport(project.repository)
+      withSandboxSupport(project.repository)
       return textResponse(project.repository.rootPath)
     }
 
@@ -777,9 +972,11 @@ describe('admin write workflows', () => {
     expect(
       await screen.findByText('Worktree removed and the project list has been refreshed.'),
     ).toBeInTheDocument()
-    expect(
-      screen.queryByText('/workspace/fast-service-platform-worktrees/feature-api-preview'),
-    ).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByText('/workspace/fast-service-platform-worktrees/feature-api-preview'),
+      ).not.toBeInTheDocument()
+    })
   })
 
   it('shows merge controls for linked worktrees and merges successfully from the projects page', async () => {
@@ -890,6 +1087,117 @@ describe('admin write workflows', () => {
         'Backend request failed with 409: Merge conflict detected while merging feature-preview into repo-test; the platform aborted the in-progress merge',
       ),
     ).toBeInTheDocument()
+  })
+
+  it('shows sandbox controls for linked worktrees and manages image and container lifecycle', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(
+      await screen.findAllByText('/workspace/fast-service-platform'),
+    ).not.toHaveLength(0)
+    expect(
+      await screen.findByText('Main repository worktree cannot be used as a sandbox source'),
+    ).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Worktree branch'), {
+      target: { value: 'feature/api-preview' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create worktree' }))
+
+    expect(
+      await screen.findByText(
+        'Create or rebuild the sandbox image before starting a container',
+      ),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create image' }))
+
+    expect(
+      await screen.findByText(
+        'Sandbox image created and the project list has been refreshed.',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Image ready')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create container' }))
+
+    expect(
+      await screen.findByText(
+        'Sandbox container created and the project list has been refreshed.',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Container active')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Destroy container' }))
+
+    expect(
+      await screen.findByText(
+        'Sandbox container destroyed and the project list has been refreshed.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('shows sandbox failure feedback for image and container initialization', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(
+      await screen.findAllByText('/workspace/fast-service-platform'),
+    ).not.toHaveLength(0)
+
+    fireEvent.change(screen.getByLabelText('Worktree branch'), {
+      target: { value: 'feature/image-fail' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create worktree' }))
+    await screen.findByText('/workspace/fast-service-platform-worktrees/feature-image-fail')
+    fireEvent.click(screen.getByRole('button', { name: 'Create image' }))
+
+    expect(
+      await screen.findByText(
+        'Backend request failed with 409: Sandbox image initialization failed: init-image.sh exited with status 7',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Image failed')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Worktree branch'), {
+      target: { value: 'feature/project-fail' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create worktree' }))
+    await screen.findByText('/workspace/fast-service-platform-worktrees/feature-project-fail')
+
+    const createImageButtons = await screen.findAllByRole('button', { name: 'Create image' })
+    fireEvent.click(createImageButtons[1]!)
+
+    expect(
+      await screen.findByText(
+        'Sandbox image created and the project list has been refreshed.',
+      ),
+    ).toBeInTheDocument()
+
+    const createContainerButtons = await screen.findAllByRole('button', {
+      name: 'Create container',
+    })
+    fireEvent.click(createContainerButtons[1]!)
+
+    expect(
+      await screen.findByText(
+        'Backend request failed with 409: Sandbox container initialization failed: init-project.sh exited with status 9',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Container failed')).toBeInTheDocument()
   })
 
   it('shows detached repair restrictions and supports prune from the projects page', async () => {

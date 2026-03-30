@@ -4,87 +4,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
-import com.fastservice.platform.backend.access.AccessControlServiceImpl;
-import com.fastservice.platform.backend.kanban.KanbanServiceImpl;
 import com.fastservice.platform.backend.project.ProjectServiceImpl;
 import com.fastservice.platform.backend.support.BackendTestSupport;
-import com.fastservice.platform.backend.ticket.TicketServiceImpl;
-import com.fastservice.platform.backend.user.UserServiceImpl;
 
-class EnterpriseServicesTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ProjectEngineeringServicesTest extends ProjectServiceTestSupport {
 
-    @BeforeEach
+    @BeforeAll
     void bootstrapBackend() {
         BackendTestSupport.bootstrap(BackendTestSupport.uniqueDatabaseName("service_test"), false);
-    }
-
-    @Test
-    void createsUsersRolesProjectsAndTickets() {
-        UserServiceImpl users = new UserServiceImpl();
-        AccessControlServiceImpl access = new AccessControlServiceImpl();
-        ProjectServiceImpl projects = new ProjectServiceImpl();
-        KanbanServiceImpl kanbans = new KanbanServiceImpl();
-        TicketServiceImpl tickets = new TicketServiceImpl();
-
-        long userId = users.createUser("service-user", "Service User", "service@example.com");
-        long roleId = access.createRole("DEV", "Developer");
-        long permissionId = access.createPermission("project:view", "View Projects", "FUNCTION");
-        access.assignPermissionToRole(roleId, permissionId);
-        access.assignRoleToUser(userId, roleId);
-
-        long projectId = projects.createProject("SVT", "Service Test", "Service layer test project");
-        long kanbanId = kanbans.createKanban(projectId, "Sprint Board");
-        long ticketId = tickets.createTicket(projectId, kanbanId, "SVT-1", "Create service test ticket", "Validate service APIs", userId);
-        String movedState = tickets.moveTicket(ticketId, "IN_PROGRESS");
-
-        assertTrue(users.listUsers().contains("service-user"));
-        assertTrue(access.listRoles().contains("\"code\":\"DEV\""));
-        assertTrue(access.listPermissions().contains("\"code\":\"project:view\""));
-        assertTrue(access.listRolesForUser(userId).contains("\"code\":\"DEV\""));
-        assertTrue(access.listPermissionsForRole(roleId).contains("\"code\":\"project:view\""));
-        assertTrue(projects.listProjects().contains("Service Test"));
-        assertTrue(kanbans.listKanbansByProject(projectId).contains("Sprint Board"));
-        assertTrue(tickets.listTicketsByProject(projectId).contains("SVT-1"));
-        assertTrue("IN_PROGRESS".equals(movedState));
-    }
-
-    @Test
-    void escapesJsonOutputValues() {
-        UserServiceImpl users = new UserServiceImpl();
-
-        users.createUser("json-user", "Display \"Name\"\nLine", "json\\user@example.com");
-
-        String payload = users.listUsers();
-        assertTrue(payload.contains("\"displayName\":\"Display \\\"Name\\\"\\nLine\""));
-        assertTrue(payload.contains("\"email\":\"json\\\\user@example.com\""));
-    }
-
-    @Test
-    void rejectsInvalidProjectAndKanbanRelationships() {
-        UserServiceImpl users = new UserServiceImpl();
-        ProjectServiceImpl projects = new ProjectServiceImpl();
-        KanbanServiceImpl kanbans = new KanbanServiceImpl();
-        TicketServiceImpl tickets = new TicketServiceImpl();
-
-        long userId = users.createUser("relationship-user", "Relationship User", "relationship@example.com");
-        long projectId = projects.createProject("REL", "Relationship Test", "Relationship validation");
-        long boardId = kanbans.createKanban(projectId, "Relationship Board");
-        long otherProjectId = projects.createProject("OTH", "Other Project", "Relationship mismatch");
-
-        assertThrows(IllegalArgumentException.class, () -> kanbans.createKanban(99999L, "Broken Board"));
-        assertThrows(IllegalArgumentException.class,
-                () -> tickets.createTicket(projectId, 99999L, "REL-404", "Missing board", "Should fail", userId));
-        assertThrows(IllegalArgumentException.class,
-                () -> tickets.createTicket(otherProjectId, boardId, "OTH-1", "Wrong board", "Should fail", userId));
     }
 
     @Test
@@ -413,123 +349,26 @@ class EnterpriseServicesTest {
         assertEquals("", runGitAndReadOutput(repositoryDir, "status", "--porcelain"));
     }
 
-    private Path createGitRepository() throws Exception {
-        Path remoteRepositoryDir = Files.createTempDirectory("fsp-project-remote-");
-        runGit(remoteRepositoryDir, "init", "--bare");
-        Path repositoryDir = Files.createTempDirectory("fsp-project-repository-");
-        runGit(repositoryDir, "init");
-        runGit(repositoryDir, "config", "user.name", "Fast Service Tests");
-        runGit(repositoryDir, "config", "user.email", "tests@fastservice.local");
-        runGit(repositoryDir, "checkout", "-b", "repo-test");
-        Files.writeString(repositoryDir.resolve("README.md"), "repository binding test\n", StandardCharsets.UTF_8);
-        runGit(repositoryDir, "add", "README.md");
-        runGit(repositoryDir, "commit", "-m", "Initial platform repo");
-        runGit(repositoryDir, "remote", "add", "origin", remoteRepositoryDir.toString());
-        runGit(repositoryDir, "push", "-u", "origin", "repo-test");
-        Files.writeString(repositoryDir.resolve("README.md"), "repository binding test\nsecond commit\n", StandardCharsets.UTF_8);
-        runGit(repositoryDir, "add", "README.md");
-        runGit(repositoryDir, "commit", "-m", "Second platform repo commit");
-        runGit(repositoryDir, "push", "origin", "repo-test");
-        runGit(repositoryDir, "checkout", "-b", "feature/api-preview");
-        Files.writeString(repositoryDir.resolve("api-preview.txt"), "preview worktree branch\n", StandardCharsets.UTF_8);
-        runGit(repositoryDir, "add", "api-preview.txt");
-        runGit(repositoryDir, "commit", "-m", "Add API preview branch");
-        runGit(repositoryDir, "push", "-u", "origin", "feature/api-preview");
-        runGit(repositoryDir, "checkout", "repo-test");
-        runGit(repositoryDir, "branch", "feature-preview");
-        return repositoryDir;
-    }
-
-    private Path createDetachedHeadRepository() throws Exception {
+    @Test
+    void exposesSandboxContextForLinkedWorktreesAndRestrictedMainWorktree() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("SBCTX", "Sandbox Context", "Sandbox context validation");
         Path repositoryDir = createGitRepository();
-        String headCommit = runGitAndReadOutput(repositoryDir, "rev-parse", "HEAD");
-        runGit(repositoryDir, "checkout", headCommit);
-        return repositoryDir;
-    }
 
-    private Path createConflictingGitRepository() throws Exception {
-        Path remoteRepositoryDir = Files.createTempDirectory("fsp-project-conflict-remote-");
-        runGit(remoteRepositoryDir, "init", "--bare");
-        Path repositoryDir = Files.createTempDirectory("fsp-project-conflict-repository-");
-        runGit(repositoryDir, "init");
-        runGit(repositoryDir, "config", "user.name", "Fast Service Tests");
-        runGit(repositoryDir, "config", "user.email", "tests@fastservice.local");
-        runGit(repositoryDir, "checkout", "-b", "repo-test");
-        Files.writeString(repositoryDir.resolve("README.md"), "conflict repository\n", StandardCharsets.UTF_8);
-        Files.writeString(repositoryDir.resolve("conflict.txt"), "base\n", StandardCharsets.UTF_8);
-        runGit(repositoryDir, "add", "README.md", "conflict.txt");
-        runGit(repositoryDir, "commit", "-m", "Initial conflicting repository");
-        runGit(repositoryDir, "remote", "add", "origin", remoteRepositoryDir.toString());
-        runGit(repositoryDir, "push", "-u", "origin", "repo-test");
-        runGit(repositoryDir, "checkout", "-b", "feature/conflict");
-        Files.writeString(repositoryDir.resolve("conflict.txt"), "feature change\n", StandardCharsets.UTF_8);
-        runGit(repositoryDir, "add", "conflict.txt");
-        runGit(repositoryDir, "commit", "-m", "Feature side conflict change");
-        runGit(repositoryDir, "push", "-u", "origin", "feature/conflict");
-        runGit(repositoryDir, "checkout", "repo-test");
-        Files.writeString(repositoryDir.resolve("conflict.txt"), "target change\n", StandardCharsets.UTF_8);
-        runGit(repositoryDir, "add", "conflict.txt");
-        runGit(repositoryDir, "commit", "-m", "Target side conflict change");
-        runGit(repositoryDir, "push", "origin", "repo-test");
-        runGit(repositoryDir, "branch", "feature-preview");
-        return repositoryDir;
-    }
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+        String worktreePath = projects.createProjectWorktree(projectId, "feature/api-preview");
+        String payload = projects.listProjects();
 
-    private void runGit(Path repositoryDir, String... args) throws Exception {
-        String output = runGitAndReadOutput(repositoryDir, args);
-        if (output.startsWith("fatal:")) {
-            throw new IOException("Git command failed: " + output);
-        }
-    }
+        assertTrue(payload.contains("\"restriction\":\"Main repository worktree cannot be used as a sandbox source\""));
+        assertTrue(payload.contains("\"imageStatus\":\"MISSING\""));
+        assertTrue(payload.contains("\"containerStatus\":\"INACTIVE\""));
+        assertTrue(payload.contains("\"imageInitScriptPath\":\"init-image.sh\""));
+        assertTrue(payload.contains("\"projectInitScriptPath\":\"init-project.sh\""));
+        assertTrue(payload.contains("\"imageInitScriptSource\":\"DEFAULT\""));
+        assertTrue(payload.contains("\"projectInitScriptSource\":\"DEFAULT\""));
+        assertTrue(payload.contains("\"path\":\"" + escapeJson(worktreePath) + "\""));
+        assertTrue(payload.contains("\"supported\":true"));
 
-    private String runGitAndReadOutput(Path repositoryDir, String... args) throws Exception {
-        String[] command = new String[args.length + 3];
-        command[0] = "git";
-        command[1] = "-C";
-        command[2] = repositoryDir.toString();
-        System.arraycopy(args, 0, command, 3, args.length);
-        Process process = new ProcessBuilder(command)
-                .redirectErrorStream(true)
-                .start();
-        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            throw new IOException("Git command failed: " + output);
-        }
-        return output;
-    }
-
-    private String runGitAndReadOutputAllowFailure(Path repositoryDir, String... args) throws Exception {
-        String[] command = new String[args.length + 3];
-        command[0] = "git";
-        command[1] = "-C";
-        command[2] = repositoryDir.toString();
-        System.arraycopy(args, 0, command, 3, args.length);
-        Process process = new ProcessBuilder(command)
-                .redirectErrorStream(true)
-                .start();
-        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
-        process.waitFor();
-        return output;
-    }
-
-    private String escapeJson(String value) {
-        return value.replace("\\", "\\\\");
-    }
-
-    private void deleteRecursively(Path path) throws IOException {
-        if (Files.notExists(path)) {
-            return;
-        }
-
-        try (var stream = Files.walk(path)) {
-            stream.sorted(Comparator.reverseOrder()).forEach(entry -> {
-                try {
-                    Files.deleteIfExists(entry);
-                } catch (IOException e) {
-                    throw new IllegalStateException("Unable to delete path: " + entry, e);
-                }
-            });
-        }
+        projects.deleteProjectWorktree(projectId, worktreePath);
     }
 }

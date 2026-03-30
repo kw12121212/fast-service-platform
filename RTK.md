@@ -81,7 +81,7 @@ Implementation status today:
 - Git repository binding and branch switching are implemented.
 - Project-scoped worktree management is implemented.
 - Project-scoped merge support from managed linked worktrees into existing local branches is implemented.
-- Sandbox environments are still reserved platform directions, not completed baseline capabilities.
+- Project-scoped sandbox environments for managed linked worktrees are implemented through `podman`, with persistent images and temporary containers.
 
 ## Minimum Platform Baseline
 
@@ -118,7 +118,8 @@ This repository is already in a real implementation phase, not just product plan
 - The frontend implements the corresponding dashboard and management pages.
 - The frontend talks directly to the current backend through `/service/*`.
 - The backend supports optional demo data.
-- The software-project area already includes repository binding, Git branch switching, and project-scoped worktree management.
+- The default backend validation path is a fast baseline, while real sandbox runtime validation runs through a separate repository-owned entrypoint.
+- The software-project area already includes repository binding, Git branch switching, project-scoped worktree management, linked-worktree merge support, and linked-worktree sandbox support.
 
 ## Working Assumptions For Contributors
 

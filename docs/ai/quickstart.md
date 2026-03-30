@@ -83,13 +83,15 @@
 
 ```bash
 ./scripts/verify-backend.sh
+./scripts/verify-backend-sandbox-runtime.sh
 ./scripts/verify-frontend.sh
 ./scripts/verify-fullstack.sh
 ```
 
 说明：
 
-- `verify-backend.sh` 跑 backend 基线测试
+- `verify-backend.sh` 跑 backend 快速基线测试，不包含真实 sandbox runtime 执行
+- `verify-backend-sandbox-runtime.sh` 跑 backend 的重型 sandbox runtime 验证，实际执行 `podman` image/container 路径
 - `verify-frontend.sh` 跑 frontend 的 `test`、`build`、`lint`
 - `verify-fullstack.sh` 会准备 backend 运行时、启动 backend 和 Vite dev server，并通过 frontend 的 `/service/*` 代理做 smoke 验证
 

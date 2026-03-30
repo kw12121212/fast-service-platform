@@ -15,6 +15,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <lealone.version>8.0.0-SNAPSHOT</lealone.version>
     <junit.version>5.11.4</junit.version>
+    <test.excludedGroups>heavy-runtime</test.excludedGroups>
+    <test.groups></test.groups>
   </properties>
 
   <repositories>
@@ -82,6 +84,8 @@
         <version>3.5.2</version>
         <configuration>
           <useModulePath>false</useModulePath>
+          <groups>${test.groups}</groups>
+          <excludedGroups>${test.excludedGroups}</excludedGroups>
           <systemPropertyVariables>
             <fsp.base-dir>${project.build.directory}/test-lealone</fsp.base-dir>
           </systemPropertyVariables>

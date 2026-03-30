@@ -361,6 +361,33 @@ export function useDeleteProjectWorktreeAction() {
   })
 }
 
+export function useCreateProjectSandboxImageAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+      worktreePath: string
+    }) => invokeService<string>('project_service/createProjectSandboxImage', args),
+  })
+}
+
+export function useCreateProjectSandboxContainerAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+      worktreePath: string
+    }) => invokeService<string>('project_service/createProjectSandboxContainer', args),
+  })
+}
+
+export function useDeleteProjectSandboxContainerAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+      worktreePath: string
+    }) => invokeService<string>('project_service/deleteProjectSandboxContainer', args),
+  })
+}
+
 export function useRepairProjectWorktreesAction() {
   return useBackendMutation({
     run: (args: {

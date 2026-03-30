@@ -45,6 +45,18 @@ create table if not exists project_repository_binding (
   repository_root_path varchar
 ) package @packageName generate code @modelSrcDir;
 
+create table if not exists project_worktree_sandbox (
+  project_id long,
+  worktree_path varchar,
+  init_image_script_path_override varchar,
+  init_project_script_path_override varchar,
+  image_status varchar,
+  image_failure_message varchar,
+  container_status varchar,
+  container_failure_message varchar,
+  primary key (project_id, worktree_path)
+) package @packageName generate code @modelSrcDir;
+
 create table if not exists kanban_board (
   id long auto_increment primary key,
   project_id long,

@@ -1,10 +1,12 @@
 package com.fastservice.platform.backend.project;
 
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 import com.fastservice.platform.backend.common.db.EntityExistence;
 import com.fastservice.platform.backend.common.db.JdbcSupport;
@@ -13,6 +15,7 @@ import com.fastservice.platform.backend.common.json.JsonStrings;
 public class ProjectServiceImpl {
 
     private final GitRepositoryInspector gitRepositoryInspector = new GitRepositoryInspector();
+    private final ProjectSandboxManager projectSandboxManager = new ProjectSandboxManager();
 
     // Lealone-generated service executors dispatch to lowercase method names.
     public long createproject(String projectKey, String projectName, String description) {
@@ -37,6 +40,18 @@ public class ProjectServiceImpl {
 
     public String deleteprojectworktree(long projectId, String worktreePath) {
         return deleteProjectWorktree(projectId, worktreePath);
+    }
+
+    public String createprojectsandboximage(long projectId, String worktreePath) {
+        return createProjectSandboxImage(projectId, worktreePath);
+    }
+
+    public String createprojectsandboxcontainer(long projectId, String worktreePath) {
+        return createProjectSandboxContainer(projectId, worktreePath);
+    }
+
+    public String deleteprojectsandboxcontainer(long projectId, String worktreePath) {
+        return deleteProjectSandboxContainer(projectId, worktreePath);
     }
 
     public String repairprojectworktrees(long projectId) {
@@ -119,7 +134,27 @@ public class ProjectServiceImpl {
     public String deleteProjectWorktree(long projectId, String worktreePath) {
         EntityExistence.requireExists("software_project", projectId, "Project");
         String repositoryRootPath = requireBoundRepositoryPath(projectId);
-        return gitRepositoryInspector.deleteWorktree(repositoryRootPath, worktreePath);
+        String deletedPath = gitRepositoryInspector.deleteWorktree(repositoryRootPath, worktreePath);
+        projectSandboxManager.cleanupWorktreeResources(projectId, deletedPath);
+        return deletedPath;
+    }
+
+    public String createProjectSandboxImage(long projectId, String worktreePath) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return projectSandboxManager.createImage(projectId, repositoryRootPath, worktreePath);
+    }
+
+    public String createProjectSandboxContainer(long projectId, String worktreePath) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return projectSandboxManager.createContainer(projectId, repositoryRootPath, worktreePath);
+    }
+
+    public String deleteProjectSandboxContainer(long projectId, String worktreePath) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return projectSandboxManager.deleteContainer(projectId, repositoryRootPath, worktreePath);
     }
 
     public String repairProjectWorktrees(long projectId) {
@@ -131,7 +166,10 @@ public class ProjectServiceImpl {
     public String pruneProjectWorktrees(long projectId) {
         EntityExistence.requireExists("software_project", projectId, "Project");
         String repositoryRootPath = requireBoundRepositoryPath(projectId);
-        return gitRepositoryInspector.pruneWorktrees(repositoryRootPath);
+        String prunedPath = gitRepositoryInspector.pruneWorktrees(repositoryRootPath);
+        ProjectRepositorySummary repositorySummary = gitRepositoryInspector.inspect(repositoryRootPath);
+        projectSandboxManager.pruneMissingWorktreeResources(projectId, repositorySummary.worktrees());
+        return prunedPath;
     }
 
     public String listProjects() {
@@ -156,7 +194,7 @@ public class ProjectServiceImpl {
                 builder.append(",\"name\":").append(JsonStrings.quote(rs.getString("project_name")));
                 builder.append(",\"active\":").append(rs.getBoolean("active"));
                 builder.append(",\"repository\":");
-                appendRepositorySummary(builder, rs.getString("repository_root_path"));
+                appendRepositorySummary(builder, rs.getLong("id"), rs.getString("repository_root_path"));
                 builder.append('}');
             }
             builder.append(']');
@@ -166,13 +204,14 @@ public class ProjectServiceImpl {
         }
     }
 
-    private void appendRepositorySummary(StringBuilder builder, String repositoryRootPath) {
+    private void appendRepositorySummary(StringBuilder builder, long projectId, String repositoryRootPath) {
         if (repositoryRootPath == null || repositoryRootPath.isBlank()) {
             builder.append("null");
             return;
         }
 
         ProjectRepositorySummary repositorySummary = gitRepositoryInspector.inspect(repositoryRootPath);
+        Map<String, ProjectWorktreeSandboxRecord> sandboxRecords = projectSandboxManager.readSandboxRecords(projectId);
         builder.append('{');
         builder.append("\"rootPath\":").append(JsonStrings.quote(repositorySummary.rootPath()));
         builder.append(",\"headState\":").append(JsonStrings.quote(repositorySummary.headState().name()));
@@ -184,7 +223,13 @@ public class ProjectServiceImpl {
         builder.append(",\"recentCommits\":");
         appendRecentCommits(builder, repositorySummary.recentCommits());
         builder.append(",\"worktrees\":");
-        appendWorktrees(builder, repositorySummary.worktrees(), repositorySummary.availableBranches());
+        appendWorktrees(
+                builder,
+                projectId,
+                repositorySummary.rootPath(),
+                repositorySummary.worktrees(),
+                repositorySummary.availableBranches(),
+                sandboxRecords);
         builder.append('}');
     }
 
@@ -232,8 +277,11 @@ public class ProjectServiceImpl {
 
     private void appendWorktrees(
             StringBuilder builder,
+            long projectId,
+            String repositoryRootPath,
             List<ProjectWorktreeSummary> worktrees,
-            List<String> availableBranches) {
+            List<String> availableBranches,
+            Map<String, ProjectWorktreeSandboxRecord> sandboxRecords) {
         builder.append('[');
         for (int i = 0; i < worktrees.size(); i++) {
             if (i > 0) {
@@ -241,6 +289,11 @@ public class ProjectServiceImpl {
             }
             ProjectWorktreeSummary worktree = worktrees.get(i);
             List<String> mergeTargetBranches = worktree.mergeTargetBranches(availableBranches);
+            ProjectWorktreeSandboxSummary sandboxSummary = projectSandboxManager.summarize(
+                    projectId,
+                    Path.of(repositoryRootPath),
+                    worktree,
+                    sandboxRecords.get(Path.of(worktree.path()).normalize().toAbsolutePath().toString()));
             builder.append('{');
             builder.append("\"path\":").append(JsonStrings.quote(worktree.path()));
             builder.append(",\"main\":").append(worktree.main());
@@ -256,8 +309,33 @@ public class ProjectServiceImpl {
             builder.append(",\"mergeRestriction\":").append(JsonStrings.quote(worktree.mergeRestriction(availableBranches)));
             builder.append(",\"mergeTargetBranches\":");
             appendStringArray(builder, mergeTargetBranches);
+            builder.append(",\"sandbox\":");
+            appendSandboxSummary(builder, sandboxSummary);
             builder.append('}');
         }
         builder.append(']');
+    }
+
+    private void appendSandboxSummary(StringBuilder builder, ProjectWorktreeSandboxSummary sandbox) {
+        builder.append('{');
+        builder.append("\"supported\":").append(sandbox.supported());
+        builder.append(",\"restriction\":").append(JsonStrings.quote(sandbox.restriction()));
+        builder.append(",\"imageStatus\":").append(JsonStrings.quote(sandbox.imageStatus()));
+        builder.append(",\"imageReference\":").append(JsonStrings.quote(sandbox.imageReference()));
+        builder.append(",\"imageFailureMessage\":").append(JsonStrings.quote(sandbox.imageFailureMessage()));
+        builder.append(",\"imageInitScriptPath\":").append(JsonStrings.quote(sandbox.imageInitScriptPath()));
+        builder.append(",\"imageInitScriptSource\":").append(JsonStrings.quote(sandbox.imageInitScriptSource()));
+        builder.append(",\"imageActionAllowed\":").append(sandbox.imageActionAllowed());
+        builder.append(",\"imageActionRestriction\":").append(JsonStrings.quote(sandbox.imageActionRestriction()));
+        builder.append(",\"containerStatus\":").append(JsonStrings.quote(sandbox.containerStatus()));
+        builder.append(",\"containerName\":").append(JsonStrings.quote(sandbox.containerName()));
+        builder.append(",\"containerFailureMessage\":").append(JsonStrings.quote(sandbox.containerFailureMessage()));
+        builder.append(",\"projectInitScriptPath\":").append(JsonStrings.quote(sandbox.projectInitScriptPath()));
+        builder.append(",\"projectInitScriptSource\":").append(JsonStrings.quote(sandbox.projectInitScriptSource()));
+        builder.append(",\"containerCreateAllowed\":").append(sandbox.containerCreateAllowed());
+        builder.append(",\"containerCreateRestriction\":").append(JsonStrings.quote(sandbox.containerCreateRestriction()));
+        builder.append(",\"containerDeleteAllowed\":").append(sandbox.containerDeleteAllowed());
+        builder.append(",\"containerDeleteRestriction\":").append(JsonStrings.quote(sandbox.containerDeleteRestriction()));
+        builder.append('}');
     }
 }

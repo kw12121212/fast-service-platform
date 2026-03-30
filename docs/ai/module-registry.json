@@ -208,7 +208,7 @@
     {
       "id": "sandbox-environment",
       "role": "engineering-support-component",
-      "description": "Future sandbox component reserved by the platform."
+      "description": "Project-scoped sandbox support for managed linked worktrees, with podman-backed images and temporary containers."
     }
   ]
 }

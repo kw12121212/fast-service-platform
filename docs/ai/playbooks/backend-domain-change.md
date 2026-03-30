@@ -45,7 +45,10 @@
 
 ### 改测试
 
-- 领域行为优先放进 `EnterpriseServicesTest`
+- 领域行为优先放进 `backend/src/test/java/com/fastservice/platform/backend/service/` 下对应职责的测试类
+- 纯 service/core 行为优先放进 `CoreEnterpriseServicesTest`
+- project repository/worktree/merge 这类工程支持行为优先放进 `ProjectEngineeringServicesTest`
+- 如果改动影响真实 sandbox runtime，再补 `ProjectSandboxRuntimeTest` 并执行 `./scripts/verify-backend-sandbox-runtime.sh`
 - 启动或 demo 数据行为优先放进 `BackendBootstrapIntegrationTest`
 
 ## 最低验证

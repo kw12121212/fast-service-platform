@@ -6,6 +6,7 @@
 - `backend/project-git-management.md` - Bound-project Git context, local branch visibility, clean-only branch switching, detached HEAD restrictions, and unbound-project handling.
 - `backend/project-merge-support.md` - Project-scoped merge support context, clean linked-worktree merge execution, local-target restrictions, and conflict-safe failure behavior.
 - `backend/project-repository-binding.md` - Optional project-to-local-repository binding, repository summary behavior, and unbound-project handling.
+- `backend/project-sandbox-environment.md` - Project-scoped sandbox context, linked-worktree image lifecycle, temporary container restrictions, and failure-state visibility.
 - `backend/project-worktree-management.md` - Project-scoped worktree inventory, sibling-directory creation rules, deletion safety limits, and repair or prune maintenance behavior.
 - `backend/runtime-bootstrap.md` - Runnable backend bootstrap behavior, local schema/service definition inputs, and optional demo-data startup behavior.
 - `backend/testing-and-demo-data.md` - Required automated backend test coverage and optional demo-data validation behavior.
@@ -30,6 +31,7 @@
 - `frontend/project-git-management.md` - Projects-page Git context display, local branch visibility, safe branch switching, and mutation feedback behavior.
 - `frontend/project-merge-support.md` - Projects-page merge support context, linked-worktree merge requests, restricted merge states, and merge outcome visibility.
 - `frontend/project-repository-management.md` - Projects-page repository binding workflows, repository context display, and mutation feedback behavior.
+- `frontend/project-sandbox-environment.md` - Projects-page sandbox context, linked-worktree image and container actions, restricted states, and sandbox outcome visibility.
 - `frontend/project-worktree-management.md` - Projects-page worktree inventory, creation and deletion restrictions, repair or prune actions, and mutation outcome visibility.
 - `platform/built-in-components.md` - Required enterprise management and engineering-support platform components.
 - `product/enterprise-platform-positioning.md` - Product positioning as an AI-oriented enterprise component platform, plus enterprise scope and monolithic target shape.

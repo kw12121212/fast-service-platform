@@ -11,8 +11,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   useBindProjectRepositoryAction,
+  useCreateProjectSandboxContainerAction,
+  useCreateProjectSandboxImageAction,
   useCreateProjectWorktreeAction,
   useCreateProjectAction,
+  useDeleteProjectSandboxContainerAction,
   useDeleteProjectWorktreeAction,
   useMergeProjectWorktreeAction,
   useProjectsResource,
@@ -134,6 +137,45 @@ function worktreeRefLabel(worktree: ProjectWorktreeSummary) {
   return worktree.branch ?? 'Unknown ref'
 }
 
+function sandboxTone(worktree: ProjectWorktreeSummary) {
+  if (!worktree.sandbox.supported || worktree.sandbox.imageStatus === 'FAILED') {
+    return 'bg-rose-500/12 text-rose-700'
+  }
+  if (worktree.sandbox.containerStatus === 'ACTIVE') {
+    return 'bg-primary/12 text-primary'
+  }
+  if (worktree.sandbox.containerStatus === 'FAILED') {
+    return 'bg-amber-500/14 text-amber-700'
+  }
+  if (worktree.sandbox.imageStatus === 'READY') {
+    return 'bg-emerald-500/12 text-emerald-700'
+  }
+  return 'bg-muted text-muted-foreground'
+}
+
+function sandboxStatusLabel(worktree: ProjectWorktreeSummary) {
+  if (!worktree.sandbox.supported) {
+    return 'Restricted'
+  }
+  if (worktree.sandbox.containerStatus === 'ACTIVE') {
+    return 'Container active'
+  }
+  if (worktree.sandbox.containerStatus === 'FAILED') {
+    return 'Container failed'
+  }
+  if (worktree.sandbox.imageStatus === 'FAILED') {
+    return 'Image failed'
+  }
+  if (worktree.sandbox.imageStatus === 'READY') {
+    return 'Image ready'
+  }
+  return 'Image missing'
+}
+
+function scriptSourceLabel(source: string) {
+  return source === 'WORKTREE_PROPERTY' ? 'Worktree property' : 'Default path'
+}
+
 type ProjectRepositoryCardProps = {
   project: SoftwareProject
   onRepositoryBound: () => void
@@ -148,6 +190,9 @@ function ProjectRepositoryCard({
   const createProjectWorktree = useCreateProjectWorktreeAction()
   const mergeProjectWorktree = useMergeProjectWorktreeAction()
   const deleteProjectWorktree = useDeleteProjectWorktreeAction()
+  const createProjectSandboxImage = useCreateProjectSandboxImageAction()
+  const createProjectSandboxContainer = useCreateProjectSandboxContainerAction()
+  const deleteProjectSandboxContainer = useDeleteProjectSandboxContainerAction()
   const repairProjectWorktrees = useRepairProjectWorktreesAction()
   const pruneProjectWorktrees = usePruneProjectWorktreesAction()
   const [repositoryPath, setRepositoryPath] = useState(
@@ -163,6 +208,14 @@ function ProjectRepositoryCard({
   const [activeMergeWorktreePath, setActiveMergeWorktreePath] = useState<string | null>(
     null,
   )
+  const [activeSandboxImageWorktreePath, setActiveSandboxImageWorktreePath] = useState<
+    string | null
+  >(null)
+  const [activeSandboxContainerWorktreePath, setActiveSandboxContainerWorktreePath] =
+    useState<string | null>(null)
+  const [activeSandboxDeleteWorktreePath, setActiveSandboxDeleteWorktreePath] = useState<
+    string | null
+  >(null)
   const repositoryPathValue = repositoryPath || project.repository?.rootPath || ''
   const targetBranchValue =
     project.repository && project.repository.availableBranches.includes(targetBranch)
@@ -282,6 +335,48 @@ function ProjectRepositoryCard({
       })
       onRepositoryBound()
     } catch {
+      return
+    }
+  }
+
+  async function handleCreateSandboxImage(worktreePath: string) {
+    setActiveSandboxImageWorktreePath(worktreePath)
+    try {
+      await createProjectSandboxImage.submit({
+        projectId: project.id,
+        worktreePath,
+      })
+      onRepositoryBound()
+    } catch {
+      onRepositoryBound()
+      return
+    }
+  }
+
+  async function handleCreateSandboxContainer(worktreePath: string) {
+    setActiveSandboxContainerWorktreePath(worktreePath)
+    try {
+      await createProjectSandboxContainer.submit({
+        projectId: project.id,
+        worktreePath,
+      })
+      onRepositoryBound()
+    } catch {
+      onRepositoryBound()
+      return
+    }
+  }
+
+  async function handleDeleteSandboxContainer(worktreePath: string) {
+    setActiveSandboxDeleteWorktreePath(worktreePath)
+    try {
+      await deleteProjectSandboxContainer.submit({
+        projectId: project.id,
+        worktreePath,
+      })
+      onRepositoryBound()
+    } catch {
+      onRepositoryBound()
       return
     }
   }
@@ -616,6 +711,171 @@ function ProjectRepositoryCard({
                         <div className="rounded-[16px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
                           {worktree.mergeRestriction ??
                             'Merge is unavailable for this worktree.'}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4 space-y-3 rounded-[16px] border border-border/60 bg-background/65 p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                            Sandbox environment
+                          </div>
+                          <div className="mt-2 text-sm text-muted-foreground">
+                            Manage the persistent podman image and the temporary container for this linked worktree.
+                          </div>
+                        </div>
+                        <Badge className={sandboxTone(worktree)}>
+                          {sandboxStatusLabel(worktree)}
+                        </Badge>
+                      </div>
+
+                      <div className="grid gap-2 text-sm text-muted-foreground">
+                        <div>
+                          Image state{' '}
+                          <span className="font-medium text-foreground">
+                            {worktree.sandbox.imageStatus}
+                          </span>
+                        </div>
+                        <div>
+                          Image ref{' '}
+                          <span className="font-mono text-xs text-foreground">
+                            {worktree.sandbox.imageReference}
+                          </span>
+                        </div>
+                        <div>
+                          Image init{' '}
+                          <span className="font-medium text-foreground">
+                            {worktree.sandbox.imageInitScriptPath}
+                          </span>{' '}
+                          <span className="text-xs">
+                            · {scriptSourceLabel(worktree.sandbox.imageInitScriptSource)}
+                          </span>
+                        </div>
+                        <div>
+                          Container state{' '}
+                          <span className="font-medium text-foreground">
+                            {worktree.sandbox.containerStatus}
+                          </span>
+                        </div>
+                        <div>
+                          Container name{' '}
+                          <span className="font-mono text-xs text-foreground">
+                            {worktree.sandbox.containerName}
+                          </span>
+                        </div>
+                        <div>
+                          Project init{' '}
+                          <span className="font-medium text-foreground">
+                            {worktree.sandbox.projectInitScriptPath}
+                          </span>{' '}
+                          <span className="text-xs">
+                            · {scriptSourceLabel(worktree.sandbox.projectInitScriptSource)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {worktree.sandbox.imageFailureMessage ? (
+                        <div className="rounded-[16px] border border-destructive/25 bg-destructive/8 px-3 py-2 text-sm text-destructive">
+                          {worktree.sandbox.imageFailureMessage}
+                        </div>
+                      ) : null}
+
+                      {worktree.sandbox.containerFailureMessage ? (
+                        <div className="rounded-[16px] border border-destructive/25 bg-destructive/8 px-3 py-2 text-sm text-destructive">
+                          {worktree.sandbox.containerFailureMessage}
+                        </div>
+                      ) : null}
+
+                      {!worktree.sandbox.supported ? (
+                        <div className="rounded-[16px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+                          {worktree.sandbox.restriction ??
+                            'Sandbox is unavailable for this worktree.'}
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap gap-3">
+                            <Button
+                              variant="outline"
+                              onClick={() => handleCreateSandboxImage(worktree.path)}
+                              disabled={
+                                !worktree.sandbox.imageActionAllowed ||
+                                createProjectSandboxImage.status === 'submitting'
+                              }
+                            >
+                              {worktree.sandbox.imageStatus === 'READY'
+                                ? 'Rebuild image'
+                                : 'Create image'}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleCreateSandboxContainer(worktree.path)}
+                              disabled={
+                                !worktree.sandbox.containerCreateAllowed ||
+                                createProjectSandboxContainer.status === 'submitting'
+                              }
+                            >
+                              Create container
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleDeleteSandboxContainer(worktree.path)}
+                              disabled={
+                                !worktree.sandbox.containerDeleteAllowed ||
+                                deleteProjectSandboxContainer.status === 'submitting'
+                              }
+                            >
+                              Destroy container
+                            </Button>
+                          </div>
+
+                          {worktree.sandbox.imageActionAllowed ? null : (
+                            <div className="rounded-[16px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+                              {worktree.sandbox.imageActionRestriction ??
+                                'Image creation is unavailable for this worktree.'}
+                            </div>
+                          )}
+
+                          {worktree.sandbox.containerCreateAllowed ? null : (
+                            <div className="rounded-[16px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+                              {worktree.sandbox.containerCreateRestriction ??
+                                'Container creation is unavailable for this worktree.'}
+                            </div>
+                          )}
+
+                          {worktree.sandbox.containerDeleteAllowed ? null : (
+                            <div className="rounded-[16px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+                              {worktree.sandbox.containerDeleteRestriction ??
+                                'Container destruction is unavailable for this worktree.'}
+                            </div>
+                          )}
+
+                          {activeSandboxImageWorktreePath === worktree.path ? (
+                            <MutationStatus
+                              status={createProjectSandboxImage.status}
+                              error={createProjectSandboxImage.error}
+                              submittingMessage="Creating sandbox image through the backend project service..."
+                              successMessage="Sandbox image created and the project list has been refreshed."
+                            />
+                          ) : null}
+
+                          {activeSandboxContainerWorktreePath === worktree.path ? (
+                            <MutationStatus
+                              status={createProjectSandboxContainer.status}
+                              error={createProjectSandboxContainer.error}
+                              submittingMessage="Creating sandbox container through the backend project service..."
+                              successMessage="Sandbox container created and the project list has been refreshed."
+                            />
+                          ) : null}
+
+                          {activeSandboxDeleteWorktreePath === worktree.path ? (
+                            <MutationStatus
+                              status={deleteProjectSandboxContainer.status}
+                              error={deleteProjectSandboxContainer.error}
+                              submittingMessage="Destroying sandbox container through the backend project service..."
+                              successMessage="Sandbox container destroyed and the project list has been refreshed."
+                            />
+                          ) : null}
                         </div>
                       )}
                     </div>

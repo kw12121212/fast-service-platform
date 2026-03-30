@@ -58,10 +58,12 @@ Project and repository workflows are already available from the current software
 - Merge a managed linked worktree branch into another existing local branch:
   - source must be a clean linked worktree
   - conflicts fail and are aborted instead of being auto-resolved
-
-Still not implemented:
-
-- `sandbox-environment`
+- Manage project-scoped sandbox environments for managed linked worktrees:
+  - inspect sandbox image and container state from the Projects page
+  - create or rebuild a persistent worktree-scoped sandbox image through `podman`
+  - create and destroy a temporary sandbox container through `podman`
+  - run `init-image.sh` during image creation and `init-project.sh` during container creation
+  - surface restricted states and initialization failures clearly
 
 ## AI-Ready Platform Workflows
 
@@ -137,6 +139,10 @@ Default local tool paths used by repository scripts:
 - Java: `$HOME/.sdkman/candidates/java/25.0.2-tem`
 - Maven: `$HOME/.sdkman/candidates/maven/current/bin/mvn`
 
+Additional host prerequisite for sandbox support:
+
+- `podman`
+
 If your environment differs, override with `JAVA_HOME` and `MVN_BIN`.
 
 ## Local Run
@@ -190,11 +196,14 @@ Repository-owned verification entrypoints:
 
 ```bash
 ./scripts/verify-backend.sh
+./scripts/verify-backend-sandbox-runtime.sh
 ./scripts/verify-frontend.sh
 ./scripts/verify-fullstack.sh
 ```
 
-`verify-fullstack.sh` starts the backend with demo data, runs the frontend, and validates real `/service/*` responses through the frontend proxy.
+- `mvn test` and `verify-backend.sh` run the fast backend baseline and exclude heavyweight real sandbox runtime execution.
+- `verify-backend-sandbox-runtime.sh` runs the dedicated real `podman` sandbox runtime validation path.
+- `verify-fullstack.sh` starts the backend with demo data, runs the frontend, and validates real `/service/*` responses through the frontend proxy.
 
 ## V1 Minimum Baseline
 
