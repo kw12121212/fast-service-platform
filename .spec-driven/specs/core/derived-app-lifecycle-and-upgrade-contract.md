@@ -17,7 +17,7 @@ Derived applications MUST expose machine-readable metadata that identifies the p
 - THEN they can determine which platform release and baseline identity the generated application came from
 
 ### Requirement: Repository Defines Upgrade Compatibility Inputs
-The repository MUST define the machine-readable inputs used to evaluate whether a derived application is compatible with a later platform release, including the standardized release-history / lineage assets, the release-delta and advisory assets for candidate targets, and the supported upgrade-path declarations that explain which source-to-target combinations the repository recognizes.
+The repository MUST define the machine-readable inputs used to evaluate whether a derived application is compatible with a later platform release, including the standardized release-history / lineage assets, the release-delta and advisory assets for candidate targets, the supported upgrade-path declarations that explain which source-to-target combinations the repository recognizes, and the structured template-boundary assets that clarify which generated areas are platform-managed versus customization-owned.
 
 #### Scenario: A contributor evaluates upgrade eligibility
 - GIVEN a contributor wants to know whether a derived application can be upgraded
@@ -33,6 +33,11 @@ The repository MUST define the machine-readable inputs used to evaluate whether 
 - GIVEN a contributor has a derived application from an older platform release
 - WHEN they inspect the repository-owned lifecycle and upgrade assets
 - THEN they can identify which target releases are declared as supported candidates instead of inferring upgrade eligibility from the current release alone
+
+#### Scenario: A contributor prepares an upgrade decision using template-boundary facts
+- GIVEN a contributor wants to know whether a platform-managed output change may safely apply to a derived application
+- WHEN they inspect the repository-owned lifecycle and upgrade assets
+- THEN they can identify template-boundary facts that distinguish platform-owned template regions from derived-app customization regions
 
 ### Requirement: Repository Provides A Repository-Owned Upgrade Evaluation Path
 The repository MUST provide repository-owned entrypoints that evaluate derived-application upgrade compatibility, surface release advisory details for repository-declared target releases, provide release lookup guidance for selecting a supported target, and provide a controlled upgrade execution path, with Java as the repository-owned implementation runtime for those platform workflows.

@@ -1,0 +1,151 @@
+{
+  "schemaVersion": "fsp-derived-app-template-map/v1",
+  "contractVersion": "fsp-structured-app-template-contract/v1",
+  "mapId": "default-derived-app-template-map",
+  "entries": [
+    {
+      "id": "generated-readme",
+      "matchKind": "exact",
+      "path": "README.md",
+      "unitType": "customization-zone",
+      "ownership": "derived-managed",
+      "upgradeBehavior": "preserve-by-default",
+      "description": "The generated root README may be adapted for the derived application."
+    },
+    {
+      "id": "generated-agents-guide",
+      "matchKind": "exact",
+      "path": "AGENTS.md",
+      "unitType": "stable-template",
+      "ownership": "platform-managed",
+      "upgradeBehavior": "refresh-from-platform",
+      "description": "The generated AGENTS entrypoint stays aligned with the repository-owned workflow."
+    },
+    {
+      "id": "generated-context",
+      "matchKind": "exact",
+      "path": "docs/ai/context.json",
+      "unitType": "stable-template",
+      "ownership": "platform-managed",
+      "upgradeBehavior": "refresh-from-platform",
+      "description": "Generated AI context mirrors the repository-owned contract and selected module set."
+    },
+    {
+      "id": "generated-lifecycle",
+      "matchKind": "exact",
+      "path": "docs/ai/derived-app-lifecycle.json",
+      "unitType": "stable-template",
+      "ownership": "platform-managed",
+      "upgradeBehavior": "refresh-from-platform",
+      "description": "Lifecycle metadata must stay aligned with the source platform release and selected modules."
+    },
+    {
+      "id": "template-contract-asset",
+      "matchKind": "exact",
+      "path": "docs/ai/structured-app-template-contract.json",
+      "unitType": "stable-template",
+      "ownership": "platform-managed",
+      "upgradeBehavior": "refresh-from-platform",
+      "description": "The structured template contract is copied into generated applications as a normative asset."
+    },
+    {
+      "id": "template-map-asset",
+      "matchKind": "exact",
+      "path": "docs/ai/template-classifications/default-derived-app-template-map.json",
+      "unitType": "stable-template",
+      "ownership": "platform-managed",
+      "upgradeBehavior": "refresh-from-platform",
+      "description": "The default classification map explains platform-managed and derived-managed output areas."
+    },
+    {
+      "id": "frontend-admin-routes",
+      "matchKind": "exact",
+      "path": "frontend/src/app/router.tsx",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "slotId": "frontend-admin-routes",
+      "upgradeBehavior": "refresh-slot-host-with-review-for-local-edits",
+      "description": "Selected modules contribute route fragments through the repository-defined route slot."
+    },
+    {
+      "id": "frontend-admin-navigation",
+      "matchKind": "exact",
+      "path": "frontend/src/app/navigation.ts",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "slotId": "frontend-admin-navigation",
+      "upgradeBehavior": "refresh-slot-host-with-review-for-local-edits",
+      "description": "Selected modules contribute navigation fragments through the repository-defined navigation slot."
+    },
+    {
+      "id": "backend-table-contract",
+      "matchKind": "exact",
+      "path": "backend/src/main/resources/sql/tables.sql",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "slotId": "backend-table-contract",
+      "upgradeBehavior": "refresh-slot-host-with-review-for-local-edits",
+      "description": "Selected modules contribute SQL table fragments through the repository-defined table slot."
+    },
+    {
+      "id": "backend-service-contract",
+      "matchKind": "exact",
+      "path": "backend/src/main/resources/sql/services.sql",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "slotId": "backend-service-contract",
+      "upgradeBehavior": "refresh-slot-host-with-review-for-local-edits",
+      "description": "Selected modules contribute SQL service fragments through the repository-defined service slot."
+    },
+    {
+      "id": "backend-demo-data",
+      "matchKind": "exact",
+      "path": "backend/src/main/resources/sql/demo.sql",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "slotId": "backend-demo-data",
+      "upgradeBehavior": "refresh-slot-host-with-review-for-local-edits",
+      "description": "Selected modules contribute demo-data fragments through the repository-defined demo-data slot."
+    },
+    {
+      "id": "project-management-page-fragment",
+      "matchKind": "exact",
+      "path": "frontend/src/features/projects/projects-page.tsx",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "project-management",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The projects page is emitted when project management is selected."
+    },
+    {
+      "id": "project-management-service-fragment",
+      "matchKind": "exact",
+      "path": "backend/src/main/java/com/fastservice/platform/backend/project/ProjectServiceImpl.java",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "project-management",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The project service implementation is emitted when project management is selected."
+    },
+    {
+      "id": "frontend-derived-customizations",
+      "matchKind": "prefix",
+      "path": "frontend/src/features/custom/",
+      "unitType": "customization-zone",
+      "ownership": "derived-managed",
+      "upgradeBehavior": "preserve-by-default",
+      "pathMayBeAbsentUntilCustomized": true,
+      "description": "Preferred derived-app-owned frontend customization zone."
+    },
+    {
+      "id": "backend-derived-customizations",
+      "matchKind": "prefix",
+      "path": "backend/src/main/java/com/fastservice/platform/backend/custom/",
+      "unitType": "customization-zone",
+      "ownership": "derived-managed",
+      "upgradeBehavior": "preserve-by-default",
+      "pathMayBeAbsentUntilCustomized": true,
+      "description": "Preferred derived-app-owned backend customization zone."
+    }
+  ]
+}

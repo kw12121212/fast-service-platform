@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/derived-app-template-map.schema.json",
+  "title": "Fast Service Platform Derived App Template Map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractVersion",
+    "mapId",
+    "entries"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-derived-app-template-map/v1"
+    },
+    "contractVersion": {
+      "const": "fsp-structured-app-template-contract/v1"
+    },
+    "mapId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "matchKind",
+          "path",
+          "unitType",
+          "ownership",
+          "upgradeBehavior",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "matchKind": {
+            "enum": [
+              "exact",
+              "prefix"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unitType": {
+            "enum": [
+              "stable-template",
+              "slot-host",
+              "module-fragment",
+              "customization-zone"
+            ]
+          },
+          "ownership": {
+            "enum": [
+              "platform-managed",
+              "module-managed",
+              "derived-managed"
+            ]
+          },
+          "slotId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "moduleId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "upgradeBehavior": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pathMayBeAbsentUntilCustomized": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "minItems": 1
+    }
+  }
+}

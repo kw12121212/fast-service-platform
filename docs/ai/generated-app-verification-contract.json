@@ -6,6 +6,9 @@
     "assemblyContract": "docs/ai/app-assembly-contract.json",
     "verificationContract": "docs/ai/generated-app-verification-contract.json",
     "generatedContext": "docs/ai/context.json",
+    "derivedAppLifecycleMetadata": "docs/ai/derived-app-lifecycle.json",
+    "structuredAppTemplateContract": "docs/ai/structured-app-template-contract.json",
+    "structuredAppTemplateMap": "docs/ai/template-classifications/default-derived-app-template-map.json",
     "frontendRoutes": "frontend/src/app/router.tsx",
     "frontendNavigation": "frontend/src/app/navigation.ts",
     "backendServices": "backend/src/main/resources/sql/services.sql",
@@ -19,6 +22,7 @@
   "checks": [
     "required-files-present",
     "verification-inputs-present",
+    "template-boundary-assets-present",
     "generated-context-selected-modules-match-manifest",
     "module-selected-routes-match-registry",
     "module-selected-backend-services-match-registry",

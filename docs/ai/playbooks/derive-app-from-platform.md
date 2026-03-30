@@ -16,14 +16,16 @@
 6. `docs/ai/schemas/app-manifest.schema.json`
 7. `docs/ai/module-registry.json`
 8. `docs/ai/generated-app-verification-contract.json`
-9. `docs/ai/derived-app-lifecycle-contract.json`
-10. `docs/ai/platform-release.json`
-11. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
-12. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
-13. `docs/ai/compatibility/app-assembly-suite.json`
-14. 一个示例 solution input：
+9. `docs/ai/structured-app-template-contract.json`
+10. `docs/ai/template-classifications/default-derived-app-template-map.json`
+11. `docs/ai/derived-app-lifecycle-contract.json`
+12. `docs/ai/platform-release.json`
+13. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
+14. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
+15. `docs/ai/compatibility/app-assembly-suite.json`
+16. 一个示例 solution input：
    - `docs/ai/solution-inputs/core-admin-console.solution-input.json`
-15. 一个示例 manifest：
+17. 一个示例 manifest：
    - `docs/ai/manifests/default-baseline-app.json`
    - `docs/ai/manifests/core-admin-app.json`
 
@@ -33,6 +35,7 @@
 - 如果当前输入还是业务目标，先用 `ai-solution-input-contract` 收敛为 solution input，再映射成 `app-manifest`
 - AI 默认先读 orchestration contract，再决定走 `platform-tool.sh` 的哪个 workflow
 - generated app 的验证标准事实来源是 `generated-app verification contract`
+- generated output 的覆盖边界事实来源是 `structured app template contract + default template classification map`
 - generated app 的生命周期和升级评估事实来源是 `derived-app lifecycle contract + platform release metadata`
 - repository-owned assembly tooling 默认走 `platform-tool.sh` 和 Java 主路径
 - `tools/java-assembly-cli/` 是当前仓库拥有的 assembly 实现工作区
@@ -66,6 +69,7 @@ AI 编排顺序：
 - 生成目标仍然是 `企业内部管理单体应用`
 - 不要引入超出平台边界的新外部软件库
 - `solution input` 不是 assembly runtime contract；真正传给 tooling 的仍然是 `app-manifest`
+- 生成完成后如果要做定制，先按 template classification map 判断当前路径是 `stable-template`、`slot-host`、`module-fragment` 还是 `customization-zone`
 
 ## 模块选择规则
 
@@ -122,6 +126,7 @@ AI 编排顺序：
 ## 常见坑
 
 - 只看文档，不读 `module-registry.json`，导致模块依赖判断错误
+- 不看 `structured-app-template-contract.json` 和 classification map，就直接编辑生成输出
 - 把某个旧的 `Node` 辅助脚本误当成规范本身
 - 输出目录放在仓库内，污染当前母体应用工作区
 - 以为“可选模块”意味着可以忽略依赖关系

@@ -74,7 +74,7 @@ The system MUST identify which machine-readable assets are normative assembly an
 - THEN they can distinguish the standard inputs and required outputs from the current reference implementation details
 
 ### Requirement: Compatible Implementations Must Satisfy Output Invariants
-The system MUST define the observable output invariants that any compatible app assembly implementation must satisfy, including the requirement that selected decomposed optional business units are reflected consistently across generated routes, services, tables, and validation guidance.
+The system MUST define the observable output invariants that any compatible app assembly implementation must satisfy, including the requirement that selected decomposed optional business units are reflected consistently across generated routes, services, tables, validation guidance, and the structured template-layer ownership model exposed for generated output.
 
 #### Scenario: A contributor checks whether two implementations produce compatible outputs
 - GIVEN two different implementations assemble an application from the same valid manifest
@@ -85,6 +85,11 @@ The system MUST define the observable output invariants that any compatible app 
 - GIVEN a compatible implementation assembles an application with only a subset of the decomposed optional business units
 - WHEN the output is checked against the platform contract
 - THEN the generated application includes only the routes, services, tables, and guidance associated with the selected units and their declared dependencies
+
+#### Scenario: A contributor checks output ownership boundaries after assembly
+- GIVEN a compatible implementation assembles a derived application
+- WHEN the output is checked against the platform contract
+- THEN the contributor can identify which generated areas are platform-managed template output, which are module-contributed fragments, and which are intended customization boundaries
 
 ### Requirement: Repository Supports Multiple Compatible Assembly Implementations
 The system MUST support multiple compatible app assembly implementations against the same standard contract and compatibility suite.

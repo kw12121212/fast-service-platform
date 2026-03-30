@@ -21,6 +21,9 @@ final class AssemblyGenerator {
     private static final Pattern APP_ID_PATTERN = Pattern.compile("^[a-z0-9]+(?:-[a-z0-9]+)*$");
     private static final Pattern PACKAGE_PREFIX_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$");
     private static final String DERIVED_APP_LIFECYCLE_METADATA_PATH = "docs/ai/derived-app-lifecycle.json";
+    private static final String STRUCTURED_APP_TEMPLATE_CONTRACT_PATH = "docs/ai/structured-app-template-contract.json";
+    private static final String DERIVED_APP_TEMPLATE_MAP_PATH =
+            "docs/ai/template-classifications/default-derived-app-template-map.json";
 
     private static final List<String> FRONTEND_SHARED_PATHS = List.of(
             "frontend/bun.lock",
@@ -519,6 +522,7 @@ final class AssemblyGenerator {
         builder.append("\n## AI Tooling\n\n")
                 .append("When an AI agent works with this generated application against the source platform repository:\n\n")
                 .append("- Read `docs/ai/ai-tool-orchestration-contract.json` from the source platform repository first\n")
+                .append("- Read `docs/ai/structured-app-template-contract.json` and `docs/ai/template-classifications/default-derived-app-template-map.json` before customizing generated output\n")
                 .append("- Prefer `./scripts/platform-tool.sh` in the source platform repository before using workflow-specific wrappers\n")
                 .append("- Stop and report blockers when the repository-owned façade and allowed fallback wrappers are both unavailable\n")
                 .append("\n## Validation\n\n")
@@ -550,6 +554,8 @@ final class AssemblyGenerator {
                 - Read `app-manifest.json`
                 - Read `docs/ai/context.json`
                 - Read `docs/ai/derived-app-lifecycle.json`
+                - Read `docs/ai/structured-app-template-contract.json`
+                - Read `docs/ai/template-classifications/default-derived-app-template-map.json`
                 - Read `docs/ai/module-registry.json`
                 - Run `./scripts/verify-derived-app.sh` before expanding the generated skeleton
 
@@ -558,6 +564,7 @@ final class AssemblyGenerator {
                 - This generated app is a derived skeleton from Fast Service Platform
                 - Keep the selected module set in sync with `app-manifest.json`
                 - Keep lifecycle metadata in sync with the generated module set and source platform release
+                - Prefer declared customization zones over direct edits to platform-managed slot hosts
                 - Do not silently widen the dependency boundary
                 """;
     }
@@ -583,6 +590,8 @@ final class AssemblyGenerator {
         contractInputs.put("aiSolutionInputContract", "docs/ai/ai-solution-input-contract.json");
         contractInputs.put("moduleRegistry", "docs/ai/module-registry.json");
         contractInputs.put("aiToolOrchestrationContract", "docs/ai/ai-tool-orchestration-contract.json");
+        contractInputs.put("structuredAppTemplateContract", STRUCTURED_APP_TEMPLATE_CONTRACT_PATH);
+        contractInputs.put("structuredAppTemplateMap", DERIVED_APP_TEMPLATE_MAP_PATH);
         contractInputs.put("assemblyContract", "docs/ai/app-assembly-contract.json");
         contractInputs.put("derivedAppLifecycleContract", "docs/ai/derived-app-lifecycle-contract.json");
         contractInputs.put("derivedAppUpgradeExecutionContract", "docs/ai/derived-app-upgrade-execution-contract.json");
@@ -598,6 +607,12 @@ final class AssemblyGenerator {
         validation.put("repositoryOwned", "./scripts/platform-tool.sh generated-app verify <generated-app-dir>");
         validation.put("referenceVerifier", "./scripts/platform-tool.sh generated-app verify <generated-app-dir>");
         context.put("validation", validation);
+
+        Map<String, Object> templateSystem = new LinkedHashMap<>();
+        templateSystem.put("contract", STRUCTURED_APP_TEMPLATE_CONTRACT_PATH);
+        templateSystem.put("classificationMap", DERIVED_APP_TEMPLATE_MAP_PATH);
+        templateSystem.put("customizationPlaybook", "docs/ai/playbooks/customize-derived-app-template-boundaries.md");
+        context.put("templateSystem", templateSystem);
 
         Map<String, Object> lifecycle = new LinkedHashMap<>();
         lifecycle.put("metadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
@@ -632,6 +647,11 @@ final class AssemblyGenerator {
         metadata.put("selectedModules", selectedModules);
         metadata.put("requiredCoreModules", requiredCoreModuleIds(registry));
         metadata.put("derivedProfile", deriveProfileId(registry, selectedModules));
+
+        Map<String, Object> templateSystem = new LinkedHashMap<>();
+        templateSystem.put("templateContract", STRUCTURED_APP_TEMPLATE_CONTRACT_PATH);
+        templateSystem.put("templateClassificationMap", DERIVED_APP_TEMPLATE_MAP_PATH);
+        metadata.put("templateSystem", templateSystem);
 
         Map<String, Object> upgradeEvaluation = new LinkedHashMap<>();
         upgradeEvaluation.put("repositoryOwnedEntrypoint",

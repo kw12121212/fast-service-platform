@@ -35,6 +35,10 @@
         "executionContractSchema",
         "assemblyContract",
         "lifecycleContract",
+        "structuredAppTemplateContract",
+        "structuredAppTemplateContractSchema",
+        "templateClassificationMap",
+        "templateClassificationMapSchema",
         "platformReleaseMetadata",
         "platformReleaseHistory",
         "platformReleaseAdvisory",
@@ -62,6 +66,22 @@
           "minLength": 1
         },
         "lifecycleContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuredAppTemplateContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuredAppTemplateContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMapSchema": {
           "type": "string",
           "minLength": 1
         },

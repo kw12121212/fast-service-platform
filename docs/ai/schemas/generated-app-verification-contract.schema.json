@@ -25,6 +25,9 @@
         "assemblyContract",
         "verificationContract",
         "generatedContext",
+        "derivedAppLifecycleMetadata",
+        "structuredAppTemplateContract",
+        "structuredAppTemplateMap",
         "frontendRoutes",
         "frontendNavigation",
         "backendServices",
@@ -48,6 +51,18 @@
           "minLength": 1
         },
         "generatedContext": {
+          "type": "string",
+          "minLength": 1
+        },
+        "derivedAppLifecycleMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuredAppTemplateContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuredAppTemplateMap": {
           "type": "string",
           "minLength": 1
         },

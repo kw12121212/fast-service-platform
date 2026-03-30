@@ -15,8 +15,11 @@
 5. `docs/ai/platform-release.json`
 6. `docs/ai/platform-release-history.json`
 7. `docs/ai/platform-release-advisory.json`
-8. `docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json`
-9. 派生应用里的：
+8. `docs/ai/structured-app-template-contract.json`
+9. `docs/ai/template-classifications/default-derived-app-template-map.json`
+10. `docs/ai/playbooks/customize-derived-app-template-boundaries.md`
+11. `docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json`
+12. 派生应用里的：
    - `app-manifest.json`
    - `docs/ai/context.json`
    - `docs/ai/derived-app-lifecycle.json`
@@ -56,6 +59,7 @@ AI 编排顺序：
 - 更新仓库拥有的 machine-readable 合同资产
 - 刷新 `docs/ai/context.json`
 - 刷新 `docs/ai/derived-app-lifecycle.json`
+- 刷新 template-boundary contract 和 classification map 资产
 - 刷新本地 verifier 脚本
 
 ## 第一版不会做什么
@@ -63,6 +67,7 @@ AI 编排顺序：
 - 不自动 merge Git 历史
 - 不自动解决业务代码冲突
 - 不自动修改你已经人工扩展过的业务 README、页面或 Java/TS 业务实现
+- 不自动覆盖声明为 `derived-managed` 的 customization zone
 
 ## 执行后必须复验
 

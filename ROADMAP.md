@@ -34,6 +34,8 @@
 - [x] `define-ai-tool-orchestration-contract`
 - [x] `decompose-optional-business-modules`
 - [x] `consolidate-platform-tooling-on-java`
+- [x] `standardize-ai-solution-input-model`
+- [x] `introduce-structured-app-template-system`
 
 ## 建议优先级
 
@@ -78,7 +80,7 @@
 - 风险：会触碰当前前后端耦合，改动面较大。
 - 建议 change name：`decompose-optional-business-modules`
 
-#### [ ] 6. 更结构化的 AI 输入层
+#### [x] 6. 更结构化的 AI 输入层
 
 - 方向：从 `manifest` 驱动继续走向更结构化的需求输入、领域输入和 UI 输入映射。
 - 价值：中高。更接近“从需求直接到应用骨架”。
@@ -87,7 +89,7 @@
 
 ### P3
 
-#### [ ] 7. 生成模板系统升级
+#### [x] 7. 生成模板系统升级
 
 - 方向：把当前受控拼装继续演进为更明确的模板层、slot 机制和覆盖点约定。
 - 价值：中。适合后续规模扩大时提效。
@@ -102,8 +104,9 @@
 2. [x] `expand-app-assembly-compatibility-fixtures`
 3. [x] `unify-platform-tooling-entrypoints`
 4. [x] `define-ai-tool-orchestration-contract`
-5. [ ] `decompose-optional-business-modules`
-6. [ ] `standardize-ai-solution-input-model`
+5. [x] `decompose-optional-business-modules`
+6. [x] `standardize-ai-solution-input-model`
+7. [x] `introduce-structured-app-template-system`
 
 原因：
 
@@ -111,8 +114,8 @@
 - 在 lifecycle 明确之前，平台更像一个可演示生成器，不像可长期演进的基础库。
 - compatibility suite 和 tooling entrypoints 能优先提高标准可信度和日常可用性。
 - AI tool orchestration 让 AI 优先复用仓库已有工具，而不是绕开它们重做 workflow。
-- 下一步更适合继续收紧模块边界，把平台进一步做成可组合的基础库。
-- 该步骤完成后，下一阶段更适合把 AI 输入从基础 manifest 继续收敛为更结构化的需求 / 领域 / UI 输入模型。
+- 当前输入层、模块边界、生命周期和工具链都已经标准化到一个可继续抽象输出结构的阶段。
+- 下一步更适合把生成结果继续收敛成更明确的模板层、slot 机制和覆盖点约定，减少后续升级与定制之间的冲突。
 
 ## 使用方式
 

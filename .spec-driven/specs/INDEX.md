@@ -18,6 +18,7 @@
 - `core/generated-app-verification-contract.md` - Machine-readable verifier inputs, observable checks, result semantics, and reference-verifier role for generated applications.
 - `core/platform-release-history-and-version-lineage.md` - Machine-readable platform release history, lineage relationships, supported upgrade paths, and repository-owned release lookup behavior.
 - `core/platform-tooling-entrypoints.md` - Unified repository-owned tooling façade plus compatible wrapper behavior for assembly, verification, advisory, lifecycle, and upgrade workflows.
+- `core/structured-app-template-system.md` - Machine-readable generated-output template boundaries, slot hosts, module fragments, and derived-app customization-zone ownership semantics.
 - `core/project-foundation.md` - Repository bootstrap documentation, agent rules, and reserved full-stack workspace layout.
 - `frontend/admin-shell.md` - Runnable PC admin frontend workspace and coherent V1 admin shell behavior.
 - `frontend/data-access.md` - Consistent frontend data-access convention for backend-connected admin pages.

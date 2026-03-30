@@ -12,6 +12,7 @@
     "selectedModules",
     "requiredCoreModules",
     "derivedProfile",
+    "templateSystem",
     "upgradeEvaluation"
   ],
   "properties": {
@@ -103,6 +104,24 @@
     "derivedProfile": {
       "type": "string",
       "minLength": 1
+    },
+    "templateSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "templateContract",
+        "templateClassificationMap"
+      ],
+      "properties": {
+        "templateContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMap": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "upgradeEvaluation": {
       "type": "object",

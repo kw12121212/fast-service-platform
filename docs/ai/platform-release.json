@@ -10,6 +10,7 @@
     "lifecycleContractVersion": "fsp-derived-app-lifecycle-contract/v1",
     "lifecycleMetadataVersion": "fsp-derived-app-lifecycle/v1",
     "assemblyContractVersion": "fsp-app-assembly-contract/v2",
+    "structuredAppTemplateContractVersion": "fsp-structured-app-template-contract/v1",
     "generatedAppVerificationContractVersion": "fsp-generated-app-verification-contract/v1",
     "releaseAdvisory": "docs/ai/platform-release-advisory.json",
     "releaseHistory": "docs/ai/platform-release-history.json"

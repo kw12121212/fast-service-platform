@@ -15,6 +15,9 @@ public final class PlatformTooling {
     private static final Pattern APP_ID_PATTERN = Pattern.compile("^[a-z0-9]+(?:-[a-z0-9]+)*$");
     private static final Pattern PACKAGE_PREFIX_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$");
     private static final String DERIVED_APP_LIFECYCLE_METADATA_PATH = "docs/ai/derived-app-lifecycle.json";
+    private static final String STRUCTURED_APP_TEMPLATE_CONTRACT_PATH = "docs/ai/structured-app-template-contract.json";
+    private static final String DERIVED_APP_TEMPLATE_MAP_PATH =
+            "docs/ai/template-classifications/default-derived-app-template-map.json";
 
     private PlatformTooling() {
     }
@@ -452,6 +455,7 @@ public final class PlatformTooling {
         Map<String, Object> evaluation = evaluateDerivedAppUpgrade(targetDir, repoRoot);
         Map<String, Object> advisory = readPlatformReleaseAdvisory(targetDir, repoRoot);
         ManagedAssets managedAssets = buildDerivedAppManagedAssetMap(targetDir, repoRoot);
+        Map<String, Object> templateMap = readJson(repoRoot.resolve(DERIVED_APP_TEMPLATE_MAP_PATH));
         List<Map<String, Object>> autoApplyItems = new ArrayList<>();
 
         for (Map.Entry<String, String> entry : managedAssets.managedAssets().entrySet()) {
@@ -464,6 +468,9 @@ public final class PlatformTooling {
             String category = "managed-doc-asset";
             if (entry.getKey().startsWith("docs/ai/schemas/")) {
                 category = "managed-schema-asset";
+            } else if (STRUCTURED_APP_TEMPLATE_CONTRACT_PATH.equals(entry.getKey())
+                    || entry.getKey().startsWith("docs/ai/template-classifications/")) {
+                category = "managed-template-metadata";
             } else if (entry.getKey().startsWith("scripts/")) {
                 category = "managed-verifier-script";
             } else if ("docs/ai/context.json".equals(entry.getKey())) {
@@ -476,6 +483,17 @@ public final class PlatformTooling {
             item.put("path", entry.getKey());
             item.put("action", currentContents == null ? "create" : "update");
             item.put("category", category);
+            Map<String, Object> templateEntry = matchTemplateEntry(templateMap, entry.getKey());
+            if (templateEntry != null) {
+                item.put("templateUnitType", templateEntry.get("unitType"));
+                item.put("ownership", templateEntry.get("ownership"));
+                if (templateEntry.containsKey("slotId")) {
+                    item.put("slotId", templateEntry.get("slotId"));
+                }
+                if (templateEntry.containsKey("moduleId")) {
+                    item.put("moduleId", templateEntry.get("moduleId"));
+                }
+            }
             autoApplyItems.add(item);
         }
 
@@ -612,8 +630,11 @@ public final class PlatformTooling {
 
         Map<String, Object> contractInputs = new LinkedHashMap<>();
         contractInputs.put("manifest", "app-manifest.json");
+        contractInputs.put("aiSolutionInputContract", "docs/ai/ai-solution-input-contract.json");
         contractInputs.put("moduleRegistry", "docs/ai/module-registry.json");
         contractInputs.put("aiToolOrchestrationContract", "docs/ai/ai-tool-orchestration-contract.json");
+        contractInputs.put("structuredAppTemplateContract", STRUCTURED_APP_TEMPLATE_CONTRACT_PATH);
+        contractInputs.put("structuredAppTemplateMap", DERIVED_APP_TEMPLATE_MAP_PATH);
         contractInputs.put("assemblyContract", "docs/ai/app-assembly-contract.json");
         contractInputs.put("derivedAppLifecycleContract", "docs/ai/derived-app-lifecycle-contract.json");
         contractInputs.put("derivedAppUpgradeExecutionContract", "docs/ai/derived-app-upgrade-execution-contract.json");
@@ -629,6 +650,12 @@ public final class PlatformTooling {
         validation.put("repositoryOwned", "./scripts/platform-tool.sh generated-app verify <generated-app-dir>");
         validation.put("referenceVerifier", "./scripts/platform-tool.sh generated-app verify <generated-app-dir>");
         context.put("validation", validation);
+
+        Map<String, Object> templateSystem = new LinkedHashMap<>();
+        templateSystem.put("contract", STRUCTURED_APP_TEMPLATE_CONTRACT_PATH);
+        templateSystem.put("classificationMap", DERIVED_APP_TEMPLATE_MAP_PATH);
+        templateSystem.put("customizationPlaybook", "docs/ai/playbooks/customize-derived-app-template-boundaries.md");
+        context.put("templateSystem", templateSystem);
 
         Map<String, Object> lifecycle = new LinkedHashMap<>();
         lifecycle.put("metadata", DERIVED_APP_LIFECYCLE_METADATA_PATH);
@@ -668,6 +695,11 @@ public final class PlatformTooling {
         metadata.put("selectedModules", selectedModules);
         metadata.put("requiredCoreModules", requiredCoreModuleIds(registry));
         metadata.put("derivedProfile", deriveProfileId(registry, selectedModules));
+
+        Map<String, Object> templateSystem = new LinkedHashMap<>();
+        templateSystem.put("templateContract", STRUCTURED_APP_TEMPLATE_CONTRACT_PATH);
+        templateSystem.put("templateClassificationMap", DERIVED_APP_TEMPLATE_MAP_PATH);
+        metadata.put("templateSystem", templateSystem);
 
         Map<String, Object> upgradeEvaluation = new LinkedHashMap<>();
         Map<String, Object> upgradeEvaluationContract = asMap(
@@ -823,6 +855,20 @@ public final class PlatformTooling {
                     && targetReleaseId.equals(asString(upgradePath.get("targetReleaseId")))
                     && "supported".equals(asString(upgradePath.get("supportStatus")))) {
                 return upgradePath;
+            }
+        }
+        return null;
+    }
+
+    private static Map<String, Object> matchTemplateEntry(Map<String, Object> templateMap, String relativePath) {
+        for (Map<String, Object> entry : asMapList(templateMap.get("entries"), "Template map entries must be an array")) {
+            String matchKind = asString(entry.get("matchKind"));
+            String path = asString(entry.get("path"));
+            if ("exact".equals(matchKind) && path.equals(relativePath)) {
+                return entry;
+            }
+            if ("prefix".equals(matchKind) && relativePath.startsWith(path)) {
+                return entry;
             }
         }
         return null;

@@ -9,6 +9,9 @@ import { fileURLToPath } from 'node:url'
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 export const REPO_ROOT = path.resolve(SCRIPT_DIR, '..')
 const DERIVED_APP_LIFECYCLE_METADATA_PATH = 'docs/ai/derived-app-lifecycle.json'
+const STRUCTURED_APP_TEMPLATE_CONTRACT_PATH = 'docs/ai/structured-app-template-contract.json'
+const DERIVED_APP_TEMPLATE_MAP_PATH =
+  'docs/ai/template-classifications/default-derived-app-template-map.json'
 const DYNAMIC_GENERATED_DOCS = new Set([
   'docs/ai/context.json',
   DERIVED_APP_LIFECYCLE_METADATA_PATH
@@ -1331,6 +1334,7 @@ ${selectedModules.map((moduleId) => `- \`${moduleId}\``).join('\n')}
 When an AI agent works with this generated application against the source platform repository:
 
 - Read \`docs/ai/ai-tool-orchestration-contract.json\` from the source platform repository first
+- Read \`docs/ai/structured-app-template-contract.json\` and \`docs/ai/template-classifications/default-derived-app-template-map.json\` before customizing generated output
 - Prefer \`./scripts/platform-tool.sh\` in the source platform repository before using workflow-specific wrappers
 - Stop and report blockers when the repository-owned façade and allowed fallback wrappers are both unavailable
 
@@ -1391,6 +1395,8 @@ function buildAgentsFile() {
 - Read \`app-manifest.json\`
 - Read \`docs/ai/context.json\`
 - Read \`docs/ai/derived-app-lifecycle.json\`
+- Read \`docs/ai/structured-app-template-contract.json\`
+- Read \`docs/ai/template-classifications/default-derived-app-template-map.json\`
 - Read \`docs/ai/module-registry.json\`
 - Run \`./scripts/verify-derived-app.sh\` before expanding the generated skeleton
 
@@ -1399,6 +1405,7 @@ function buildAgentsFile() {
 - This generated app is a derived skeleton from Fast Service Platform
 - Keep the selected module set in sync with \`app-manifest.json\`
 - Keep lifecycle metadata in sync with the generated module set and source platform release
+- Prefer declared customization zones over direct edits to platform-managed slot hosts
 - Do not silently widen the dependency boundary
 `
 }
@@ -1423,6 +1430,8 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
         aiSolutionInputContract: 'docs/ai/ai-solution-input-contract.json',
         moduleRegistry: 'docs/ai/module-registry.json',
         aiToolOrchestrationContract: 'docs/ai/ai-tool-orchestration-contract.json',
+        structuredAppTemplateContract: STRUCTURED_APP_TEMPLATE_CONTRACT_PATH,
+        structuredAppTemplateMap: DERIVED_APP_TEMPLATE_MAP_PATH,
         assemblyContract: 'docs/ai/app-assembly-contract.json',
         derivedAppLifecycleContract: 'docs/ai/derived-app-lifecycle-contract.json',
         derivedAppUpgradeExecutionContract: 'docs/ai/derived-app-upgrade-execution-contract.json',
@@ -1436,6 +1445,11 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
         local: './scripts/verify-derived-app.sh',
         repositoryOwned: './scripts/platform-tool.sh generated-app verify <generated-app-dir>',
         referenceVerifier: './scripts/platform-tool.sh generated-app verify <generated-app-dir>'
+      },
+      templateSystem: {
+        contract: STRUCTURED_APP_TEMPLATE_CONTRACT_PATH,
+        classificationMap: DERIVED_APP_TEMPLATE_MAP_PATH,
+        customizationPlaybook: 'docs/ai/playbooks/customize-derived-app-template-boundaries.md'
       },
       lifecycle: {
         metadata: DERIVED_APP_LIFECYCLE_METADATA_PATH,
@@ -1474,6 +1488,10 @@ function buildDerivedAppLifecycle(manifest, selectedModules, registry, assemblyC
         .filter((module) => module.role === 'required-core')
         .map((module) => module.id),
       derivedProfile: deriveProfileId(registry, selectedModules),
+      templateSystem: {
+        templateContract: STRUCTURED_APP_TEMPLATE_CONTRACT_PATH,
+        templateClassificationMap: DERIVED_APP_TEMPLATE_MAP_PATH
+      },
       upgradeEvaluation: {
         repositoryOwnedEntrypoint:
           lifecycleContract.upgradeEvaluation.repositoryOwnedEntrypoint,
@@ -1702,6 +1720,24 @@ export async function verifyDerivedApp(targetDir) {
     'generatedContext',
     issues
   )
+  const lifecyclePath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'derivedAppLifecycleMetadata',
+    issues
+  )
+  const templateContractPath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'structuredAppTemplateContract',
+    issues
+  )
+  const templateMapPath = resolveVerificationInputPath(
+    resolvedTargetDir,
+    verificationContract,
+    'structuredAppTemplateMap',
+    issues
+  )
   const routesPath = resolveVerificationInputPath(
     resolvedTargetDir,
     verificationContract,
@@ -1743,6 +1779,9 @@ export async function verifyDerivedApp(targetDir) {
     !manifestPath ||
     !registryPath ||
     !contextPath ||
+    !lifecyclePath ||
+    !templateContractPath ||
+    !templateMapPath ||
     !routesPath ||
     !navigationPath ||
     !servicesPath ||
@@ -1779,6 +1818,7 @@ export async function verifyDerivedApp(targetDir) {
   const routerTsx = await readFile(routesPath, 'utf8')
   const navigationTs = await readFile(navigationPath, 'utf8')
   const context = await readJson(contextPath)
+  const lifecycle = await readJson(lifecyclePath)
 
   if (checkIds.has('module-selected-routes-match-registry')) {
     for (const [moduleId, routes] of getFrontendRoutesByModule(registry)) {
@@ -1833,6 +1873,27 @@ export async function verifyDerivedApp(targetDir) {
     JSON.stringify(context.selectedModules) !== JSON.stringify(selectedModules)
   ) {
     issues.push('docs/ai/context.json does not match app-manifest.json selectedModules')
+  }
+
+  if (checkIds.has('template-boundary-assets-present')) {
+    if (context.contractInputs?.structuredAppTemplateContract !== STRUCTURED_APP_TEMPLATE_CONTRACT_PATH) {
+      issues.push('docs/ai/context.json does not expose the structured app template contract')
+    }
+    if (context.contractInputs?.structuredAppTemplateMap !== DERIVED_APP_TEMPLATE_MAP_PATH) {
+      issues.push('docs/ai/context.json does not expose the structured app template map')
+    }
+    if (context.templateSystem?.contract !== STRUCTURED_APP_TEMPLATE_CONTRACT_PATH) {
+      issues.push('docs/ai/context.json templateSystem.contract is missing or incorrect')
+    }
+    if (context.templateSystem?.classificationMap !== DERIVED_APP_TEMPLATE_MAP_PATH) {
+      issues.push('docs/ai/context.json templateSystem.classificationMap is missing or incorrect')
+    }
+    if (lifecycle.templateSystem?.templateContract !== STRUCTURED_APP_TEMPLATE_CONTRACT_PATH) {
+      issues.push('docs/ai/derived-app-lifecycle.json templateSystem.templateContract is missing or incorrect')
+    }
+    if (lifecycle.templateSystem?.templateClassificationMap !== DERIVED_APP_TEMPLATE_MAP_PATH) {
+      issues.push('docs/ai/derived-app-lifecycle.json templateSystem.templateClassificationMap is missing or incorrect')
+    }
   }
 
   return {
@@ -2187,6 +2248,22 @@ async function buildDerivedAppManagedAssetMap(targetDir, rootDir = REPO_ROOT) {
   }
 }
 
+async function loadDerivedAppTemplateMap(rootDir = REPO_ROOT) {
+  return readJson(path.join(path.resolve(rootDir), DERIVED_APP_TEMPLATE_MAP_PATH))
+}
+
+function matchTemplateEntry(templateMap, relativePath) {
+  return (templateMap.entries ?? []).find((entry) => {
+    if (entry.matchKind === 'exact') {
+      return entry.path === relativePath
+    }
+    if (entry.matchKind === 'prefix') {
+      return relativePath.startsWith(entry.path)
+    }
+    return false
+  })
+}
+
 function buildManualInterventionItems(advisory, evaluation) {
   const items = []
 
@@ -2220,6 +2297,7 @@ export async function planDerivedAppUpgrade(targetDir, rootDir = REPO_ROOT) {
   const advisory = await readPlatformReleaseAdvisory(resolvedTargetDir, rootDir)
   const { managedAssets, selectedModules, executionContract } =
     await buildDerivedAppManagedAssetMap(resolvedTargetDir, rootDir)
+  const templateMap = await loadDerivedAppTemplateMap(rootDir)
   const autoApplyItems = []
 
   for (const [relativePath, desiredContents] of managedAssets) {
@@ -2237,6 +2315,11 @@ export async function planDerivedAppUpgrade(targetDir, rootDir = REPO_ROOT) {
     let category = 'managed-doc-asset'
     if (relativePath.startsWith('docs/ai/schemas/')) {
       category = 'managed-schema-asset'
+    } else if (
+      relativePath === STRUCTURED_APP_TEMPLATE_CONTRACT_PATH ||
+      relativePath.startsWith('docs/ai/template-classifications/')
+    ) {
+      category = 'managed-template-metadata'
     } else if (relativePath.startsWith('scripts/')) {
       category = 'managed-verifier-script'
     } else if (relativePath === 'docs/ai/context.json') {
@@ -2245,11 +2328,23 @@ export async function planDerivedAppUpgrade(targetDir, rootDir = REPO_ROOT) {
       category = 'generated-lifecycle-refresh'
     }
 
-    autoApplyItems.push({
+    const templateEntry = matchTemplateEntry(templateMap, relativePath)
+    const item = {
       path: relativePath,
       action: currentContents === null ? 'create' : 'update',
       category
-    })
+    }
+    if (templateEntry) {
+      item.templateUnitType = templateEntry.unitType
+      item.ownership = templateEntry.ownership
+      if (templateEntry.slotId) {
+        item.slotId = templateEntry.slotId
+      }
+      if (templateEntry.moduleId) {
+        item.moduleId = templateEntry.moduleId
+      }
+    }
+    autoApplyItems.push(item)
   }
 
   return {

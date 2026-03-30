@@ -123,6 +123,10 @@
 - `docs/ai/schemas/ai-solution-input.schema.json`
 - `docs/ai/ai-tool-orchestration-contract.json`
 - `docs/ai/schemas/ai-tool-orchestration-contract.schema.json`
+- `docs/ai/structured-app-template-contract.json`
+- `docs/ai/schemas/structured-app-template-contract.schema.json`
+- `docs/ai/template-classifications/default-derived-app-template-map.json`
+- `docs/ai/schemas/derived-app-template-map.schema.json`
 - `docs/ai/schemas/app-manifest.schema.json`
 - `docs/ai/schemas/module-registry.schema.json`
 - `docs/ai/derived-app-lifecycle-contract.json`
@@ -150,6 +154,7 @@
 - `docs/ai/ai-solution-input-contract.json` 定义更高层的结构化业务输入；它要先映射成 `app-manifest`，再进入 assembly tooling
 - `docs/ai/ai-tool-orchestration-contract.json` 定义 AI 应该怎样优先使用 repository-owned tooling，而不是直接重做 assembly / verification / upgrade 逻辑
 - `docs/ai/generated-app-verification-contract.json` 定义生成后验证的标准输入、检查项和结果语义
+- `docs/ai/structured-app-template-contract.json` 和 `docs/ai/template-classifications/default-derived-app-template-map.json` 定义生成输出里的 stable template、slot host、module fragment 和 customization zone 边界
 - `docs/ai/derived-app-lifecycle-contract.json`、`docs/ai/derived-app-upgrade-execution-contract.json`、`docs/ai/platform-release.json`、`docs/ai/platform-release-history.json` 和 `docs/ai/platform-release-advisory.json` 定义生成后生命周期、升级目标选择、升级评估、升级执行和当前发布差异说明的事实来源
 - `docs/ai/compatibility/app-assembly-suite.json` 现在覆盖的不只是最小 baseline，还包括代表性的模块组合和无效边界样例
 - repository-owned platform tooling 现在统一走 Java 主路径；前端仍然保留 `Node/bun`
@@ -157,6 +162,7 @@
 - `tools/java-assembly-cli/` 提供当前仓库拥有的 assembly 实现；它要通过同一套 compatibility suite
 - `scripts/VerifyDerivedApp.java` 是 generated-app repository-owned verifier 入口，不是 contract 本身
 - `tools/java-generated-app-verifier/` 保留为 compatible generated-app verifier；它读取生成应用自带资产，而不是读取 repository-owned verifier 内部状态
+- 如果要改 generated output，先读 `docs/ai/playbooks/customize-derived-app-template-boundaries.md`，不要把 `slot-host` 误当成自由编辑区
 
 如果你当前只有业务目标，还没有 manifest，先读：
 

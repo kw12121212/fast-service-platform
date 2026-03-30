@@ -105,6 +105,7 @@
     "generatedOutputChecks": [
       "required-files-present",
       "verification-inputs-present",
+      "template-boundary-assets-present",
       "module-selected-routes-match-registry",
       "module-selected-backend-services-match-registry",
       "module-selected-backend-tables-match-registry",

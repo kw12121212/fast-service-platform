@@ -9,6 +9,10 @@
     "executionContractSchema": "docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
     "assemblyContract": "docs/ai/app-assembly-contract.json",
     "lifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
+    "structuredAppTemplateContract": "docs/ai/structured-app-template-contract.json",
+    "structuredAppTemplateContractSchema": "docs/ai/schemas/structured-app-template-contract.schema.json",
+    "templateClassificationMap": "docs/ai/template-classifications/default-derived-app-template-map.json",
+    "templateClassificationMapSchema": "docs/ai/schemas/derived-app-template-map.schema.json",
     "platformReleaseMetadata": "docs/ai/platform-release.json",
     "platformReleaseHistory": "docs/ai/platform-release-history.json",
     "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
@@ -18,6 +22,7 @@
     "managed-doc-asset",
     "managed-schema-asset",
     "managed-verifier-script",
+    "managed-template-metadata",
     "generated-context-refresh",
     "generated-lifecycle-refresh"
   ],

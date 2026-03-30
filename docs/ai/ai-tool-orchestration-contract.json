@@ -26,7 +26,8 @@
         "docs/ai/playbooks/define-ai-solution-input.md",
         "docs/ai/app-assembly-contract.json",
         "docs/ai/module-registry.json",
-        "docs/ai/compatibility/app-assembly-suite.json"
+        "docs/ai/compatibility/app-assembly-suite.json",
+        "docs/ai/structured-app-template-contract.json"
       ],
       "defaultEntrypoint": "./scripts/platform-tool.sh assembly scaffold <manifest-path> <absolute-output-dir>",
       "compatibleFallbacks": [
@@ -45,7 +46,9 @@
       "id": "generated-app-verification",
       "readBefore": [
         "docs/ai/generated-app-verification-contract.json",
-        "docs/ai/app-assembly-contract.json"
+        "docs/ai/app-assembly-contract.json",
+        "docs/ai/structured-app-template-contract.json",
+        "docs/ai/template-classifications/default-derived-app-template-map.json"
       ],
       "defaultEntrypoint": "./scripts/platform-tool.sh generated-app verify <generated-app-dir>",
       "compatibleFallbacks": [
@@ -103,7 +106,9 @@
       "readBefore": [
         "docs/ai/derived-app-lifecycle-contract.json",
         "docs/ai/platform-release-history.json",
-        "docs/ai/platform-release-advisory.json"
+        "docs/ai/platform-release-advisory.json",
+        "docs/ai/structured-app-template-contract.json",
+        "docs/ai/template-classifications/default-derived-app-template-map.json"
       ],
       "defaultEntrypoint": "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>",
       "compatibleFallbacks": [
@@ -122,7 +127,10 @@
       "readBefore": [
         "docs/ai/derived-app-upgrade-execution-contract.json",
         "docs/ai/derived-app-lifecycle-contract.json",
-        "docs/ai/platform-release-advisory.json"
+        "docs/ai/platform-release-advisory.json",
+        "docs/ai/structured-app-template-contract.json",
+        "docs/ai/template-classifications/default-derived-app-template-map.json",
+        "docs/ai/playbooks/customize-derived-app-template-boundaries.md"
       ],
       "defaultEntrypoint": "./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]",
       "compatibleFallbacks": [

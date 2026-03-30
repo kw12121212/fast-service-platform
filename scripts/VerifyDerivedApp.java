@@ -14,6 +14,9 @@ public final class VerifyDerivedApp {
     private static final String VERIFIER_ID = "java-generated-app-verifier";
     private static final Pattern APP_ID_PATTERN = Pattern.compile("^[a-z0-9]+(?:-[a-z0-9]+)*$");
     private static final Pattern PACKAGE_PREFIX_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$");
+    private static final String STRUCTURED_APP_TEMPLATE_CONTRACT_PATH = "docs/ai/structured-app-template-contract.json";
+    private static final String DERIVED_APP_TEMPLATE_MAP_PATH =
+            "docs/ai/template-classifications/default-derived-app-template-map.json";
 
     private VerifyDerivedApp() {
     }
@@ -75,6 +78,9 @@ public final class VerifyDerivedApp {
         Path manifestPath = resolveVerificationInputPath(resolvedTargetDir, normativeInputs, "applicationManifest", issues);
         Path registryPath = resolveVerificationInputPath(resolvedTargetDir, normativeInputs, "moduleRegistry", issues);
         Path contextPath = resolveVerificationInputPath(resolvedTargetDir, normativeInputs, "generatedContext", issues);
+        Path lifecyclePath = resolveVerificationInputPath(resolvedTargetDir, normativeInputs, "derivedAppLifecycleMetadata", issues);
+        Path templateContractPath = resolveVerificationInputPath(resolvedTargetDir, normativeInputs, "structuredAppTemplateContract", issues);
+        Path templateMapPath = resolveVerificationInputPath(resolvedTargetDir, normativeInputs, "structuredAppTemplateMap", issues);
         Path routesPath = resolveVerificationInputPath(resolvedTargetDir, normativeInputs, "frontendRoutes", issues);
         Path navigationPath = resolveVerificationInputPath(resolvedTargetDir, normativeInputs, "frontendNavigation", issues);
         Path servicesPath = resolveVerificationInputPath(resolvedTargetDir, normativeInputs, "backendServices", issues);
@@ -94,6 +100,9 @@ public final class VerifyDerivedApp {
                 || manifestPath == null
                 || registryPath == null
                 || contextPath == null
+                || lifecyclePath == null
+                || templateContractPath == null
+                || templateMapPath == null
                 || routesPath == null
                 || navigationPath == null
                 || servicesPath == null
@@ -127,6 +136,7 @@ public final class VerifyDerivedApp {
         String routerTsx = Files.readString(routesPath);
         String navigationTs = Files.readString(navigationPath);
         Map<String, Object> generatedContext = readJson(contextPath);
+        Map<String, Object> lifecycle = readJson(lifecyclePath);
 
         if (checks.contains("module-selected-routes-match-registry")) {
             for (Map<String, Object> module : modules(registry)) {
@@ -185,6 +195,37 @@ public final class VerifyDerivedApp {
             List<String> contextModules = asOptionalStringList(generatedContext.get("selectedModules"));
             if (!contextModules.equals(selectedModules)) {
                 issues.add("docs/ai/context.json does not match app-manifest.json selectedModules");
+            }
+        }
+
+        if (checks.contains("template-boundary-assets-present")) {
+            Map<String, Object> contractInputs = asMap(
+                    generatedContext.get("contractInputs"),
+                    "docs/ai/context.json must include contractInputs");
+            Map<String, Object> templateSystem = asMap(
+                    generatedContext.get("templateSystem"),
+                    "docs/ai/context.json must include templateSystem");
+            Map<String, Object> lifecycleTemplateSystem = asMap(
+                    lifecycle.get("templateSystem"),
+                    "docs/ai/derived-app-lifecycle.json must include templateSystem");
+
+            if (!STRUCTURED_APP_TEMPLATE_CONTRACT_PATH.equals(asString(contractInputs.get("structuredAppTemplateContract")))) {
+                issues.add("docs/ai/context.json does not expose the structured app template contract");
+            }
+            if (!DERIVED_APP_TEMPLATE_MAP_PATH.equals(asString(contractInputs.get("structuredAppTemplateMap")))) {
+                issues.add("docs/ai/context.json does not expose the structured app template map");
+            }
+            if (!STRUCTURED_APP_TEMPLATE_CONTRACT_PATH.equals(asString(templateSystem.get("contract")))) {
+                issues.add("docs/ai/context.json templateSystem.contract is missing or incorrect");
+            }
+            if (!DERIVED_APP_TEMPLATE_MAP_PATH.equals(asString(templateSystem.get("classificationMap")))) {
+                issues.add("docs/ai/context.json templateSystem.classificationMap is missing or incorrect");
+            }
+            if (!STRUCTURED_APP_TEMPLATE_CONTRACT_PATH.equals(asString(lifecycleTemplateSystem.get("templateContract")))) {
+                issues.add("docs/ai/derived-app-lifecycle.json templateSystem.templateContract is missing or incorrect");
+            }
+            if (!DERIVED_APP_TEMPLATE_MAP_PATH.equals(asString(lifecycleTemplateSystem.get("templateClassificationMap")))) {
+                issues.add("docs/ai/derived-app-lifecycle.json templateSystem.templateClassificationMap is missing or incorrect");
             }
         }
 

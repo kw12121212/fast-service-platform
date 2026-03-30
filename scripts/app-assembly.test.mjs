@@ -123,6 +123,18 @@ test('generated app verification contract is exposed as a normative asset', asyn
   const solutionInputExample = await readJson(
     path.join(REPO_ROOT, 'docs/ai/solution-inputs/core-admin-console.solution-input.json')
   )
+  const templateContract = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/structured-app-template-contract.json')
+  )
+  const templateContractSchema = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/schemas/structured-app-template-contract.schema.json')
+  )
+  const templateMap = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/template-classifications/default-derived-app-template-map.json')
+  )
+  const templateMapSchema = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/schemas/derived-app-template-map.schema.json')
+  )
   const orchestrationContract = await readJson(
     path.join(REPO_ROOT, 'docs/ai/ai-tool-orchestration-contract.json')
   )
@@ -144,6 +156,22 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(
     assemblyContract.normativeAssets.aiToolOrchestrationContractSchema,
     'docs/ai/schemas/ai-tool-orchestration-contract.schema.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.structuredAppTemplateContract,
+    'docs/ai/structured-app-template-contract.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.structuredAppTemplateContractSchema,
+    'docs/ai/schemas/structured-app-template-contract.schema.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.derivedAppTemplateMap,
+    'docs/ai/template-classifications/default-derived-app-template-map.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.derivedAppTemplateMapSchema,
+    'docs/ai/schemas/derived-app-template-map.schema.json'
   )
   assert.equal(
     assemblyContract.normativeAssets.generatedAppVerificationContract,
@@ -190,6 +218,16 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(platformRelease.currentRelease.releaseHistory, 'docs/ai/platform-release-history.json')
   assert.equal(solutionInputContract.schemaVersion, 'fsp-ai-solution-input-contract/v1')
   assert.equal(solutionInputSchema.title, 'Fast Service Platform AI Solution Input')
+  assert.equal(templateContract.schemaVersion, 'fsp-structured-app-template-contract/v1')
+  assert.equal(templateContractSchema.title, 'Fast Service Platform Structured App Template Contract')
+  assert.equal(templateMap.schemaVersion, 'fsp-derived-app-template-map/v1')
+  assert.equal(templateMapSchema.title, 'Fast Service Platform Derived App Template Map')
+  assert.equal(
+    templateMap.entries.some(
+      (entry) => entry.path === 'frontend/src/app/router.tsx' && entry.slotId === 'frontend-admin-routes'
+    ),
+    true
+  )
   assert.equal(
     solutionInputContract.inputLayering.assemblyManifestRole,
     'direct-input-to-repository-owned-assembly-tooling'
@@ -218,6 +256,7 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.deepEqual(verificationContract.checks, [
     'required-files-present',
     'verification-inputs-present',
+    'template-boundary-assets-present',
     'generated-context-selected-modules-match-manifest',
     'module-selected-routes-match-registry',
     'module-selected-backend-services-match-registry',
@@ -243,15 +282,36 @@ test('generated app verification contract is exposed as a normative asset', asyn
     executionContract.normativeAssets.aiToolOrchestrationContract,
     'docs/ai/ai-tool-orchestration-contract.json'
   )
+  assert.equal(
+    lifecycleContract.normativeAssets.structuredAppTemplateContract,
+    'docs/ai/structured-app-template-contract.json'
+  )
+  assert.equal(
+    executionContract.normativeAssets.structuredAppTemplateContract,
+    'docs/ai/structured-app-template-contract.json'
+  )
+  assert.equal(
+    executionContract.normativeAssets.templateClassificationMap,
+    'docs/ai/template-classifications/default-derived-app-template-map.json'
+  )
   assert.equal(aiContextText.includes('ai_solution_input_contract: docs/ai/ai-solution-input-contract.json'), true)
   assert.equal(
+    aiContextText.includes('structured_app_template_contract: docs/ai/structured-app-template-contract.json'),
+    true
+  )
+  assert.equal(
     aiContextText.includes('- docs/ai/playbooks/define-ai-solution-input.md'),
+    true
+  )
+  assert.equal(
+    aiContextText.includes('- docs/ai/playbooks/customize-derived-app-template-boundaries.md'),
     true
   )
   assert.equal(
     quickstartText.includes('docs/ai/ai-solution-input-contract.json'),
     true
   )
+  assert.equal(quickstartText.includes('docs/ai/structured-app-template-contract.json'), true)
 })
 
 test('compatibility suite passes for the java reference implementation', async () => {
@@ -459,12 +519,36 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
       'docs/ai/ai-tool-orchestration-contract.json'
     )
     assert.equal(
+      context.contractInputs.structuredAppTemplateContract,
+      'docs/ai/structured-app-template-contract.json'
+    )
+    assert.equal(
+      context.contractInputs.structuredAppTemplateMap,
+      'docs/ai/template-classifications/default-derived-app-template-map.json'
+    )
+    assert.equal(
       context.validation.repositoryOwned,
       './scripts/platform-tool.sh generated-app verify <generated-app-dir>'
     )
     assert.equal(
+      context.templateSystem.contract,
+      'docs/ai/structured-app-template-contract.json'
+    )
+    assert.equal(
+      context.templateSystem.classificationMap,
+      'docs/ai/template-classifications/default-derived-app-template-map.json'
+    )
+    assert.equal(
       lifecycle.upgradeEvaluation.repositoryOwnedTargetSelectionEntrypoint,
       './scripts/platform-tool.sh upgrade targets [generated-app-dir]'
+    )
+    assert.equal(
+      lifecycle.templateSystem.templateContract,
+      'docs/ai/structured-app-template-contract.json'
+    )
+    assert.equal(
+      lifecycle.templateSystem.templateClassificationMap,
+      'docs/ai/template-classifications/default-derived-app-template-map.json'
     )
     assert.equal(
       lifecycle.upgradeEvaluation.repositoryOwnedEntrypoint,

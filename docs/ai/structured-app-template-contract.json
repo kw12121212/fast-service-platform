@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "fsp-structured-app-template-contract/v1",
+  "normativeAssets": {
+    "templateContract": "docs/ai/structured-app-template-contract.json",
+    "templateContractSchema": "docs/ai/schemas/structured-app-template-contract.schema.json",
+    "defaultTemplateClassificationMap": "docs/ai/template-classifications/default-derived-app-template-map.json",
+    "templateClassificationMapSchema": "docs/ai/schemas/derived-app-template-map.schema.json",
+    "assemblyContract": "docs/ai/app-assembly-contract.json",
+    "derivedAppLifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
+    "derivedAppUpgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
+    "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json"
+  },
+  "templateUnitTypes": [
+    {
+      "id": "stable-template",
+      "description": "Platform-owned generated asset that may be refreshed by repository-owned upgrade workflows."
+    },
+    {
+      "id": "slot-host",
+      "description": "Platform-owned generated asset that hosts structured module contributions at a declared slot boundary."
+    },
+    {
+      "id": "module-fragment",
+      "description": "Generated asset or section contributed by a selected platform module."
+    },
+    {
+      "id": "customization-zone",
+      "description": "Derived-app-owned area reserved for local customization that repository-owned upgrades must not overwrite by default."
+    }
+  ],
+  "ownershipModes": [
+    {
+      "id": "platform-managed",
+      "allowedDefaultUpgradeAction": "refresh-when-repository-contract-assets-change"
+    },
+    {
+      "id": "module-managed",
+      "allowedDefaultUpgradeAction": "review-before-overwrite"
+    },
+    {
+      "id": "derived-managed",
+      "allowedDefaultUpgradeAction": "preserve-by-default"
+    }
+  ],
+  "slotDefinitions": [
+    {
+      "id": "frontend-admin-routes",
+      "hostPath": "frontend/src/app/router.tsx",
+      "hostKind": "typescript-route-slot",
+      "allowedModuleFragments": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "ticket-management",
+        "kanban-management"
+      ]
+    },
+    {
+      "id": "frontend-admin-navigation",
+      "hostPath": "frontend/src/app/navigation.ts",
+      "hostKind": "typescript-navigation-slot",
+      "allowedModuleFragments": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "ticket-management",
+        "kanban-management"
+      ]
+    },
+    {
+      "id": "backend-table-contract",
+      "hostPath": "backend/src/main/resources/sql/tables.sql",
+      "hostKind": "sql-contract-slot",
+      "allowedModuleFragments": [
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "project-repository-management",
+        "ticket-management",
+        "kanban-management"
+      ]
+    },
+    {
+      "id": "backend-service-contract",
+      "hostPath": "backend/src/main/resources/sql/services.sql",
+      "hostKind": "sql-contract-slot",
+      "allowedModuleFragments": [
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "project-repository-management",
+        "ticket-management",
+        "kanban-management"
+      ]
+    },
+    {
+      "id": "backend-demo-data",
+      "hostPath": "backend/src/main/resources/sql/demo.sql",
+      "hostKind": "sql-seed-slot",
+      "allowedModuleFragments": [
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "project-repository-management",
+        "ticket-management",
+        "kanban-management"
+      ]
+    }
+  ],
+  "generatedOutputDefaults": {
+    "requiredTemplateAssets": [
+      "docs/ai/structured-app-template-contract.json",
+      "docs/ai/template-classifications/default-derived-app-template-map.json",
+      "docs/ai/schemas/structured-app-template-contract.schema.json",
+      "docs/ai/schemas/derived-app-template-map.schema.json"
+    ],
+    "defaultClassificationMap": "docs/ai/template-classifications/default-derived-app-template-map.json"
+  },
+  "upgradeSemantics": {
+    "platformRefreshableUnitTypes": [
+      "stable-template",
+      "slot-host"
+    ],
+    "manualReviewUnitTypes": [
+      "module-fragment",
+      "customization-zone"
+    ],
+    "defaultCustomizationPolicy": "prefer-declared-customization-zones-over-direct-edits-to-platform-managed-slot-hosts",
+    "upgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json"
+  },
+  "aiToolingGuidance": {
+    "defaultRole": "tool-orchestrator",
+    "defaultFacade": "./scripts/platform-tool.sh <group> <command> [...]",
+    "playbook": "docs/ai/playbooks/customize-derived-app-template-boundaries.md"
+  }
+}

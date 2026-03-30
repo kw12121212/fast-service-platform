@@ -4,6 +4,10 @@
     "lifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
     "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
     "aiToolOrchestrationContractSchema": "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
+    "structuredAppTemplateContract": "docs/ai/structured-app-template-contract.json",
+    "structuredAppTemplateContractSchema": "docs/ai/schemas/structured-app-template-contract.schema.json",
+    "templateClassificationMap": "docs/ai/template-classifications/default-derived-app-template-map.json",
+    "templateClassificationMapSchema": "docs/ai/schemas/derived-app-template-map.schema.json",
     "lifecycleContractSchema": "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
     "lifecycleMetadataSchema": "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
     "upgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
@@ -18,7 +22,8 @@
   "generatedOutput": {
     "lifecycleMetadata": "docs/ai/derived-app-lifecycle.json",
     "generatedContext": "docs/ai/context.json",
-    "applicationManifest": "app-manifest.json"
+    "applicationManifest": "app-manifest.json",
+    "templateClassificationMap": "docs/ai/template-classifications/default-derived-app-template-map.json"
   },
   "requiredLifecycleFields": [
     "schemaVersion",
@@ -34,6 +39,8 @@
     "sourcePlatform.generatedAppVerificationContractVersion",
     "selectedModules",
     "requiredCoreModules",
+    "templateSystem.templateContract",
+    "templateSystem.templateClassificationMap",
     "upgradeEvaluation.repositoryOwnedEntrypoint",
     "upgradeEvaluation.repositoryOwnedTargetSelectionEntrypoint",
     "upgradeEvaluation.repositoryOwnedAdvisoryEntrypoint",
@@ -51,7 +58,9 @@
     "requiredGeneratedInputs": [
       "app-manifest.json",
       "docs/ai/context.json",
-      "docs/ai/derived-app-lifecycle.json"
+      "docs/ai/derived-app-lifecycle.json",
+      "docs/ai/structured-app-template-contract.json",
+      "docs/ai/template-classifications/default-derived-app-template-map.json"
     ],
     "compatibilitySignals": [
       "matching-source-platform-id",
@@ -60,7 +69,8 @@
       "supported-lifecycle-metadata-version",
       "supported-lifecycle-contract-version",
       "supported-assembly-contract-version",
-      "selected-modules-known-to-target-platform"
+      "selected-modules-known-to-target-platform",
+      "template-boundary-assets-present"
     ],
     "resultShape": {
       "compatible": "boolean",

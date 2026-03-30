@@ -23,6 +23,10 @@
         "lifecycleContract",
         "aiToolOrchestrationContract",
         "aiToolOrchestrationContractSchema",
+        "structuredAppTemplateContract",
+        "structuredAppTemplateContractSchema",
+        "templateClassificationMap",
+        "templateClassificationMapSchema",
         "lifecycleContractSchema",
         "lifecycleMetadataSchema",
         "upgradeExecutionContract",
@@ -44,6 +48,22 @@
           "minLength": 1
         },
         "aiToolOrchestrationContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuredAppTemplateContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuredAppTemplateContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMapSchema": {
           "type": "string",
           "minLength": 1
         },
@@ -95,7 +115,8 @@
       "required": [
         "lifecycleMetadata",
         "generatedContext",
-        "applicationManifest"
+        "applicationManifest",
+        "templateClassificationMap"
       ],
       "properties": {
         "lifecycleMetadata": {
@@ -107,6 +128,10 @@
           "minLength": 1
         },
         "applicationManifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMap": {
           "type": "string",
           "minLength": 1
         }
