@@ -1,101 +1,126 @@
 # RTK
 
-RTK 在本仓库中表示 `Repository Technical Knowledge`，用于给人类和 AI 代理提供统一的技术背景。
+RTK means `Repository Technical Knowledge`.
 
-## 定位
+This document gives both humans and AI agents a shared technical view of the repository: what the platform is, what boundaries it follows, what technology choices are intentional, and what implementation reality already exists.
 
-这个项目是一个基于 `Lealone-Platform` 的 AI-oriented 企业应用组件平台。
-平台的主要复用者是 AI。AI 在外部工作流中可以结合需求和视觉材料，但本仓库本身的职责是提供可靠、AI 友好的企业应用前后端组件。
+## Positioning
 
-## 产品边界
+This project is an AI-oriented enterprise application component platform built on top of `Lealone-Platform`.
 
-- V1 只面向企业内部管理应用。
-- V1 目标应用形态是单体应用。
-- 本仓库不直接实现 AI 对话、提示词接收、原型图片上传或参考网站采集入口。
-- “不依赖外部软件库”是产品原则。
+The main reuser is `AI`. In external workflows, AI may combine requirements and visual references, but the job of this repository is narrower: provide reliable, AI-friendly backend and frontend components that can be reused to assemble internal enterprise management systems.
 
-## 后端基线
+## Product Boundary
 
-- 使用 Java 25 LTS 作为统一语言和运行时基线。
-- 以 [Lealone-Platform](https://github.com/lealone/Lealone-Platform) 为后端技术基础。
-- 核心目标是在 Lealone-Platform 之上提供更高层的企业应用组件能力，供 AI 稳定复用。
+- V1 targets internal enterprise management applications only.
+- V1 targets a monolithic application shape.
+- This repository does not directly implement AI chat, prompt intake, prototype upload, or reference-site ingestion.
+- Avoiding new external software libraries is a product principle.
 
-## Lealone 判断
+## Backend Baseline
 
-- 当前实现主路径遵循 Lealone-Platform 推荐方式：Maven 依赖、SQL 定义表和服务、Java 实现服务、`LealoneApplication` 启动。
-- 实际接入过程中遇到过源码构建兼容性、Tomcat 运行时依赖、测试启动阻塞等问题，说明它的工程配套还不够平滑。
-- 结论是：Lealone-Platform 在结构表达上对 AI 友好，但在构建、测试和可预测性上还需要本项目再包一层，才能更适合作为 AI 生成企业系统的平台底座。
+- `Java 25 LTS` is the unified backend language and runtime baseline.
+- [Lealone-Platform](https://github.com/lealone/Lealone-Platform) is the backend foundation.
+- The goal is not to expose raw Lealone primitives directly, but to build higher-level enterprise components on top of Lealone in a form AI agents can reuse predictably.
 
-## 前端基线
+## Lealone Assessment
 
-- 使用 Vite 8 作为前端构建入口。
-- 使用 React 19 作为 UI 运行时。
-- 使用 shadcn/ui 作为源码级组件体系。
-- 使用 Tailwind CSS 4 作为样式和设计 token 基础。
-- 当前前端包管理器是 `bun`。
-- 当前前端运行时基线是 `Node 24`。
+The current implementation still follows the recommended Lealone-Platform path:
 
-## V1 最小组件集
+- Maven-managed dependencies
+- SQL-defined tables and services
+- Java service implementations
+- `LealoneApplication`-based startup
 
-当前仓库默认 baseline 应用仍然包含：
+At the same time, real integration work exposed practical friction around source builds, Tomcat runtime dependencies, smoke validation, and startup predictability. The working conclusion is:
 
-- 用户管理
-- 基于角色的权限管理
-- 软件项目管理
-- 工单管理
-- 看板管理
+- `Lealone-Platform` is structurally friendly to AI because the service and schema model is explicit.
+- It still needs repository-owned engineering support around build, verification, and operational predictability to serve as a solid platform base for AI-generated enterprise systems.
 
-但从“AI 派生独立新应用”的平台视角，当前更合理的划分是：
+## Frontend Baseline
 
-- 必选核心：
+- `Vite 8` is the frontend build and dev entrypoint.
+- `React 19` is the frontend UI runtime.
+- `shadcn/ui` is the source-controlled component system.
+- `Tailwind CSS 4` is the styling and design-token baseline.
+- `bun` is the frontend package manager and script runner.
+- `Node 24` is the frontend runtime baseline.
+
+## V1 Component Model
+
+The runnable baseline application currently includes these business domains:
+
+- user management
+- role and permission management
+- software project management
+- ticket management
+- kanban management
+
+From the platform perspective for derived applications, the more useful split is:
+
+- Mandatory core:
   - admin shell
-  - 用户管理
-  - 基于角色的权限管理
-- 可选业务模块：
-  - 软件项目管理
-  - 工单管理
-  - 看板管理
+  - user management
+  - role and permission management
+- Optional built-in business modules:
+  - software project management
+  - ticket management
+  - kanban management
 
-## 研发工程组件
+## Engineering-Support Components
 
-这些能力也属于本项目要提供给最终企业系统使用的组件：
+These are also platform components, not incidental local tooling:
 
-- Git 仓库管理
-- worktree 管理
-- 代码合并支持
-- 沙盒环境
+- Git repository management
+- project-scoped worktree management
+- code merge support
+- sandbox environments
 
-## 最小平台基线
+Implementation status today:
 
-当前 V1 平台基线至少要包含：
+- Git repository binding and branch switching are implemented.
+- Project-scoped worktree management is implemented.
+- Merge support and sandbox environments are still reserved platform directions, not completed baseline capabilities.
 
-- 测试
-- 可选 demo 数据
-- 管理后台首页
-- 软件项目管理功能
-- 工单管理功能
-- 看板管理功能
-- 角色权限管理
-- 用户管理
+## Minimum Platform Baseline
 
-## AI 协作约束
+The V1 platform baseline must include at least:
 
-- 任何非平凡改动都先通过 `.spec-driven/` 明确范围。
-- 文档和目录结构要让 AI 能快速定位“入口文件、规则文件、当前规格、工作区边界”。
-- 前后端都要尽量选择对 AI 友好的结构：少隐藏约定、少魔法生成、少跨目录耦合。
-- AI 创建项目时应优先复用平台内置组件，而不是自由引入新的外部软件库或能力栈。
-- 仓库应提供 AI 可直接消费的入口文档、结构化上下文、常见变更配方、模块索引、装配契约和稳定验证命令，减少代理在分散文档中自行推断。
-- 对 app assembly 而言，规范事实来源应是 `contract + schemas + compatibility suite`，具体语言实现只是兼容实现或参考实现，不应反过来定义标准。
+- tests
+- optional demo data
+- admin dashboard shell
+- user management
+- role and permission management
+- software project management
+- ticket management
+- kanban management
 
-## 当前实现状态
+## AI Collaboration Constraints
 
-当前仓库已经完成第一批真实工程落地，不再只是产品定义阶段：
+- Route every non-trivial change through `.spec-driven/` first.
+- Treat repository documents and directory structure as AI navigation surfaces: entrypoints, rules, specs, and workspace boundaries should be easy to locate.
+- Prefer AI-friendly structure in both backend and frontend:
+  - fewer hidden conventions
+  - less magic generation
+  - less cross-directory coupling
+- When AI creates or changes applications, it should reuse built-in platform components before inventing new dependency stacks or external libraries.
+- The repository should provide stable AI-facing entrypoints: quickstart docs, machine-readable context, playbooks, module metadata, assembly contracts, and verification commands.
+- For app assembly, the source of truth is `contract + schemas + compatibility suite`. Language-specific implementations are compatible implementations or references, not the definition of the standard.
 
-- `backend/` 已经是可运行的 Java 25 单模块 Maven 后端核心
-- `frontend/` 已经是可运行的 Vite 8 + React 19 PC 管理后台
-- backend 已实现用户、角色权限、软件项目、工单、看板这批最小企业域
-- frontend 已实现管理首页、用户管理、角色权限、软件项目、工单、看板这批最小页面
-- frontend 已直接对接当前 backend 的 `/service/*` 路径
-- backend 支持 `可选 demo 数据`
+## Implementation Reality
 
-当前没有活动中的 spec-driven change。后续实现应继续围绕 V1 企业组件平台推进，而不是偏离到无关的独立业务需求。
+This repository is already in a real implementation phase, not just product planning.
+
+- `backend/` is a runnable single-module Maven backend.
+- `frontend/` is a runnable PC admin frontend.
+- The backend implements the minimum enterprise domains already listed in this document.
+- The frontend implements the corresponding dashboard and management pages.
+- The frontend talks directly to the current backend through `/service/*`.
+- The backend supports optional demo data.
+- The software-project area already includes repository binding, Git branch switching, and project-scoped worktree management.
+
+## Working Assumptions For Contributors
+
+- Continue evolving the repository as a V1 enterprise component platform, not as an unrelated standalone business product.
+- Prefer extending existing repository patterns over introducing new framework layers without need.
+- If a change affects boundaries, collaboration contracts, module structure, or AI workflows, update specs before implementation.

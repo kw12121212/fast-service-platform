@@ -1,26 +1,30 @@
 # Roadmap
 
-本路线图用于记录平台下一阶段的优先方向，帮助 AI 和人工贡献者判断“下一步最值得做什么”。
+This roadmap records the most valuable next directions for the platform.
 
-它不是绕过 `.spec-driven/` 的实施许可。任何非平凡变更仍然必须先进入 spec-driven proposal，再实施、验证和归档。
+It is not permission to bypass `.spec-driven/`. Any non-trivial change still needs to go through proposal, implementation, verification, and archive.
 
-## 当前判断
+## Current Reading
 
-当前仓库已经具备这些能力：
+The repository is no longer blocked on basic platform definition. It already has:
 
-- Java-owned 的 repository platform tooling 主路径
-- `Java CLI` app assembly 实现与兼容验证路径
-- repository-owned Java generated-app verifier 与兼容 Java verifier 路径
-- 语言无关的 `contract + schemas + compatibility suite`
-- machine-readable 的 derived-app lifecycle / upgrade evaluation / upgrade execution contract
-- machine-readable 的 platform release advisory、release history 和 version lineage
-- repository-owned 的 upgrade target lookup、upgrade evaluation、advisory 和 execution 入口
-- machine-readable 的 AI tool orchestration contract，以及统一 façade 优先的 AI 使用路径
-- 更细粒度的可选业务模块边界：`project-management`、`project-repository-management`、`kanban-management`、`ticket-management`
+- a runnable backend and frontend baseline
+- repository-owned AI contracts, schemas, manifests, and compatibility fixtures
+- repository-owned tooling for assembly, verification, release lookup, and upgrades
+- a committed baseline demo
+- software-project repository binding
+- bound-project Git branch inspection and safe branch switching
+- project-scoped worktree management
 
-下一阶段的重点不再只是“再增加一种实现语言”，而是继续提高平台的长期可演进性、兼容性可信度和 AI 可消费性。
+That changes the next priority.
 
-## 已完成的关键增量
+The platform does not most urgently need another language implementation or more contract surface area. The next bottlenecks are:
+
+- completing engineering-support workflows around real project repositories
+- increasing trust that derived applications are runnable, verifiable, and maintainable
+- making optional platform modules more operationally composable, not just conceptually separated
+
+## Recently Completed Foundations
 
 - [x] `add-ai-app-scaffolding-and-module-assembly`
 - [x] `standardize-app-assembly-spec-and-compatibility-suite`
@@ -36,89 +40,158 @@
 - [x] `consolidate-platform-tooling-on-java`
 - [x] `standardize-ai-solution-input-model`
 - [x] `introduce-structured-app-template-system`
+- [x] `add-repository-owned-baseline-demo`
+- [x] `project-worktree-management`
 
-## 建议优先级
+## Roadmap Principles
+
+- Prefer closing adjacent platform gaps over opening new product directions.
+- Prefer repository-owned trust mechanisms over more descriptive documentation alone.
+- Prefer project-scoped engineering workflows over generic standalone Git tooling.
+- Prefer composable built-in modules over hidden baseline coupling.
+- Prefer end-to-end runnable proof over purely structural validation.
+
+## Priority Roadmap
 
 ### P0
 
-#### [x] 1. 派生应用生命周期能力
+#### 1. Project-Scoped Merge Support
 
-- 方向：定义派生应用的升级、兼容、平台版本和回收平台变更的标准路径。
-- 价值：最高。解决“生成之后怎么升级、怎么持续演进”的核心问题。
-- 风险：需要定义平台版本、派生应用版本、兼容矩阵、upgrade / rebase 语义。
-- 建议 change name：`define-derived-app-lifecycle-and-upgrade-contract`
+- Why now:
+  Worktree management is implemented, but the next natural engineering step is still missing. Contributors can create and maintain parallel workspaces, but they cannot complete the project-scoped merge workflow inside the platform boundary.
+- Scope direction:
+  - expose merge-ready repository state from the project context
+  - allow controlled branch-to-branch merge execution
+  - surface conflict, refusal, and dirty-state restrictions clearly
+  - keep the scope project-bound instead of turning the platform into a general Git client
+- Main risk:
+  Merge semantics can expand quickly into conflict resolution UX, force strategies, and recovery logic.
+- Suggested change name:
+  `project-merge-support`
 
 ### P1
 
-#### [x] 2. 兼容性套件扩容
+#### 2. Project-Scoped Sandbox Environment
 
-- 方向：增加更多 manifest、失败样例、模块组合、空模块边界和冲突依赖样例。
-- 价值：高。能快速提高标准可信度，减少边界遗漏。
-- 风险：测试资产会变多，维护成本会增加。
-- 建议 change name：`expand-app-assembly-compatibility-fixtures`
+- Why next:
+  After merge support, the next missing engineering-support component is sandbox execution. The platform already models sandbox environments as a built-in capability, but it still has no concrete lifecycle.
+- Scope direction:
+  - define sandbox creation and teardown around a bound project or worktree
+  - define execution boundaries, filesystem scope, and lifecycle ownership
+  - keep the first version operationally narrow and deterministic
+- Main risk:
+  Sandbox work can sprawl into process management, isolation semantics, and host-environment assumptions if not tightly bounded.
+- Suggested change name:
+  `project-sandbox-environment`
 
-#### [x] 3. 统一工具入口
+#### 3. Dynamic Form Component
 
-- 方向：把分散的 `Node`、`Java`、`shell` 入口收敛成一致的仓库命令界面。
-- 价值：高。降低工具使用门槛，让文档和自动化入口更清晰。
-- 风险：如果设计过度，容易变成一层收益有限的包装。
-- 建议 change name：`unify-platform-tooling-entrypoints`
+- Why next:
+  The platform already has runnable admin pages and backend-backed management workflows, but it still lacks a reusable component for turning structured business descriptions plus table definitions into editable, savable forms.
+- Scope direction:
+  - generate frontend form structure from business description, table definition, and field metadata
+  - support common input widgets, validation, default values, and edit or create modes
+  - connect generated forms to backend-backed save flows instead of stopping at static UI generation
+  - keep V1 focused on single-entity or single-table form workflows
+- Main risk:
+  Dynamic forms can expand too quickly into a full low-code designer unless field semantics, layout rules, and save boundaries stay narrow.
+- Suggested change name:
+  `dynamic-form-component`
 
-#### [x] 4. AI 工具编排契约
+#### 4. Dynamic Report Component
 
-- 方向：让 AI 学会优先使用 repository-owned tooling façade、playbook 和兼容 wrapper，而不是直接替代已有 assembly / verification / upgrade 实现。
-- 价值：中高。能把平台的既有 contract 和工具真正变成 AI 可稳定消费的工作流。
-- 风险：需要跨多个 contract、playbook 和 façade 入口统一 AI 的默认行为边界。
-- 建议 change name：`define-ai-tool-orchestration-contract`
+- Why next:
+  Once the platform can generate structured data-entry experiences, the next adjacent reusable capability is reporting. AI-generated enterprise systems need a controlled way to turn business descriptions plus live data into platform-owned report views.
+- Scope direction:
+  - generate report views from report description and data definitions
+  - support a narrow first version with summary cards, tables, and simple charts
+  - define filtering, grouping, and aggregation boundaries explicitly
+  - keep the first version inside platform-owned report patterns rather than turning it into a full BI product
+- Main risk:
+  Reporting scope can balloon into ad hoc analytics, formula builders, and multi-source modeling if the first version is not constrained.
+- Suggested change name:
+  `dynamic-report-component`
+
+#### 5. Derived-App Runtime Smoke Validation
+
+- Why next:
+  The repository already validates contracts and generated-app structure well. The next trust gap is runtime proof: a derived app should be demonstrably buildable and smokable, not just structurally compatible.
+- Scope direction:
+  - add runtime-oriented fixtures for generated or demo-derived apps
+  - verify backend, frontend, and `/service/*` behavior for derived applications
+  - make failures actionable for both human contributors and AI agents
+- Main risk:
+  Runtime fixtures can become expensive or brittle if they are too broad.
+- Suggested change name:
+  `add-derived-app-runtime-smoke`
 
 ### P2
 
-#### [x] 5. 模块边界继续下沉
+#### 6. Operational Module Assembly Completion
 
-- 方向：把可选业务模块进一步拆细，明确更稳定的模块边界、依赖声明和裁剪规则。
-- 价值：中高。会让平台更像真正可组合的基础库。
-- 风险：会触碰当前前后端耦合，改动面较大。
-- 建议 change name：`decompose-optional-business-modules`
+- Why later:
+  The platform already describes optional modules well, but optionality should become more operationally real. A module should be removable or selectable without hidden baseline assumptions leaking through routes, navigation, dependencies, or verification flow.
+- Scope direction:
+  - harden module dependency declarations
+  - verify route, page, and backend behavior when optional modules are omitted
+  - reduce accidental coupling between project, ticket, and kanban areas
+- Main risk:
+  This touches both backend and frontend assumptions at once and can expose latent coupling.
+- Suggested change name:
+  `complete-optional-module-assembly`
 
-#### [x] 6. 更结构化的 AI 输入层
+#### 7. Platform Release And Upgrade Smoke Hardening
 
-- 方向：从 `manifest` 驱动继续走向更结构化的需求输入、领域输入和 UI 输入映射。
-- 价值：中高。更接近“从需求直接到应用骨架”。
-- 风险：如果过早推进，容易把输入契约做得过重。
-- 建议 change name：`standardize-ai-solution-input-model`
+- Why later:
+  Release history, upgrade targets, and advisory flows are already defined. The next maturity step is proving those flows against real repository-owned fixtures rather than mostly contract-level guarantees.
+- Scope direction:
+  - add runnable release-to-release upgrade fixtures
+  - verify advisory and execution behavior against concrete versioned examples
+  - strengthen confidence in repository-owned upgrade semantics
+- Main risk:
+  Release fixtures can become maintenance-heavy unless version scope stays small.
+- Suggested change name:
+  `harden-release-upgrade-smoke`
 
 ### P3
 
-#### [x] 7. 生成模板系统升级
+#### 8. Template Variant Expansion
 
-- 方向：把当前受控拼装继续演进为更明确的模板层、slot 机制和覆盖点约定。
-- 价值：中。适合后续规模扩大时提效。
-- 风险：如果设计不克制，容易引入新的模板复杂度和代码生成魔法。
-- 建议 change name：`introduce-structured-app-template-system`
+- Why last:
+  The structured template system now exists. It should expand only after merge, sandbox, derived-app runtime proof, and operational module assembly are stronger, otherwise new template variants will amplify shaky foundations.
+- Scope direction:
+  - add more explicit slot and template variants
+  - improve controlled customization points for derived apps
+  - keep ownership boundaries explicit between platform-managed zones and customization zones
+- Main risk:
+  Template systems can become magic-heavy if they evolve faster than runtime guarantees.
+- Suggested change name:
+  `expand-structured-template-variants`
 
-## 推荐顺序
+## Recommended Order
 
-建议按下面顺序推进：
+1. [ ] `project-merge-support`
+2. [ ] `project-sandbox-environment`
+3. [ ] `dynamic-form-component`
+4. [ ] `dynamic-report-component`
+5. [ ] `add-derived-app-runtime-smoke`
+6. [ ] `complete-optional-module-assembly`
+7. [ ] `harden-release-upgrade-smoke`
+8. [ ] `expand-structured-template-variants`
 
-1. [x] `define-derived-app-lifecycle-and-upgrade-contract`
-2. [x] `expand-app-assembly-compatibility-fixtures`
-3. [x] `unify-platform-tooling-entrypoints`
-4. [x] `define-ai-tool-orchestration-contract`
-5. [x] `decompose-optional-business-modules`
-6. [x] `standardize-ai-solution-input-model`
-7. [x] `introduce-structured-app-template-system`
+## Explicitly Not A Near-Term Priority
 
-原因：
+These directions are intentionally not near-term roadmap priorities:
 
-- 当前最缺的不是“还能不能再生成一次”，而是“派生出去以后怎么持续升级和兼容”。
-- 在 lifecycle 明确之前，平台更像一个可演示生成器，不像可长期演进的基础库。
-- compatibility suite 和 tooling entrypoints 能优先提高标准可信度和日常可用性。
-- AI tool orchestration 让 AI 优先复用仓库已有工具，而不是绕开它们重做 workflow。
-- 当前输入层、模块边界、生命周期和工具链都已经标准化到一个可继续抽象输出结构的阶段。
-- 下一步更适合把生成结果继续收敛成更明确的模板层、slot 机制和覆盖点约定，减少后续升级与定制之间的冲突。
+- adding another implementation language for platform tooling
+- building a direct end-user AI chat interface inside this repository
+- expanding beyond internal enterprise management applications
+- changing the V1 target shape away from monolithic applications
+- introducing broad new external dependency stacks without a platform-boundary reason
 
-## 使用方式
+## How To Use This Roadmap
 
-- 把本路线图视为候选方向清单，而不是自动排期。
-- 每个方向真正开始实施前，都要先进入 `.spec-driven/changes/` 形成 proposal。
-- 如果仓库真实状态已经变化，应同步更新本文件，避免路线图和实现现实脱节。
+- Treat this file as a candidate-priority list, not an automatic schedule.
+- Re-check the repository reality before starting any item.
+- Convert any selected direction into a spec-driven change before implementation.
+- Update this file when repository reality changes enough that the ordering is no longer defensible.
