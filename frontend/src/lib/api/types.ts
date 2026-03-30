@@ -65,6 +65,9 @@ export type ProjectWorktreeSummary = {
   stale: boolean
   deletionAllowed: boolean
   deletionRestriction: string | null
+  mergeAllowed: boolean
+  mergeRestriction: string | null
+  mergeTargetBranches: string[]
 }
 
 export type ProjectRepositorySummary = {

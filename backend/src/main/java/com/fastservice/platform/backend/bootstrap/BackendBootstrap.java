@@ -38,19 +38,21 @@ public final class BackendBootstrap {
                 Path sqlBaseDir = baseDir.resolve("bootstrap-sql");
                 String tablesSql = SqlResourceExtractor.extract("/sql/tables.sql", sqlBaseDir);
                 String servicesSql = SqlResourceExtractor.extract("/sql/services.sql", sqlBaseDir);
-                if (loadDemoData) {
-                    startDemoDataLoader(databaseName);
-                }
-
                 LealoneApplication app = new LealoneApplication();
                 app.setBaseDir(baseDir.toAbsolutePath().toString());
                 app.setDatabase(databaseName);
-                app.setSqlScripts(tablesSql, servicesSql);
                 app.start();
+
+                awaitDatabaseConnection(databaseName);
+                initializeSchema(databaseName, tablesSql, servicesSql);
+                if (loadDemoData) {
+                    DemoDataSupport.load(databaseName);
+                }
             } else if (loadDemoData) {
                 DemoDataSupport.load(databaseName);
             }
         } catch (Exception e) {
+            STARTED_DATABASES.remove(databaseName);
             throw new IllegalStateException("Unable to bootstrap backend runtime", e);
         }
     }
@@ -66,40 +68,32 @@ public final class BackendBootstrap {
                 Path sqlBaseDir = baseDir.resolve("bootstrap-sql");
                 String tablesSql = SqlResourceExtractor.extract("/sql/tables.sql", sqlBaseDir);
                 String servicesSql = SqlResourceExtractor.extract("/sql/services.sql", sqlBaseDir);
-                Lealone.runScript("jdbc:lealone:embed:" + databaseName, tablesSql, servicesSql);
+                initializeSchema(databaseName, tablesSql, servicesSql);
             }
 
             if (loadDemoData) {
                 DemoDataSupport.load(databaseName);
             }
         } catch (Exception e) {
+            STARTED_DATABASES.remove(databaseName);
             throw new IllegalStateException("Unable to initialize embedded backend runtime", e);
         }
     }
 
-    private static void startDemoDataLoader(String databaseName) {
-        Thread demoLoader = new Thread(() -> {
-            try {
-                awaitDatabaseReady(databaseName);
-                DemoDataSupport.load(databaseName);
-            } catch (Exception e) {
-                throw new IllegalStateException("Unable to load demo data after backend startup", e);
-            }
-        }, "fsp-demo-data-loader");
-        demoLoader.setDaemon(true);
-        demoLoader.start();
+    private static void initializeSchema(String databaseName, String tablesSql, String servicesSql) {
+        Lealone.runScript("jdbc:lealone:embed:" + databaseName, tablesSql, servicesSql);
     }
 
-    private static void awaitDatabaseReady(String databaseName) throws InterruptedException {
+    private static void awaitDatabaseConnection(String databaseName) throws InterruptedException {
         for (int attempt = 0; attempt < STARTUP_WAIT_ATTEMPTS; attempt++) {
             try (Connection connection = JdbcSupport.getConnection(databaseName);
-                    PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM app_user")) {
+                    PreparedStatement statement = connection.prepareStatement("SELECT 1")) {
                 statement.executeQuery().close();
                 return;
             } catch (Exception e) {
                 Thread.sleep(STARTUP_WAIT_MILLIS);
             }
         }
-        throw new IllegalStateException("Timed out waiting for backend database startup: " + databaseName);
+        throw new IllegalStateException("Timed out waiting for backend database connection: " + databaseName);
     }
 }

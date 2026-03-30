@@ -342,6 +342,16 @@ export function useCreateProjectWorktreeAction() {
   })
 }
 
+export function useMergeProjectWorktreeAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+      worktreePath: string
+      targetBranch: string
+    }) => invokeService<string>('project_service/mergeProjectWorktree', args),
+  })
+}
+
 export function useDeleteProjectWorktreeAction() {
   return useBackendMutation({
     run: (args: {

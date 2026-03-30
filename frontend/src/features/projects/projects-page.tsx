@@ -14,6 +14,7 @@ import {
   useCreateProjectWorktreeAction,
   useCreateProjectAction,
   useDeleteProjectWorktreeAction,
+  useMergeProjectWorktreeAction,
   useProjectsResource,
   usePruneProjectWorktreesAction,
   useRepairProjectWorktreesAction,
@@ -145,6 +146,7 @@ function ProjectRepositoryCard({
   const bindProjectRepository = useBindProjectRepositoryAction()
   const switchProjectBranch = useSwitchProjectBranchAction()
   const createProjectWorktree = useCreateProjectWorktreeAction()
+  const mergeProjectWorktree = useMergeProjectWorktreeAction()
   const deleteProjectWorktree = useDeleteProjectWorktreeAction()
   const repairProjectWorktrees = useRepairProjectWorktreesAction()
   const pruneProjectWorktrees = usePruneProjectWorktreesAction()
@@ -156,6 +158,10 @@ function ProjectRepositoryCard({
   )
   const [worktreeBranch, setWorktreeBranch] = useState(
     project.repository ? availableWorktreeBranches(project.repository)[0] ?? '' : '',
+  )
+  const [mergeTargets, setMergeTargets] = useState<Record<string, string>>({})
+  const [activeMergeWorktreePath, setActiveMergeWorktreePath] = useState<string | null>(
+    null,
   )
   const repositoryPathValue = repositoryPath || project.repository?.rootPath || ''
   const targetBranchValue =
@@ -228,6 +234,32 @@ function ProjectRepositoryCard({
       })
       onRepositoryBound()
     } catch {
+      return
+    }
+  }
+
+  async function handleMergeWorktree(
+    event: FormEvent<HTMLFormElement>,
+    worktreePath: string,
+    targetBranchValue: string,
+  ) {
+    event.preventDefault()
+
+    if (!targetBranchValue.trim()) {
+      return
+    }
+
+    setActiveMergeWorktreePath(worktreePath)
+
+    try {
+      await mergeProjectWorktree.submit({
+        projectId: project.id,
+        worktreePath,
+        targetBranch: targetBranchValue,
+      })
+      onRepositoryBound()
+    } catch {
+      onRepositoryBound()
       return
     }
   }
@@ -511,6 +543,82 @@ function ProjectRepositoryCard({
                         </Button>
                       </div>
                     )}
+
+                    <div className="mt-4 space-y-3 rounded-[16px] border border-border/60 bg-background/65 p-3">
+                      <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                        Merge support
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Merge this linked worktree branch into another existing local branch.
+                      </div>
+
+                      {worktree.mergeAllowed ? (
+                        <form
+                          className="space-y-4"
+                          onSubmit={(event) =>
+                            handleMergeWorktree(
+                              event,
+                              worktree.path,
+                              worktree.mergeTargetBranches.includes(
+                                mergeTargets[worktree.path] ?? '',
+                              )
+                                ? (mergeTargets[worktree.path] ?? '')
+                                : (worktree.mergeTargetBranches[0] ?? ''),
+                            )}
+                        >
+                          <div className="space-y-2">
+                            <Label htmlFor={`merge-project-worktree-${project.id}-${worktree.path}`}>
+                              Target branch
+                            </Label>
+                            <select
+                              id={`merge-project-worktree-${project.id}-${worktree.path}`}
+                              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none ring-0 transition-colors focus-visible:border-ring"
+                              value={
+                                worktree.mergeTargetBranches.includes(
+                                  mergeTargets[worktree.path] ?? '',
+                                )
+                                  ? (mergeTargets[worktree.path] ?? '')
+                                  : (worktree.mergeTargetBranches[0] ?? '')
+                              }
+                              onChange={(event) =>
+                                setMergeTargets((current) => ({
+                                  ...current,
+                                  [worktree.path]: event.target.value,
+                                }))
+                              }
+                            >
+                              {worktree.mergeTargetBranches.map((branch) => (
+                                <option key={`${worktree.path}:${branch}`} value={branch}>
+                                  {branch}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {activeMergeWorktreePath === worktree.path ? (
+                            <MutationStatus
+                              status={mergeProjectWorktree.status}
+                              error={mergeProjectWorktree.error}
+                              submittingMessage="Merging linked worktree through the backend project service..."
+                              successMessage="Worktree branch merged and the project list has been refreshed."
+                            />
+                          ) : null}
+
+                          <Button
+                            type="submit"
+                            variant="outline"
+                            disabled={mergeProjectWorktree.status === 'submitting'}
+                          >
+                            Merge worktree
+                          </Button>
+                        </form>
+                      ) : (
+                        <div className="rounded-[16px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+                          {worktree.mergeRestriction ??
+                            'Merge is unavailable for this worktree.'}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

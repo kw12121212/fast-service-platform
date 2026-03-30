@@ -110,6 +110,8 @@ class EnterpriseServicesTest {
         assertTrue(payload.contains("\"worktrees\":["));
         assertTrue(payload.contains("\"path\":\"" + escapeJson(repositoryDir.toString()) + "\""));
         assertTrue(payload.contains("\"main\":true"));
+        assertTrue(payload.contains("\"mergeAllowed\":false"));
+        assertTrue(payload.contains("\"mergeRestriction\":\"Main repository worktree cannot be used as a merge source\""));
     }
 
     @Test
@@ -188,6 +190,10 @@ class EnterpriseServicesTest {
         assertTrue(payload.contains("\"branch\":\"feature/api-preview\""));
         assertTrue(payload.contains("\"path\":\"" + escapeJson(worktreePath) + "\""));
         assertTrue(payload.contains("\"deletionAllowed\":true"));
+        assertTrue(payload.contains("\"mergeAllowed\":true"));
+        assertTrue(payload.contains("\"mergeTargetBranches\":["));
+        assertTrue(payload.contains("\"feature-preview\""));
+        assertTrue(payload.contains("\"repo-test\""));
     }
 
     @Test
@@ -321,6 +327,92 @@ class EnterpriseServicesTest {
         assertEquals(repositoryDir.toString(), projects.repairProjectWorktrees(projectId));
     }
 
+    @Test
+    void mergesManagedLinkedWorktreeBranchIntoAnotherLocalBranch() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("MERGE", "Merge Support", "Merge execution validation");
+        Path repositoryDir = createGitRepository();
+
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+        String worktreePath = projects.createProjectWorktree(projectId, "feature/api-preview");
+
+        String mergedBranch = projects.mergeProjectWorktree(projectId, worktreePath, "repo-test");
+        String payload = projects.listProjects();
+
+        assertEquals("repo-test", mergedBranch);
+        assertTrue(Files.exists(repositoryDir.resolve("api-preview.txt")));
+        assertTrue(payload.contains("Merge branch 'feature/api-preview'"));
+        assertTrue(payload.contains("\"branch\":\"repo-test\""));
+    }
+
+    @Test
+    void rejectsMergingFromDirtyLinkedWorktree() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("MRDIRTY", "Dirty Merge", "Dirty merge validation");
+        Path repositoryDir = createGitRepository();
+
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+        String worktreePath = projects.createProjectWorktree(projectId, "feature/api-preview");
+        Files.writeString(Path.of(worktreePath).resolve("README.md"), "dirty merge source\n", StandardCharsets.UTF_8);
+
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> projects.mergeProjectWorktree(projectId, worktreePath, "repo-test"));
+
+        assertEquals("Worktree has uncommitted changes", error.getMessage());
+    }
+
+    @Test
+    void rejectsUsingMainRepositoryWorktreeAsMergeSource() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("MRMAIN", "Main Merge", "Main worktree merge validation");
+        Path repositoryDir = createGitRepository();
+
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> projects.mergeProjectWorktree(projectId, repositoryDir.toString(), "feature-preview"));
+
+        assertEquals("Main repository worktree cannot be used as a merge source", error.getMessage());
+    }
+
+    @Test
+    void rejectsMergingIntoMissingLocalBranch() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("MRTARGET", "Invalid Target", "Invalid merge target validation");
+        Path repositoryDir = createGitRepository();
+
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+        String worktreePath = projects.createProjectWorktree(projectId, "feature/api-preview");
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> projects.mergeProjectWorktree(projectId, worktreePath, "release/9.9"));
+
+        assertEquals("Target branch does not exist locally: release/9.9", error.getMessage());
+    }
+
+    @Test
+    void abortsConflictedMergeWithoutLeavingMergeInProgressState() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("MRCONFLICT", "Conflict Merge", "Conflicting merge validation");
+        Path repositoryDir = createConflictingGitRepository();
+
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+        String worktreePath = projects.createProjectWorktree(projectId, "feature/conflict");
+
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> projects.mergeProjectWorktree(projectId, worktreePath, "repo-test"));
+
+        assertEquals(
+                "Merge conflict detected while merging feature/conflict into repo-test; the platform aborted the in-progress merge",
+                error.getMessage());
+        assertEquals("", runGitAndReadOutputAllowFailure(repositoryDir, "rev-parse", "-q", "--verify", "MERGE_HEAD"));
+        assertEquals("", runGitAndReadOutput(repositoryDir, "status", "--porcelain"));
+    }
+
     private Path createGitRepository() throws Exception {
         Path remoteRepositoryDir = Files.createTempDirectory("fsp-project-remote-");
         runGit(remoteRepositoryDir, "init", "--bare");
@@ -355,6 +447,34 @@ class EnterpriseServicesTest {
         return repositoryDir;
     }
 
+    private Path createConflictingGitRepository() throws Exception {
+        Path remoteRepositoryDir = Files.createTempDirectory("fsp-project-conflict-remote-");
+        runGit(remoteRepositoryDir, "init", "--bare");
+        Path repositoryDir = Files.createTempDirectory("fsp-project-conflict-repository-");
+        runGit(repositoryDir, "init");
+        runGit(repositoryDir, "config", "user.name", "Fast Service Tests");
+        runGit(repositoryDir, "config", "user.email", "tests@fastservice.local");
+        runGit(repositoryDir, "checkout", "-b", "repo-test");
+        Files.writeString(repositoryDir.resolve("README.md"), "conflict repository\n", StandardCharsets.UTF_8);
+        Files.writeString(repositoryDir.resolve("conflict.txt"), "base\n", StandardCharsets.UTF_8);
+        runGit(repositoryDir, "add", "README.md", "conflict.txt");
+        runGit(repositoryDir, "commit", "-m", "Initial conflicting repository");
+        runGit(repositoryDir, "remote", "add", "origin", remoteRepositoryDir.toString());
+        runGit(repositoryDir, "push", "-u", "origin", "repo-test");
+        runGit(repositoryDir, "checkout", "-b", "feature/conflict");
+        Files.writeString(repositoryDir.resolve("conflict.txt"), "feature change\n", StandardCharsets.UTF_8);
+        runGit(repositoryDir, "add", "conflict.txt");
+        runGit(repositoryDir, "commit", "-m", "Feature side conflict change");
+        runGit(repositoryDir, "push", "-u", "origin", "feature/conflict");
+        runGit(repositoryDir, "checkout", "repo-test");
+        Files.writeString(repositoryDir.resolve("conflict.txt"), "target change\n", StandardCharsets.UTF_8);
+        runGit(repositoryDir, "add", "conflict.txt");
+        runGit(repositoryDir, "commit", "-m", "Target side conflict change");
+        runGit(repositoryDir, "push", "origin", "repo-test");
+        runGit(repositoryDir, "branch", "feature-preview");
+        return repositoryDir;
+    }
+
     private void runGit(Path repositoryDir, String... args) throws Exception {
         String output = runGitAndReadOutput(repositoryDir, args);
         if (output.startsWith("fatal:")) {
@@ -376,6 +496,20 @@ class EnterpriseServicesTest {
         if (exitCode != 0) {
             throw new IOException("Git command failed: " + output);
         }
+        return output;
+    }
+
+    private String runGitAndReadOutputAllowFailure(Path repositoryDir, String... args) throws Exception {
+        String[] command = new String[args.length + 3];
+        command[0] = "git";
+        command[1] = "-C";
+        command[2] = repositoryDir.toString();
+        System.arraycopy(args, 0, command, 3, args.length);
+        Process process = new ProcessBuilder(command)
+                .redirectErrorStream(true)
+                .start();
+        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+        process.waitFor();
         return output;
     }
 

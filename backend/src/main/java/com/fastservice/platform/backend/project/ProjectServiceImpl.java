@@ -31,6 +31,10 @@ public class ProjectServiceImpl {
         return createProjectWorktree(projectId, branchName);
     }
 
+    public String mergeprojectworktree(long projectId, String worktreePath, String targetBranch) {
+        return mergeProjectWorktree(projectId, worktreePath, targetBranch);
+    }
+
     public String deleteprojectworktree(long projectId, String worktreePath) {
         return deleteProjectWorktree(projectId, worktreePath);
     }
@@ -106,6 +110,12 @@ public class ProjectServiceImpl {
         return gitRepositoryInspector.createWorktree(repositoryRootPath, branchName);
     }
 
+    public String mergeProjectWorktree(long projectId, String worktreePath, String targetBranch) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return gitRepositoryInspector.mergeWorktree(repositoryRootPath, worktreePath, targetBranch);
+    }
+
     public String deleteProjectWorktree(long projectId, String worktreePath) {
         EntityExistence.requireExists("software_project", projectId, "Project");
         String repositoryRootPath = requireBoundRepositoryPath(projectId);
@@ -174,7 +184,7 @@ public class ProjectServiceImpl {
         builder.append(",\"recentCommits\":");
         appendRecentCommits(builder, repositorySummary.recentCommits());
         builder.append(",\"worktrees\":");
-        appendWorktrees(builder, repositorySummary.worktrees());
+        appendWorktrees(builder, repositorySummary.worktrees(), repositorySummary.availableBranches());
         builder.append('}');
     }
 
@@ -220,13 +230,17 @@ public class ProjectServiceImpl {
         builder.append(']');
     }
 
-    private void appendWorktrees(StringBuilder builder, List<ProjectWorktreeSummary> worktrees) {
+    private void appendWorktrees(
+            StringBuilder builder,
+            List<ProjectWorktreeSummary> worktrees,
+            List<String> availableBranches) {
         builder.append('[');
         for (int i = 0; i < worktrees.size(); i++) {
             if (i > 0) {
                 builder.append(',');
             }
             ProjectWorktreeSummary worktree = worktrees.get(i);
+            List<String> mergeTargetBranches = worktree.mergeTargetBranches(availableBranches);
             builder.append('{');
             builder.append("\"path\":").append(JsonStrings.quote(worktree.path()));
             builder.append(",\"main\":").append(worktree.main());
@@ -238,6 +252,10 @@ public class ProjectServiceImpl {
             builder.append(",\"stale\":").append(worktree.stale());
             builder.append(",\"deletionAllowed\":").append(worktree.deletionAllowed());
             builder.append(",\"deletionRestriction\":").append(JsonStrings.quote(worktree.deletionRestriction()));
+            builder.append(",\"mergeAllowed\":").append(worktree.mergeAllowed(availableBranches));
+            builder.append(",\"mergeRestriction\":").append(JsonStrings.quote(worktree.mergeRestriction(availableBranches)));
+            builder.append(",\"mergeTargetBranches\":");
+            appendStringArray(builder, mergeTargetBranches);
             builder.append('}');
         }
         builder.append(']');

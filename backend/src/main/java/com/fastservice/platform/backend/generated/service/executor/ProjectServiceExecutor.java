@@ -42,6 +42,13 @@ public class ProjectServiceExecutor implements ServiceExecutor {
                     methodArgs[1].getString());
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
         }
+        case "MERGEPROJECTWORKTREE" -> {
+            String result = service.mergeprojectworktree(
+                    methodArgs[0].getLong(),
+                    methodArgs[1].getString(),
+                    methodArgs[2].getString());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
         case "DELETEPROJECTWORKTREE" -> {
             String result = service.deleteprojectworktree(
                     methodArgs[0].getLong(),
@@ -80,6 +87,10 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "CREATEPROJECTWORKTREE" -> service.createprojectworktree(
                 toLong("PROJECTID", methodArgs),
                 toString("BRANCHNAME", methodArgs));
+        case "MERGEPROJECTWORKTREE" -> service.mergeprojectworktree(
+                toLong("PROJECTID", methodArgs),
+                toString("WORKTREEPATH", methodArgs),
+                toString("TARGETBRANCH", methodArgs));
         case "DELETEPROJECTWORKTREE" -> service.deleteprojectworktree(
                 toLong("PROJECTID", methodArgs),
                 toString("WORKTREEPATH", methodArgs));
@@ -110,6 +121,10 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "CREATEPROJECTWORKTREE" -> {
             JsonArray ja = new JsonArray(json);
             yield service.createprojectworktree(ja.getLong(0), ja.getString(1));
+        }
+        case "MERGEPROJECTWORKTREE" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.mergeprojectworktree(ja.getLong(0), ja.getString(1), ja.getString(2));
         }
         case "DELETEPROJECTWORKTREE" -> {
             JsonArray ja = new JsonArray(json);

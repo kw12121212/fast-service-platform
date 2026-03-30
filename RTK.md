@@ -80,7 +80,8 @@ Implementation status today:
 
 - Git repository binding and branch switching are implemented.
 - Project-scoped worktree management is implemented.
-- Merge support and sandbox environments are still reserved platform directions, not completed baseline capabilities.
+- Project-scoped merge support from managed linked worktrees into existing local branches is implemented.
+- Sandbox environments are still reserved platform directions, not completed baseline capabilities.
 
 ## Minimum Platform Baseline
 

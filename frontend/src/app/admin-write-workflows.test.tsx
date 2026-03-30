@@ -39,6 +39,9 @@ type MockProject = {
       stale: boolean
       deletionAllowed: boolean
       deletionRestriction: string | null
+      mergeAllowed: boolean
+      mergeRestriction: string | null
+      mergeTargetBranches: string[]
     }>
   } | null
 }
@@ -186,7 +189,41 @@ function createMainWorktree(path: string, branch: string): NonNullable<MockProje
     stale: false,
     deletionAllowed: false,
     deletionRestriction: 'Main repository worktree cannot be removed from the project view',
+    mergeAllowed: false,
+    mergeRestriction: 'Main repository worktree cannot be used as a merge source',
+    mergeTargetBranches: [],
   }
+}
+
+function withMergeSupport(repository: NonNullable<MockProject['repository']>) {
+  repository.worktrees = repository.worktrees.map((worktree) => {
+    const mergeTargetBranches =
+      worktree.main || worktree.stale || worktree.headState !== 'BRANCH' || !worktree.branch
+        ? []
+        : repository.availableBranches.filter((branch) => branch !== worktree.branch)
+
+    let mergeRestriction: string | null = null
+    if (worktree.main) {
+      mergeRestriction = 'Main repository worktree cannot be used as a merge source'
+    } else if (worktree.stale) {
+      mergeRestriction = 'Stale worktree records cannot be used as a merge source'
+    } else if (worktree.headState !== 'BRANCH' || !worktree.branch) {
+      mergeRestriction = 'Detached HEAD worktree cannot be used as a merge source'
+    } else if (worktree.workingTreeState === 'DIRTY') {
+      mergeRestriction = 'Worktree has uncommitted changes'
+    } else if (mergeTargetBranches.length === 0) {
+      mergeRestriction = 'No merge target branches are available for this worktree'
+    }
+
+    return {
+      ...worktree,
+      mergeAllowed: mergeRestriction === null,
+      mergeRestriction,
+      mergeTargetBranches,
+    }
+  })
+
+  return repository
 }
 
 function installBackendMock() {
@@ -269,6 +306,7 @@ function installBackendMock() {
           ],
           worktrees: [createMainWorktree(repositoryPath, 'repo-test')],
         }
+        withMergeSupport(project.repository)
       }
       return jsonResponse(repositoryPath)
     }
@@ -300,6 +338,7 @@ function installBackendMock() {
               : worktree,
           ),
         }
+        withMergeSupport(project.repository)
       }
       return textResponse(branchName)
     }
@@ -331,8 +370,64 @@ function installBackendMock() {
         stale: false,
         deletionAllowed: deletable,
         deletionRestriction: deletable ? null : 'Worktree has no upstream branch',
+        mergeAllowed: false,
+        mergeRestriction: null,
+        mergeTargetBranches: [],
       })
+      withMergeSupport(project.repository)
       return textResponse(worktreePath)
+    }
+
+    if (path === '/service/project_service/mergeProjectWorktree') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const worktreePath = url.searchParams.get('worktreePath') ?? ''
+      const targetBranch = url.searchParams.get('targetBranch') ?? ''
+      const project = state.projects.find((entry) => entry.id === projectId)
+      const repository = project?.repository
+      const worktree = repository?.worktrees.find((entry) => entry.path === worktreePath)
+
+      if (!repository || !worktree) {
+        return errorResponse(404, 'Worktree is not managed by the bound repository')
+      }
+      if (worktree.main) {
+        return errorResponse(409, 'Main repository worktree cannot be used as a merge source')
+      }
+      if (worktree.workingTreeState === 'DIRTY') {
+        return errorResponse(409, 'Worktree has uncommitted changes')
+      }
+      if (!repository.availableBranches.includes(targetBranch)) {
+        return errorResponse(409, `Target branch does not exist locally: ${targetBranch}`)
+      }
+      if (worktree.branch === targetBranch) {
+        return errorResponse(409, `Target branch must differ from source branch: ${targetBranch}`)
+      }
+      if (worktree.branch === 'feature-preview') {
+        return errorResponse(
+          409,
+          'Merge conflict detected while merging feature-preview into repo-test; the platform aborted the in-progress merge',
+        )
+      }
+
+      repository.branch = targetBranch
+      repository.headState = 'BRANCH'
+      repository.latestCommitSummary = `merge ${worktree.branch} into ${targetBranch}`
+      repository.recentCommits = [
+        {
+          hash: '4c3b2a1',
+          summary: `Merge ${worktree.branch} into ${targetBranch}`,
+        },
+        ...repository.recentCommits,
+      ].slice(0, 3)
+      repository.worktrees = repository.worktrees.map((entry) =>
+        entry.main
+          ? {
+              ...entry,
+              branch: targetBranch,
+            }
+          : entry,
+      )
+      withMergeSupport(repository)
+      return textResponse(targetBranch)
     }
 
     if (path === '/service/project_service/deleteProjectWorktree') {
@@ -354,6 +449,7 @@ function installBackendMock() {
       project.repository.worktrees = project.repository.worktrees.filter(
         (entry) => entry.path !== worktreePath,
       )
+      withMergeSupport(project.repository)
       return textResponse(worktreePath)
     }
 
@@ -383,6 +479,7 @@ function installBackendMock() {
         (entry) => !entry.stale,
       )
       project.repository.latestCommitSummary = 'pruned stale worktree records'
+      withMergeSupport(project.repository)
       return textResponse(project.repository.rootPath)
     }
 
@@ -685,6 +782,45 @@ describe('admin write workflows', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('shows merge controls for linked worktrees and merges successfully from the projects page', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(
+      await screen.findAllByText('/workspace/fast-service-platform'),
+    ).not.toHaveLength(0)
+
+    expect(
+      await screen.findByText('Main repository worktree cannot be used as a merge source'),
+    ).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Worktree branch'), {
+      target: { value: 'feature/api-preview' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create worktree' }))
+
+    const targetBranchSelect = await screen.findByLabelText(
+      'Target branch',
+    )
+    fireEvent.change(targetBranchSelect, {
+      target: { value: 'repo-test' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Merge worktree' }))
+
+    expect(
+      await screen.findByText(
+        'Worktree branch merged and the project list has been refreshed.',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Merge feature/api-preview into repo-test')).toBeInTheDocument()
+  })
+
   it('shows restricted deletion state and rejected worktree mutations', async () => {
     renderRoute('/projects')
 
@@ -716,6 +852,43 @@ describe('admin write workflows', () => {
 
     expect(
       await screen.findByText('Backend request failed with 409: Worktree creation rejected by backend'),
+    ).toBeInTheDocument()
+  })
+
+  it('shows conflict failure feedback for project worktree merges', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(
+      await screen.findAllByText('/workspace/fast-service-platform'),
+    ).not.toHaveLength(0)
+
+    fireEvent.change(screen.getByLabelText('Worktree branch'), {
+      target: { value: 'feature-preview' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create worktree' }))
+
+    const worktreeSections = await screen.findAllByText(
+      '/workspace/fast-service-platform-worktrees/feature-preview',
+    )
+    expect(worktreeSections).not.toHaveLength(0)
+
+    const targetBranchSelect = await screen.findByLabelText('Target branch')
+    fireEvent.change(targetBranchSelect, {
+      target: { value: 'repo-test' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Merge worktree' }))
+
+    expect(
+      await screen.findByText(
+        'Backend request failed with 409: Merge conflict detected while merging feature-preview into repo-test; the platform aborted the in-progress merge',
+      ),
     ).toBeInTheDocument()
   })
 

@@ -55,10 +55,12 @@ Project and repository workflows are already available from the current software
   - create a worktree for an existing local branch
   - delete a linked worktree only when it is clean, fully pushed, and has an upstream
   - run `repair` and `prune` from the project context
+- Merge a managed linked worktree branch into another existing local branch:
+  - source must be a clean linked worktree
+  - conflicts fail and are aborted instead of being auto-resolved
 
 Still not implemented:
 
-- `merge-support`
 - `sandbox-environment`
 
 ## AI-Ready Platform Workflows

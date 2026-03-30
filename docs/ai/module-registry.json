@@ -198,12 +198,12 @@
     {
       "id": "worktree-management",
       "role": "engineering-support-component",
-      "description": "Future worktree management component reserved by the platform."
+      "description": "Project-scoped worktree inventory, creation, deletion, repair, and prune support exposed through project management."
     },
     {
       "id": "merge-support",
       "role": "engineering-support-component",
-      "description": "Future merge support component reserved by the platform."
+      "description": "Project-scoped merge support from managed linked worktrees into existing local branches."
     },
     {
       "id": "sandbox-environment",

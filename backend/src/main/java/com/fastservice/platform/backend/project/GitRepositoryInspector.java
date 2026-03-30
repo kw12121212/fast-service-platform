@@ -121,6 +121,81 @@ final class GitRepositoryInspector {
         return requestedWorktreePath.toString();
     }
 
+    String mergeWorktree(String repositoryPath, String worktreePath, String targetBranch) {
+        if (targetBranch == null || targetBranch.isBlank()) {
+            throw new IllegalArgumentException("Target branch is required");
+        }
+
+        Path repositoryRootPath = resolveRepositoryRoot(repositoryPath);
+        ProjectRepositorySummary repositorySummary = inspectResolvedRepositoryRoot(repositoryRootPath);
+        Path requestedWorktreePath = normalizeAbsolutePath(worktreePath, "Worktree path");
+        ProjectWorktreeSummary sourceWorktree = repositorySummary.worktrees().stream()
+                .filter(worktree -> Path.of(worktree.path()).normalize().toAbsolutePath().equals(requestedWorktreePath))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Worktree is not managed by the bound repository: " + worktreePath));
+
+        String mergeRestriction = sourceWorktree.mergeRestriction(repositorySummary.availableBranches());
+        if (mergeRestriction != null) {
+            throw new IllegalStateException(mergeRestriction);
+        }
+        if (!repositorySummary.availableBranches().contains(targetBranch)) {
+            throw new IllegalArgumentException("Target branch does not exist locally: " + targetBranch);
+        }
+        if (targetBranch.equals(sourceWorktree.branch())) {
+            throw new IllegalArgumentException("Target branch must differ from source branch: " + targetBranch);
+        }
+
+        ProjectWorktreeSummary targetWorktree = repositorySummary.worktrees().stream()
+                .filter(worktree -> !worktree.stale())
+                .filter(worktree -> worktree.headState() == ProjectGitHeadState.BRANCH)
+                .filter(worktree -> targetBranch.equals(worktree.branch()))
+                .findFirst()
+                .orElse(null);
+
+        Path mergeExecutionPath = repositoryRootPath;
+        if (targetWorktree != null) {
+            if (targetWorktree.dirty()) {
+                throw new IllegalStateException("Cannot merge into target branch while its worktree has uncommitted changes");
+            }
+            mergeExecutionPath = Path.of(targetWorktree.path()).normalize().toAbsolutePath();
+        } else {
+            ProjectWorktreeSummary mainWorktree = repositorySummary.worktrees().stream()
+                    .filter(ProjectWorktreeSummary::main)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Main repository worktree is unavailable"));
+            if (mainWorktree.dirty()) {
+                throw new IllegalStateException("Cannot prepare merge target while the main repository worktree has uncommitted changes");
+            }
+            if (!targetBranch.equals(repositorySummary.branch())) {
+                runGitCommandOrThrow(repositoryRootPath, "Unable to prepare merge target branch", "checkout", targetBranch);
+            }
+        }
+
+        try {
+            runGitCommandOrThrow(
+                    mergeExecutionPath,
+                    "Unable to merge project worktree branch",
+                    "merge",
+                    "--no-ff",
+                    "--no-edit",
+                    sourceWorktree.branch());
+        } catch (IllegalStateException error) {
+            boolean aborted = abortMergeIfNeeded(mergeExecutionPath);
+            if (isMergeConflictMessage(error.getMessage())) {
+                throw new IllegalStateException(
+                        "Merge conflict detected while merging "
+                                + sourceWorktree.branch()
+                                + " into "
+                                + targetBranch
+                                + (aborted ? "; the platform aborted the in-progress merge"
+                                        : "; the platform could not complete the merge"));
+            }
+            throw error;
+        }
+
+        return targetBranch;
+    }
+
     String repairWorktrees(String repositoryPath) {
         Path repositoryRootPath = resolveRepositoryRoot(repositoryPath);
         ProjectRepositorySummary repositorySummary = inspectResolvedRepositoryRoot(repositoryRootPath);
@@ -251,6 +326,26 @@ final class GitRepositoryInspector {
         }
 
         return output;
+    }
+
+    private boolean abortMergeIfNeeded(Path workingPath) {
+        String mergeHead = runGitCommand(workingPath, true, "rev-parse", "-q", "--verify", "MERGE_HEAD");
+        if (mergeHead.isBlank()) {
+            return false;
+        }
+
+        runGitCommandOrThrow(workingPath, "Unable to abort conflicted merge", "merge", "--abort");
+        return true;
+    }
+
+    private boolean isMergeConflictMessage(String message) {
+        if (message == null || message.isBlank()) {
+            return false;
+        }
+
+        return message.contains("CONFLICT")
+                || message.contains("Automatic merge failed")
+                || message.contains("Merge conflict");
     }
 
     private List<ProjectGitCommitSummary> readRecentCommits(Path repositoryRootPath) {

@@ -4,6 +4,7 @@
 
 - `backend/minimum-enterprise-components.md` - Backend baseline domains, RBAC granularity, ticket ownership, and extension-space requirements for the first backend core.
 - `backend/project-git-management.md` - Bound-project Git context, local branch visibility, clean-only branch switching, detached HEAD restrictions, and unbound-project handling.
+- `backend/project-merge-support.md` - Project-scoped merge support context, clean linked-worktree merge execution, local-target restrictions, and conflict-safe failure behavior.
 - `backend/project-repository-binding.md` - Optional project-to-local-repository binding, repository summary behavior, and unbound-project handling.
 - `backend/project-worktree-management.md` - Project-scoped worktree inventory, sibling-directory creation rules, deletion safety limits, and repair or prune maintenance behavior.
 - `backend/runtime-bootstrap.md` - Runnable backend bootstrap behavior, local schema/service definition inputs, and optional demo-data startup behavior.
@@ -27,6 +28,7 @@
 - `frontend/management-write-workflows.md` - Minimum admin creation workflows, mutation feedback behavior, and ticket state progression behavior.
 - `frontend/minimum-admin-pages.md` - Minimum visible admin page set and backend-backed page behavior for the first frontend baseline.
 - `frontend/project-git-management.md` - Projects-page Git context display, local branch visibility, safe branch switching, and mutation feedback behavior.
+- `frontend/project-merge-support.md` - Projects-page merge support context, linked-worktree merge requests, restricted merge states, and merge outcome visibility.
 - `frontend/project-repository-management.md` - Projects-page repository binding workflows, repository context display, and mutation feedback behavior.
 - `frontend/project-worktree-management.md` - Projects-page worktree inventory, creation and deletion restrictions, repair or prune actions, and mutation outcome visibility.
 - `platform/built-in-components.md` - Required enterprise management and engineering-support platform components.
