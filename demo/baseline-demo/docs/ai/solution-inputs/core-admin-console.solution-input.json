@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "fsp-ai-solution-input/v1",
+  "application": {
+    "name": "Core Admin Console",
+    "summary": "Internal administration console for managing platform users, roles, and permissions.",
+    "domain": "enterprise-internal-management",
+    "targetShape": "monolith",
+    "idHint": "core-admin-console",
+    "packagePrefixHint": "com.fastservice.platform.derived"
+  },
+  "roles": [
+    {
+      "id": "platform-admin",
+      "name": "Platform Admin",
+      "summary": "Maintains users, roles, and high-level administration settings."
+    },
+    {
+      "id": "security-admin",
+      "name": "Security Admin",
+      "summary": "Reviews and adjusts role-permission assignments."
+    }
+  ],
+  "domainObjects": [
+    {
+      "id": "user-account",
+      "name": "User Account",
+      "summary": "Represents an internal user who can access the management application."
+    },
+    {
+      "id": "role-definition",
+      "name": "Role Definition",
+      "summary": "Represents a reusable permission grouping assigned to users."
+    }
+  ],
+  "workflows": [
+    {
+      "id": "review-users",
+      "name": "Review Users",
+      "summary": "List and inspect internal user accounts from the admin console."
+    },
+    {
+      "id": "adjust-role-access",
+      "name": "Adjust Role Access",
+      "summary": "Review and update role-permission assignments for internal administration."
+    }
+  ],
+  "uiReferences": {
+    "prototypeImages": [],
+    "referenceSites": []
+  },
+  "constraints": {
+    "requiredModules": [
+      "admin-shell",
+      "user-management",
+      "role-permission-management"
+    ],
+    "excludedModules": [
+      "project-management",
+      "project-repository-management",
+      "kanban-management",
+      "ticket-management"
+    ],
+    "notes": [
+      "Keep the first derived solution focused on core administration without delivery-management modules."
+    ]
+  }
+}

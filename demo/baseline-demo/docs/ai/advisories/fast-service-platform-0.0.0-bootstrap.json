@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "fsp-platform-release-advisory/v1",
+  "previousRelease": {
+    "releaseId": "fast-service-platform/prehistory",
+    "version": "prehistory"
+  },
+  "currentRelease": {
+    "releaseId": "fast-service-platform/0.0.0-bootstrap",
+    "version": "0.0.0-bootstrap"
+  },
+  "overallCompatibilityPosture": "bootstrap-baseline",
+  "summary": "The bootstrap release establishes the initial fast-service platform baseline before lifecycle, advisory, and upgrade contracts were added.",
+  "changes": [
+    {
+      "id": "bootstrap-baseline",
+      "changeType": "baseline-release",
+      "compatibility": "baseline",
+      "summary": "This release represents the initial derived-app bootstrap baseline and does not include later lifecycle or upgrade-management assets.",
+      "impactedAssets": [
+        "docs/ai/app-assembly-contract.json",
+        "docs/ai/module-registry.json"
+      ],
+      "impactedModules": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "project-repository-management",
+        "ticket-management",
+        "kanban-management"
+      ],
+      "recommendedChecks": [
+        "review-derived-app-manifest",
+        "consider-re-deriving-or-running-supported-upgrade-path"
+      ]
+    }
+  ],
+  "recommendedNextActions": [
+    "review-derived-app-manifest",
+    "list-supported-upgrade-targets",
+    "run-derived-app-upgrade-evaluation"
+  ]
+}

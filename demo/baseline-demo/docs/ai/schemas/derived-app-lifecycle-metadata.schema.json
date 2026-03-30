@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
+  "title": "Fast Service Platform Derived App Lifecycle Metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractVersion",
+    "application",
+    "sourcePlatform",
+    "selectedModules",
+    "requiredCoreModules",
+    "derivedProfile",
+    "templateSystem",
+    "upgradeEvaluation"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-derived-app-lifecycle/v1"
+    },
+    "contractVersion": {
+      "const": "fsp-derived-app-lifecycle-contract/v1"
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "packagePrefix"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packagePrefix": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "sourcePlatform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "releaseId",
+        "version",
+        "assemblyContractVersion",
+        "generatedAppVerificationContractVersion"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "releaseId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assemblyContractVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generatedAppVerificationContractVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "selectedModules": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "requiredCoreModules": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "derivedProfile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "templateSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "templateContract",
+        "templateClassificationMap"
+      ],
+      "properties": {
+        "templateContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMap": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "upgradeEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryOwnedEntrypoint",
+        "repositoryOwnedTargetSelectionEntrypoint",
+        "repositoryOwnedAdvisoryEntrypoint",
+        "repositoryOwnedExecutionEntrypoint",
+        "platformReleaseMetadata",
+        "platformReleaseHistory",
+        "platformReleaseAdvisory",
+        "upgradeExecutionContract"
+      ],
+      "properties": {
+        "repositoryOwnedEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repositoryOwnedTargetSelectionEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repositoryOwnedAdvisoryEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repositoryOwnedExecutionEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseHistory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseAdvisory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upgradeExecutionContract": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

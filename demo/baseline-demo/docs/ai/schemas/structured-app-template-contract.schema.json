@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/structured-app-template-contract.schema.json",
+  "title": "Fast Service Platform Structured App Template Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "normativeAssets",
+    "templateUnitTypes",
+    "ownershipModes",
+    "slotDefinitions",
+    "generatedOutputDefaults",
+    "upgradeSemantics",
+    "aiToolingGuidance"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-structured-app-template-contract/v1"
+    },
+    "normativeAssets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "templateContract",
+        "templateContractSchema",
+        "defaultTemplateClassificationMap",
+        "templateClassificationMapSchema",
+        "assemblyContract",
+        "derivedAppLifecycleContract",
+        "derivedAppUpgradeExecutionContract",
+        "aiToolOrchestrationContract"
+      ],
+      "properties": {
+        "templateContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "defaultTemplateClassificationMap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMapSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assemblyContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "derivedAppLifecycleContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "derivedAppUpgradeExecutionContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aiToolOrchestrationContract": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "templateUnitTypes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/idAndDescription"
+      },
+      "minItems": 4
+    },
+    "ownershipModes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "allowedDefaultUpgradeAction"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "allowedDefaultUpgradeAction": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "minItems": 3
+    },
+    "slotDefinitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "hostPath",
+          "hostKind",
+          "allowedModuleFragments"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hostPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hostKind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "allowedModuleFragments": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "generatedOutputDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requiredTemplateAssets",
+        "defaultClassificationMap"
+      ],
+      "properties": {
+        "requiredTemplateAssets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "defaultClassificationMap": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "upgradeSemantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platformRefreshableUnitTypes",
+        "manualReviewUnitTypes",
+        "defaultCustomizationPolicy",
+        "upgradeExecutionContract"
+      ],
+      "properties": {
+        "platformRefreshableUnitTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "manualReviewUnitTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "defaultCustomizationPolicy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upgradeExecutionContract": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "aiToolingGuidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultRole",
+        "defaultFacade",
+        "playbook"
+      ],
+      "properties": {
+        "defaultRole": {
+          "const": "tool-orchestrator"
+        },
+        "defaultFacade": {
+          "type": "string",
+          "minLength": 1
+        },
+        "playbook": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "idAndDescription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

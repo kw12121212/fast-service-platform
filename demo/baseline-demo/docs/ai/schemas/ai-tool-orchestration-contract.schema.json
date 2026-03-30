@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
+  "title": "Fast Service Platform AI Tool Orchestration Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "aiRole",
+    "defaultFacade",
+    "policy",
+    "supportedWorkflowCategories"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-ai-tool-orchestration-contract/v1"
+    },
+    "aiRole": {
+      "const": "tool-orchestrator"
+    },
+    "defaultFacade": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preferRepositoryOwnedTooling",
+        "directWorkflowReimplementation",
+        "allowedFallbacks",
+        "stopAndReportConditions"
+      ],
+      "properties": {
+        "preferRepositoryOwnedTooling": {
+          "const": true
+        },
+        "directWorkflowReimplementation": {
+          "const": "disallowed-for-supported-workflows"
+        },
+        "allowedFallbacks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "stopAndReportConditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "supportedWorkflowCategories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/workflowCategory"
+      }
+    }
+  },
+  "$defs": {
+    "workflowCategory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "readBefore",
+        "defaultEntrypoint",
+        "compatibleFallbacks",
+        "successSignals",
+        "nextWorkflowIds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "readBefore": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "defaultEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compatibleFallbacks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "successSignals": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "nextWorkflowIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

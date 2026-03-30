@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "project-kanban-console",
+    "name": "Project Kanban Console",
+    "packagePrefix": "com.fastservice.platform.projectkanban"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management",
+    "project-management",
+    "kanban-management"
+  ]
+}

@@ -455,7 +455,7 @@ final class AssemblyGenerator {
         writeString(outputDir.resolve("backend/src/main/resources/sql/services.sql"), buildServicesSql(selectedModules));
         writeString(outputDir.resolve("backend/src/main/resources/sql/demo.sql"), buildDemoSql(selectedModules));
         writeString(outputDir.resolve("backend/src/main/java/com/fastservice/platform/backend/demo/DemoDataSupport.java"),
-                buildDemoDataSupport());
+                buildDemoDataSupport(selectedModules));
         if (selectedModules.contains("project-management")) {
             boolean includeRepositoryManagement = selectedModules.contains("project-repository-management");
             writeString(
@@ -761,17 +761,113 @@ final class AssemblyGenerator {
         return builder.toString();
     }
 
-    private String buildDemoDataSupport() {
+    private String buildDemoDataSupport(List<String> selectedModules) {
+        Set<String> selected = new LinkedHashSet<>(selectedModules);
+        boolean hasProjects = selected.contains("project-management");
+        boolean hasKanban = selected.contains("kanban-management");
+        boolean hasTickets = selected.contains("ticket-management");
+
+        List<String> imports = new ArrayList<>(List.of(
+                "import java.sql.Connection;",
+                "import java.sql.PreparedStatement;",
+                "import java.sql.ResultSet;",
+                "import java.sql.SQLException;",
+                "",
+                "import com.fastservice.platform.backend.common.db.JdbcSupport;",
+                "import com.fastservice.platform.backend.common.sql.SqlScriptExecutor;"));
+
+        if (hasProjects) {
+            imports.add("import com.fastservice.platform.backend.project.ProjectServiceImpl;");
+        }
+        if (hasKanban) {
+            imports.add("import com.fastservice.platform.backend.kanban.KanbanServiceImpl;");
+        }
+        if (hasTickets) {
+            imports.add("import com.fastservice.platform.backend.ticket.TicketServiceImpl;");
+        }
+
+        List<String> moduleBody = new ArrayList<>();
+        if (hasProjects) {
+            moduleBody.add("""
+
+                    ProjectServiceImpl projectService = new ProjectServiceImpl();
+                    long projectId = ensureProject(projectService);""");
+        }
+        if (hasKanban) {
+            moduleBody.add("""
+                    KanbanServiceImpl kanbanService = new KanbanServiceImpl();
+                    long boardId = ensureBoard(projectId, kanbanService);""");
+        }
+        if (hasTickets) {
+            moduleBody.add("""
+                    TicketServiceImpl ticketService = new TicketServiceImpl();
+                    ensureTicket(projectId, boardId, "FSP-1", "Bootstrap backend core",
+                            "Establish the first backend core", "TODO", ticketService);
+                    ensureTicket(projectId, boardId, "FSP-2", "Verify demo workflow",
+                            "Exercise minimal kanban state flow", "IN_PROGRESS", ticketService);""");
+        }
+
+        List<String> helperMethods = new ArrayList<>();
+        if (hasProjects) {
+            helperMethods.add("""
+
+                    private static long ensureProject(ProjectServiceImpl projectService) {
+                        Long existingProjectId = findId("SELECT id FROM software_project WHERE project_key = ?", "FSP");
+                        if (existingProjectId != null) {
+                            return existingProjectId;
+                        }
+                        return projectService.createProject("FSP", "Fast Service Platform", "Backend core demonstration project");
+                    }""");
+        }
+        if (hasKanban) {
+            helperMethods.add("""
+
+                    private static long ensureBoard(long projectId, KanbanServiceImpl kanbanService) {
+                        Long existingBoardId = findId(
+                                "SELECT id FROM kanban_board WHERE project_id = ? AND board_name = ?",
+                                projectId,
+                                "Delivery Board");
+                        if (existingBoardId != null) {
+                            return existingBoardId;
+                        }
+                        return kanbanService.createKanban(projectId, "Delivery Board");
+                    }""");
+        }
+        if (hasTickets) {
+            helperMethods.add("""
+
+                    private static void ensureTicket(long projectId, long boardId, String ticketKey, String title,
+                            String description, String targetState, TicketServiceImpl ticketService) {
+                        Long existingTicketId = findId("SELECT id FROM ticket WHERE ticket_key = ?", ticketKey);
+                        long ticketId = existingTicketId != null
+                                ? existingTicketId
+                                : ticketService.createTicket(projectId, boardId, ticketKey, title, description, 100L);
+
+                        if (!targetState.equals(findTicketState(ticketId))) {
+                            ticketService.moveTicket(ticketId, targetState);
+                        }
+                    }
+
+                    private static String findTicketState(long ticketId) {
+                        try (Connection connection = JdbcSupport.getConnection();
+                                PreparedStatement statement = connection.prepareStatement("SELECT state FROM ticket WHERE id = ?")) {
+                            statement.setLong(1, ticketId);
+                            try (ResultSet rs = statement.executeQuery()) {
+                                if (!rs.next()) {
+                                    throw new IllegalArgumentException("Ticket not found: " + ticketId);
+                                }
+                                return rs.getString(1);
+                            }
+                        } catch (SQLException e) {
+                            throw new IllegalStateException("Unable to read demo ticket state", e);
+                        }
+                    }""");
+        }
+
         return """
                 package com.fastservice.platform.backend.demo;
 
-                import java.sql.Connection;
-                import java.sql.PreparedStatement;
-                import java.sql.ResultSet;
-                import java.sql.SQLException;
-
-                import com.fastservice.platform.backend.common.db.JdbcSupport;
-                import com.fastservice.platform.backend.common.sql.SqlScriptExecutor;
+                %s
 
                 public final class DemoDataSupport {
 
@@ -792,7 +888,7 @@ final class AssemblyGenerator {
                             }
                         } catch (Exception e) {
                             throw new IllegalStateException("Unable to load demo data", e);
-                        }
+                        }%s
                     }
 
                     private static boolean hasDemoUser(Connection connection) throws SQLException {
@@ -804,8 +900,35 @@ final class AssemblyGenerator {
                             }
                         }
                     }
+
+                %s
+
+                    private static Long findId(String sql, Object... parameters) {
+                        try (Connection connection = JdbcSupport.getConnection();
+                                PreparedStatement statement = connection.prepareStatement(sql)) {
+                            for (int i = 0; i < parameters.length; i++) {
+                                Object value = parameters[i];
+                                if (value instanceof Long longValue) {
+                                    statement.setLong(i + 1, longValue);
+                                } else {
+                                    statement.setString(i + 1, String.valueOf(value));
+                                }
+                            }
+                            try (ResultSet rs = statement.executeQuery()) {
+                                if (!rs.next()) {
+                                    return null;
+                                }
+                                return rs.getLong(1);
+                            }
+                        } catch (SQLException e) {
+                            throw new IllegalStateException("Unable to look up demo data", e);
+                        }
+                    }
                 }
-                """;
+                """.formatted(
+                String.join("\n", imports),
+                String.join("\n", moduleBody),
+                String.join("\n", helperMethods));
     }
 
     private String buildProjectServiceImpl(boolean includeRepositoryManagement) throws IOException {

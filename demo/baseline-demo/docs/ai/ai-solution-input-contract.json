@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "fsp-ai-solution-input-contract/v1",
+  "normativeAssets": {
+    "solutionInputSchema": "docs/ai/schemas/ai-solution-input.schema.json",
+    "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
+    "appAssemblyContract": "docs/ai/app-assembly-contract.json",
+    "moduleRegistry": "docs/ai/module-registry.json"
+  },
+  "requiredFields": [
+    "schemaVersion",
+    "application.name",
+    "application.summary",
+    "application.domain",
+    "application.targetShape",
+    "roles",
+    "workflows"
+  ],
+  "optionalFields": [
+    "application.idHint",
+    "application.packagePrefixHint",
+    "domainObjects",
+    "uiReferences.prototypeImages",
+    "uiReferences.referenceSites",
+    "constraints.requiredModules",
+    "constraints.excludedModules",
+    "constraints.notes"
+  ],
+  "inputLayering": {
+    "solutionInputRole": "capture-business-intent-before-assembly",
+    "assemblyManifestRole": "direct-input-to-repository-owned-assembly-tooling",
+    "mappingBoundary": "solution input MUST be translated into app-manifest before repository-owned assembly tooling is invoked"
+  },
+  "mappingGuidance": {
+    "applicationIdentity": {
+      "idHint": "application.idHint MAY be used to derive app-manifest.application.id; if omitted, the contributor MUST produce a valid manifest id before assembly",
+      "packagePrefixHint": "application.packagePrefixHint MAY be used to derive app-manifest.application.packagePrefix; if omitted, the contributor MUST produce a valid Java package prefix before assembly"
+    },
+    "moduleSelectionSources": [
+      "constraints.requiredModules",
+      "constraints.excludedModules",
+      "application.summary",
+      "roles",
+      "domainObjects",
+      "workflows"
+    ],
+    "uiReferenceBoundary": "uiReferences inform UI direction and interaction expectations but do not bypass manifest-driven module selection"
+  },
+  "aiToolingGuidance": {
+    "defaultRole": "tool-orchestrator",
+    "playbook": "docs/ai/playbooks/define-ai-solution-input.md",
+    "nextStep": "produce app-manifest before invoking ./scripts/platform-tool.sh assembly scaffold"
+  },
+  "exampleInputs": [
+    "docs/ai/solution-inputs/core-admin-console.solution-input.json"
+  ]
+}

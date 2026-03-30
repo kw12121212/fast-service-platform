@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "broken-missing-dependency",
+    "name": "Broken Missing Dependency",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management",
+    "ticket-management"
+  ]
+}

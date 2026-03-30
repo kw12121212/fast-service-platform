@@ -93,6 +93,24 @@
 - `verify-frontend.sh` 跑 frontend 的 `test`、`build`、`lint`
 - `verify-fullstack.sh` 会准备 backend 运行时、启动 backend 和 Vite dev server，并通过 frontend 的 `/service/*` 代理做 smoke 验证
 
+## 如果你要展示仓库内置 baseline demo
+
+优先看：
+
+- `demo/GUIDE.md`
+
+常用命令：
+
+```bash
+./scripts/regenerate-baseline-demo.sh
+./scripts/verify-baseline-demo.sh
+```
+
+说明：
+
+- `regenerate-baseline-demo.sh` 用 repository-owned assembly path 重新生成 committed baseline demo
+- `verify-baseline-demo.sh` 会验证 generated-app contract，并检查 demo backend 和 frontend 的最小可运行校验路径
+
 ## 高价值改动顺序
 
 1. 先确认 proposal / spec 范围

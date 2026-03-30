@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "fast-service-platform-baseline-demo",
+    "name": "Fast Service Platform Baseline Demo",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management",
+    "project-management",
+    "project-repository-management",
+    "kanban-management",
+    "ticket-management"
+  ]
+}

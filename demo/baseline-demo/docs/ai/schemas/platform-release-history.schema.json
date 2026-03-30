@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/platform-release-history.schema.json",
+  "title": "Fast Service Platform Release History",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "platform",
+    "currentReleaseId",
+    "releases",
+    "supportedUpgradePaths",
+    "compatibilityWindow"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-platform-release-history/v1"
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "currentReleaseId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "releases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/release"
+      },
+      "minItems": 1
+    },
+    "supportedUpgradePaths": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/upgradePath"
+      },
+      "minItems": 1
+    },
+    "compatibilityWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "supportedSourceReleaseIds",
+        "defaultTargetReleaseId",
+        "upgradeTargetSelectionEntrypoint"
+      ],
+      "properties": {
+        "supportedSourceReleaseIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "defaultTargetReleaseId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upgradeTargetSelectionEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "releaseId",
+        "version",
+        "supportStatus",
+        "advisoryAsset"
+      ],
+      "properties": {
+        "releaseId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supportStatus": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lineageParentReleaseId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "advisoryAsset": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "upgradePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceReleaseId",
+        "targetReleaseId",
+        "pathType",
+        "supportStatus",
+        "advisoryAsset",
+        "recommendedAction"
+      ],
+      "properties": {
+        "sourceReleaseId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "targetReleaseId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pathType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supportStatus": {
+          "type": "string",
+          "minLength": 1
+        },
+        "advisoryAsset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recommendedAction": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

@@ -151,6 +151,30 @@ public class AppAssemblyCliTest {
         }
     }
 
+    @Test
+    void scaffoldBaselineDemoSeedsProjectKanbanAndTicketDemoDataSupport() throws Exception {
+        AssemblyGenerator generator = new AssemblyGenerator(repoRoot);
+        Path outputDir = Files.createTempDirectory("fsp-java-baseline-demo-");
+
+        try {
+            generator.scaffold(
+                    repoRoot.resolve("demo/baseline-demo.manifest.json"),
+                    outputDir);
+
+            String demoDataSupport = Files.readString(
+                    outputDir.resolve("backend/src/main/java/com/fastservice/platform/backend/demo/DemoDataSupport.java"));
+
+            assertTrue(demoDataSupport.contains("ProjectServiceImpl projectService = new ProjectServiceImpl();"));
+            assertTrue(demoDataSupport.contains("long projectId = ensureProject(projectService);"));
+            assertTrue(demoDataSupport.contains("KanbanServiceImpl kanbanService = new KanbanServiceImpl();"));
+            assertTrue(demoDataSupport.contains("long boardId = ensureBoard(projectId, kanbanService);"));
+            assertTrue(demoDataSupport.contains("ensureTicket(projectId, boardId, \"FSP-1\""));
+            assertTrue(demoDataSupport.contains("ensureTicket(projectId, boardId, \"FSP-2\""));
+        } finally {
+            deleteRecursively(outputDir);
+        }
+    }
+
     private static void deleteRecursively(Path path) throws Exception {
         if (!Files.exists(path)) {
             return;

@@ -31,12 +31,20 @@ The system MUST provide a machine-readable module registry that exposes the avai
 
 ### Requirement: Repository Generates An Independent Application Skeleton
 The system MUST provide a repository-owned scaffolding and assembly path that generates an independent monolithic application skeleton from the application manifest and selected modules, and that generated output MUST expose the machine-readable lifecycle metadata needed for later upgrade evaluation, with Java as the repository-owned tooling runtime for that platform workflow.
+The system MUST require any repository-owned committed derived-application example to preserve explicit assembly provenance so contributors can identify which assembly input and repository-owned entrypoint produced that example.
 
 #### Scenario: A contributor scaffolds a new application through the repository-owned path
 - GIVEN a contributor has provided a valid application-assembly input
 - WHEN they run the repository-owned scaffolding and assembly path
 - THEN the platform workflow is executed through the repository's Java-owned tooling runtime
 - AND the generated output still reflects the selected modules instead of always copying the full default application
+
+#### Scenario: A contributor audits a repository-owned demo derived application
+- GIVEN the repository keeps a committed derived-application example for demonstration
+- WHEN a contributor inspects that example and its guide
+- THEN they can identify the manifest or equivalent assembly input used to produce it
+- AND they can identify the repository-owned assembly entrypoint used to generate it
+- AND they do not need to infer whether the example was created through a special undocumented path
 
 ### Requirement: Scaffolded Output Includes Repository-Approved Validation Guidance
 The system MUST define scaffolded-application validation and lifecycle guidance through language-neutral contracts that may be satisfied by multiple compatible implementations rather than only through a single verifier script.

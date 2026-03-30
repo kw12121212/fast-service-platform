@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
+  "title": "Fast Service Platform Derived App Lifecycle Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "normativeAssets",
+    "generatedOutput",
+    "requiredLifecycleFields",
+    "upgradeEvaluation",
+    "aiToolingGuidance"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-derived-app-lifecycle-contract/v1"
+    },
+    "normativeAssets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lifecycleContract",
+        "aiToolOrchestrationContract",
+        "aiToolOrchestrationContractSchema",
+        "structuredAppTemplateContract",
+        "structuredAppTemplateContractSchema",
+        "templateClassificationMap",
+        "templateClassificationMapSchema",
+        "lifecycleContractSchema",
+        "lifecycleMetadataSchema",
+        "upgradeExecutionContract",
+        "upgradeExecutionContractSchema",
+        "platformReleaseMetadata",
+        "platformReleaseHistory",
+        "platformReleaseHistorySchema",
+        "platformReleaseAdvisory",
+        "platformReleaseAdvisorySchema",
+        "moduleRegistry"
+      ],
+      "properties": {
+        "lifecycleContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aiToolOrchestrationContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aiToolOrchestrationContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuredAppTemplateContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuredAppTemplateContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMapSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lifecycleContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lifecycleMetadataSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upgradeExecutionContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upgradeExecutionContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseHistory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseHistorySchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseAdvisory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseAdvisorySchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "moduleRegistry": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "generatedOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lifecycleMetadata",
+        "generatedContext",
+        "applicationManifest",
+        "templateClassificationMap"
+      ],
+      "properties": {
+        "lifecycleMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generatedContext": {
+          "type": "string",
+          "minLength": 1
+        },
+        "applicationManifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMap": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "requiredLifecycleFields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "upgradeEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryOwnedEntrypoint",
+        "repositoryOwnedTargetSelectionEntrypoint",
+        "repositoryOwnedAdvisoryEntrypoint",
+        "repositoryOwnedExecutionEntrypoint",
+        "requiredGeneratedInputs",
+        "compatibilitySignals",
+        "resultShape"
+      ],
+      "properties": {
+        "repositoryOwnedEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repositoryOwnedTargetSelectionEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repositoryOwnedAdvisoryEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repositoryOwnedExecutionEntrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requiredGeneratedInputs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "compatibilitySignals": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "resultShape": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "compatible",
+            "issues",
+            "sourcePlatformRelease",
+            "targetPlatformRelease",
+            "recommendedAction"
+          ],
+          "properties": {
+            "compatible": {
+              "const": "boolean"
+            },
+            "issues": {
+              "const": "string[]"
+            },
+            "sourcePlatformRelease": {
+              "const": "string"
+            },
+            "targetPlatformRelease": {
+              "const": "string"
+            },
+            "recommendedAction": {
+              "const": "string"
+            }
+          }
+        }
+      }
+    },
+    "aiToolingGuidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultRole",
+        "preferredSequence",
+        "orchestrationContract"
+      ],
+      "properties": {
+        "defaultRole": {
+          "const": "tool-orchestrator"
+        },
+        "preferredSequence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "orchestrationContract": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

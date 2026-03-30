@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "fsp-platform-release-advisory/v1",
+  "previousRelease": {
+    "releaseId": "fast-service-platform/0.0.0-bootstrap",
+    "version": "0.0.0-bootstrap"
+  },
+  "currentRelease": {
+    "releaseId": "fast-service-platform/0.1.0-dev",
+    "version": "0.1.0-dev"
+  },
+  "overallCompatibilityPosture": "compatible-with-review",
+  "summary": "The current platform release adds derived-app lifecycle metadata, machine-readable template-boundary guidance, and repository-owned release guidance for derived applications.",
+  "changes": [
+    {
+      "id": "derived-app-lifecycle-contract",
+      "changeType": "new-contract",
+      "compatibility": "additive",
+      "summary": "Derived applications now carry lifecycle metadata that identifies their source platform release and upgrade-evaluation inputs.",
+      "impactedAssets": [
+        "docs/ai/derived-app-lifecycle-contract.json",
+        "docs/ai/derived-app-lifecycle.json",
+        "docs/ai/context.json"
+      ],
+      "impactedModules": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "project-repository-management",
+        "ticket-management",
+        "kanban-management"
+      ],
+      "recommendedChecks": [
+        "verify-derived-app-contract-assets-present",
+        "confirm-derived-lifecycle-metadata-matches-manifest"
+      ]
+    },
+    {
+      "id": "upgrade-evaluation-entrypoint",
+      "changeType": "new-repository-entrypoint",
+      "compatibility": "review-required",
+      "summary": "The repository now provides a derived-app upgrade evaluator that should run before manual upgrade planning.",
+      "impactedAssets": [
+        "scripts/evaluate-derived-app-upgrade.sh",
+        "scripts/evaluate-derived-app-upgrade.mjs",
+        "docs/ai/playbooks/evaluate-derived-app-upgrade.md"
+      ],
+      "impactedModules": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "project-repository-management",
+        "ticket-management",
+        "kanban-management"
+      ],
+      "recommendedChecks": [
+        "run-derived-app-upgrade-evaluation",
+        "review-platform-release-advisory"
+      ]
+    },
+    {
+      "id": "platform-release-guidance",
+      "changeType": "new-release-guidance",
+      "compatibility": "additive",
+      "summary": "The platform publishes machine-readable release guidance so contributors can see changed contracts, impacted modules, and recommended next steps.",
+      "impactedAssets": [
+        "docs/ai/platform-release.json",
+        "docs/ai/platform-release-advisory.json"
+      ],
+      "impactedModules": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "project-repository-management",
+        "ticket-management",
+        "kanban-management"
+      ],
+      "recommendedChecks": [
+        "review-platform-release-advisory",
+        "review-upgrade-playbook"
+      ]
+    },
+    {
+      "id": "structured-template-boundaries",
+      "changeType": "new-contract",
+      "compatibility": "review-required",
+      "summary": "Generated applications now include a structured template contract and classification map that distinguish platform-managed template assets, slot hosts, module fragments, and derived-owned customization zones.",
+      "impactedAssets": [
+        "docs/ai/structured-app-template-contract.json",
+        "docs/ai/template-classifications/default-derived-app-template-map.json",
+        "docs/ai/context.json",
+        "docs/ai/derived-app-lifecycle.json"
+      ],
+      "impactedModules": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management",
+        "project-management",
+        "project-repository-management",
+        "ticket-management",
+        "kanban-management"
+      ],
+      "recommendedChecks": [
+        "review-template-boundary-classification-map",
+        "avoid-direct-edits-to-platform-managed-slot-hosts"
+      ]
+    }
+  ],
+  "recommendedNextActions": [
+    "list-supported-upgrade-targets",
+    "review-platform-release-advisory",
+    "run-derived-app-upgrade-evaluation",
+    "run-generated-app-verifiers"
+  ]
+}

@@ -1,7 +1,7 @@
 # AI Repository Readiness
 
 ### Requirement: Repository Provides AI Contribution Quickstart
-The repository MUST provide an AI-oriented quickstart that identifies required references, common task locations, the standard verification entrypoints for repository changes, and the repository-owned path for deriving an independent application from the platform.
+The repository MUST provide an AI-oriented quickstart that identifies required references, common task locations, the standard verification entrypoints for repository changes, the repository-owned path for deriving an independent application from the platform, and the discoverable entrypoint for any repository-owned baseline demo and its regeneration guide.
 
 #### Scenario: An AI contributor starts a common repository task
 - GIVEN an AI contributor needs to extend or modify the repository
@@ -12,6 +12,11 @@ The repository MUST provide an AI-oriented quickstart that identifies required r
 - GIVEN an AI contributor wants to derive an application instead of modifying the current baseline app
 - WHEN it reads the repository's AI quickstart path
 - THEN it can find the derivation workflow, the relevant machine-readable indexes, and the validation entrypoints for generated output
+
+#### Scenario: A contributor looks for the repository-owned demo entrypoint
+- GIVEN a contributor wants to run or explain the repository-owned baseline demo
+- WHEN they read the repository quickstart or root guidance
+- THEN they can find the committed demo location and its guide without searching through implementation directories
 
 ### Requirement: Repository Provides Machine-Readable AI Context
 The repository MUST provide a machine-readable AI context manifest that exposes the current stack baseline, required guidance files, workspace boundaries, verification commands, hard repository constraints, the machine-readable assets used for structured solution definition and later application derivation, the machine-readable assets that classify generated template boundaries and customization zones, the lifecycle / upgrade assets needed to evaluate existing derived applications, the advisory assets needed to explain platform release deltas, the release-history / lineage assets needed to select supported upgrade targets, the execution assets needed to plan or apply derived-app upgrades, the AI tool-orchestration assets needed to teach AI contributors how to choose and sequence repository-owned tooling, and the unified repository-owned tooling façade that serves as the default invocation surface for those workflows, while distinguishing frontend `Node/bun` requirements from Java-owned platform tooling requirements.

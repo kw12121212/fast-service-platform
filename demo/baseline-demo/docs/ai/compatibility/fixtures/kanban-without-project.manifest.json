@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "broken-kanban-without-project",
+    "name": "Broken Kanban Without Project",
+    "packagePrefix": "com.fastservice.platform.kanbanwithoutproject"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management",
+    "kanban-management"
+  ]
+}

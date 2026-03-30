@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/module-registry.schema.json",
+  "title": "Fast Service Platform Module Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "defaultAssemblyProfile",
+    "profiles",
+    "modules"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-module-registry/v1"
+    },
+    "defaultAssemblyProfile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "description",
+          "modules"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "enum": [
+              "required-core",
+              "optional-business-module",
+              "engineering-support-component"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dependsOn": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "backend": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "tables": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "services": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              }
+            }
+          },
+          "frontend": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "routes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^/"
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  }
+}

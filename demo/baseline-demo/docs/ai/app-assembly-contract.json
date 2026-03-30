@@ -1,0 +1,193 @@
+{
+  "schemaVersion": "fsp-app-assembly-contract/v2",
+  "manifestSchemaVersion": "fsp-app-manifest/v1",
+  "requiredManifestFields": [
+    "schemaVersion",
+    "application.id",
+    "application.name",
+    "application.packagePrefix",
+    "modules"
+  ],
+  "normativeAssets": {
+    "assemblyContract": "docs/ai/app-assembly-contract.json",
+    "aiSolutionInputContract": "docs/ai/ai-solution-input-contract.json",
+    "aiSolutionInputSchema": "docs/ai/schemas/ai-solution-input.schema.json",
+    "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
+    "aiToolOrchestrationContractSchema": "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
+    "structuredAppTemplateContract": "docs/ai/structured-app-template-contract.json",
+    "structuredAppTemplateContractSchema": "docs/ai/schemas/structured-app-template-contract.schema.json",
+    "derivedAppTemplateMap": "docs/ai/template-classifications/default-derived-app-template-map.json",
+    "derivedAppTemplateMapSchema": "docs/ai/schemas/derived-app-template-map.schema.json",
+    "manifestSchema": "docs/ai/schemas/app-manifest.schema.json",
+    "moduleRegistry": "docs/ai/module-registry.json",
+    "moduleRegistrySchema": "docs/ai/schemas/module-registry.schema.json",
+    "derivedAppLifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
+    "derivedAppLifecycleContractSchema": "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
+    "derivedAppLifecycleMetadataSchema": "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
+    "derivedAppUpgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
+    "derivedAppUpgradeExecutionContractSchema": "docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
+    "platformReleaseMetadata": "docs/ai/platform-release.json",
+    "platformReleaseHistory": "docs/ai/platform-release-history.json",
+    "platformReleaseHistorySchema": "docs/ai/schemas/platform-release-history.schema.json",
+    "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
+    "platformReleaseAdvisorySchema": "docs/ai/schemas/platform-release-advisory.schema.json",
+    "generatedAppVerificationContract": "docs/ai/generated-app-verification-contract.json",
+    "generatedAppVerificationContractSchema": "docs/ai/schemas/generated-app-verification-contract.schema.json",
+    "compatibilitySuite": "docs/ai/compatibility/app-assembly-suite.json",
+    "compatibilitySuiteSchema": "docs/ai/schemas/app-assembly-compatibility-suite.schema.json"
+  },
+  "outputRules": {
+    "mustBeOutsideRepositoryWorkspace": true,
+    "applicationShape": "monolith",
+    "scope": "enterprise-internal-management"
+  },
+  "outputInvariants": {
+    "requiredFiles": [
+      "README.md",
+      "AGENTS.md",
+      "app-manifest.json",
+      "docs/ai/context.json",
+      "docs/ai/ai-solution-input-contract.json",
+      "docs/ai/ai-tool-orchestration-contract.json",
+      "docs/ai/structured-app-template-contract.json",
+      "docs/ai/derived-app-lifecycle.json",
+      "docs/ai/derived-app-lifecycle-contract.json",
+      "docs/ai/derived-app-upgrade-execution-contract.json",
+      "docs/ai/module-registry.json",
+      "docs/ai/app-assembly-contract.json",
+      "docs/ai/template-classifications/default-derived-app-template-map.json",
+      "docs/ai/platform-release.json",
+      "docs/ai/platform-release-history.json",
+      "docs/ai/platform-release-advisory.json",
+      "docs/ai/advisories/fast-service-platform-0.0.0-bootstrap.json",
+      "docs/ai/generated-app-verification-contract.json",
+      "docs/ai/compatibility/app-assembly-suite.json",
+      "docs/ai/compatibility/fixtures/missing-required-core.manifest.json",
+      "docs/ai/compatibility/fixtures/unknown-module.manifest.json",
+      "docs/ai/compatibility/fixtures/missing-dependency.manifest.json",
+      "docs/ai/compatibility/fixtures/duplicate-module.manifest.json",
+      "docs/ai/compatibility/fixtures/kanban-without-project.manifest.json",
+      "docs/ai/compatibility/fixtures/repository-without-project.manifest.json",
+      "docs/ai/compatibility/fixtures/invalid-package-prefix.manifest.json",
+      "docs/ai/compatibility/fixtures/project-admin.manifest.json",
+      "docs/ai/compatibility/fixtures/project-repository.manifest.json",
+      "docs/ai/compatibility/fixtures/project-kanban.manifest.json",
+      "docs/ai/solution-inputs/core-admin-console.solution-input.json",
+      "docs/ai/schemas/ai-solution-input.schema.json",
+      "docs/ai/schemas/app-manifest.schema.json",
+      "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
+      "docs/ai/schemas/structured-app-template-contract.schema.json",
+      "docs/ai/schemas/derived-app-template-map.schema.json",
+      "docs/ai/schemas/module-registry.schema.json",
+      "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
+      "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
+      "docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
+      "docs/ai/schemas/platform-release-history.schema.json",
+      "docs/ai/schemas/platform-release-advisory.schema.json",
+      "docs/ai/schemas/generated-app-verification-contract.schema.json",
+      "docs/ai/schemas/app-assembly-compatibility-suite.schema.json",
+      "backend/pom.xml",
+      "frontend/package.json",
+      "scripts/VerifyDerivedApp.java",
+      "scripts/verify-derived-app.sh"
+    ],
+    "moduleWiringSources": {
+      "frontendRoutes": "module-registry.modules[].frontend.routes",
+      "backendServices": "module-registry.modules[].backend.services",
+      "backendTables": "module-registry.modules[].backend.tables"
+    },
+    "structuredTemplateOutput": {
+      "templateContract": "docs/ai/structured-app-template-contract.json",
+      "defaultClassificationMap": "docs/ai/template-classifications/default-derived-app-template-map.json"
+    }
+  },
+  "machineReadableIndexes": {
+    "repositoryEntry": [
+      "docs/ai/quickstart.md",
+      "docs/ai/context.yaml"
+    ],
+    "solutionInputContract": "docs/ai/ai-solution-input-contract.json",
+    "moduleRegistry": "docs/ai/module-registry.json",
+    "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
+    "derivedAppLifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
+    "structuredAppTemplateContract": "docs/ai/structured-app-template-contract.json",
+    "derivedAppTemplateMap": "docs/ai/template-classifications/default-derived-app-template-map.json",
+    "derivedAppUpgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
+    "platformReleaseMetadata": "docs/ai/platform-release.json",
+    "platformReleaseHistory": "docs/ai/platform-release-history.json",
+    "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
+    "schemas": [
+      "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
+      "docs/ai/schemas/structured-app-template-contract.schema.json",
+      "docs/ai/schemas/derived-app-template-map.schema.json",
+      "docs/ai/schemas/app-manifest.schema.json",
+      "docs/ai/schemas/module-registry.schema.json",
+      "docs/ai/schemas/derived-app-lifecycle-contract.schema.json",
+      "docs/ai/schemas/derived-app-lifecycle-metadata.schema.json",
+      "docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
+      "docs/ai/schemas/platform-release-history.schema.json",
+      "docs/ai/schemas/platform-release-advisory.schema.json",
+      "docs/ai/schemas/generated-app-verification-contract.schema.json",
+      "docs/ai/schemas/app-assembly-compatibility-suite.schema.json"
+    ],
+    "generatedAppVerificationContract": "docs/ai/generated-app-verification-contract.json",
+    "compatibilitySuite": "docs/ai/compatibility/app-assembly-suite.json",
+    "solutionInputExamples": [
+      "docs/ai/solution-inputs/core-admin-console.solution-input.json"
+    ],
+    "assemblyExamples": [
+      "docs/ai/manifests/default-baseline-app.json",
+      "docs/ai/manifests/core-admin-app.json"
+    ]
+  },
+  "inputLayers": {
+    "solutionInput": {
+      "contract": "docs/ai/ai-solution-input-contract.json",
+      "role": "capture-business-intent-before-assembly"
+    },
+    "assemblyManifest": {
+      "contract": "docs/ai/schemas/app-manifest.schema.json",
+      "role": "direct-input-to-repository-owned-assembly-tooling"
+    }
+  },
+  "referenceImplementations": [
+    {
+      "id": "java-cli",
+      "type": "reference-implementation",
+      "language": "java-cli",
+      "workspace": "tools/java-assembly-cli",
+      "mainClass": "com.fastservice.platform.tools.assemblycli.AppAssemblyCli",
+      "scaffoldEntrypoint": "scripts/scaffold-derived-app-java.sh",
+      "generatedAppVerifier": "scripts/verify-derived-app.sh",
+      "generatedAppVerifierRole": "reference-verifier"
+    }
+  ],
+  "commands": {
+    "platformTool": "./scripts/platform-tool.sh <group> <command> [...]",
+    "scaffold": "./scripts/platform-tool.sh assembly scaffold <manifest-path> <absolute-output-dir>",
+    "verifyCompatibility": "./scripts/platform-tool.sh assembly compatibility",
+    "verifyRepositoryAssembly": "./scripts/platform-tool.sh assembly verify",
+    "verifyGeneratedApp": "./scripts/platform-tool.sh generated-app verify <generated-app-dir>",
+    "evaluateDerivedAppUpgrade": "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>",
+    "listPlatformUpgradeTargets": "./scripts/platform-tool.sh upgrade targets [generated-app-dir]",
+    "showPlatformReleaseAdvisory": "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]",
+    "executeDerivedAppUpgrade": "./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]"
+  },
+  "aiToolingGuidance": {
+    "defaultRole": "tool-orchestrator",
+    "preferredWorkflow": "use-repository-owned-platform-tooling-before-direct-reimplementation",
+    "solutionInputPlaybook": "docs/ai/playbooks/define-ai-solution-input.md",
+    "orchestrationContract": "docs/ai/ai-tool-orchestration-contract.json"
+  },
+  "legacyCommands": {
+    "scaffoldJava": "./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>",
+    "verifyCompatibility": "./scripts/verify-app-assembly.sh",
+    "verifyRepositoryAssembly": "./scripts/verify-app-assembly.sh",
+    "verifyGeneratedApp": "./scripts/verify-derived-app.sh <generated-app-dir>",
+    "verifyGeneratedAppJava": "./scripts/verify-derived-app-java.sh <generated-app-dir>",
+    "evaluateDerivedAppUpgrade": "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>",
+    "listPlatformUpgradeTargets": "./scripts/list-platform-upgrade-targets.sh [generated-app-dir]",
+    "showPlatformReleaseAdvisory": "./scripts/show-platform-release-advisory.sh [generated-app-dir]",
+    "executeDerivedAppUpgrade": "./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]"
+  }
+}

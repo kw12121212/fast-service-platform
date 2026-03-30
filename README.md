@@ -37,6 +37,80 @@
 
 当前默认运行形态仍然是完整 baseline 应用；但从“AI 派生新应用”的角度看，`项目管理 / 工单管理 / 看板管理` 已经开始被视为可选装配模块，而不是所有派生应用都必须包含的硬性业务域。
 
+## 当前已经达成的目标
+
+当前仓库已经不只是“能启动一套演示后台”，而是已经完成了三类关键目标：
+
+- `可运行 baseline`：
+  - backend 和 frontend 都已落地，并通过 `/service/*` 完成真实联调
+  - 最小企业域已经覆盖用户、角色权限、软件项目、工单、看板
+  - backend 支持 `可选 demo 数据`
+- `可组合平台模块`：
+  - 当前 runnable baseline 仍可完整复现
+  - 从派生应用角度，`admin shell`、`user-management`、`role-permission-management` 已经形成更稳定的必选核心
+  - `project-management`、`project-repository-management`、`kanban-management`、`ticket-management` 已经形成更细粒度的可选模块边界
+- `AI-ready 平台工作流`：
+  - 已定义 machine-readable 的 `contract + schemas + compatibility suite`
+  - 已提供 repository-owned 的 app assembly、generated-app verification、upgrade targets / evaluation / advisory / execution 入口
+  - 已提供 AI quickstart、context、playbooks 和统一 tooling façade，约束 AI 优先复用仓库工具而不是重写 workflow
+
+## 当前使用者可以做到什么
+
+### 平台使用者
+
+- 直接运行当前 baseline 企业管理应用
+- 在管理后台里查看和操作用户、角色权限、软件项目、工单、看板等最小企业域
+- 使用 demo 数据快速演示当前平台能力
+- 通过前端代理路径 `/service/*` 做真实前后端联调和 smoke 验证
+
+### 项目 / 工程使用者
+
+- 在项目页创建软件项目
+- 给项目绑定一个本地 Git 仓库绝对路径
+- 查看绑定仓库的根路径、当前分支或 detached HEAD、working tree 状态、最近提交和本地分支列表
+- 在仓库处于 clean working tree 且非 detached HEAD 时切换到现有本地分支
+
+### AI 代理 / 平台贡献者
+
+- 从结构化 `solution input` 收敛到 `app-manifest`
+- 基于仓库拥有的 assembly contract 和 module registry 派生新的管理类单体应用骨架
+- 使用统一入口 `./scripts/platform-tool.sh` 执行：
+  - `assembly scaffold`
+  - `assembly verify`
+  - `assembly compatibility`
+  - `generated-app verify`
+  - `upgrade targets`
+  - `upgrade evaluate`
+  - `upgrade advisory`
+  - `upgrade execute`
+- 依据 structured app template contract 和 template classification map 判断哪些生成区域属于平台管理区、slot host 或 customization zone
+
+## 当前仍未完成的内容
+
+这些能力已经被纳入平台边界或预留扩展位，但还没有达到当前 baseline 业务模块同等成熟度：
+
+- `worktree-management`
+- `merge-support`
+- `sandbox-environment`
+
+这些方向更适合作为下一阶段的 spec-driven change，而不是当成已经可直接使用的现成功能。
+
+## Demo
+
+仓库现在提供一个 repository-owned 的 baseline demo，用于向人类直接展示“本项目作为基础库可以生成并运行什么样的企业管理基线”。
+
+- demo manifest: `demo/baseline-demo.manifest.json`
+- committed demo derived app: `demo/baseline-demo/`
+- guide: `demo/GUIDE.md`
+- 5 minute talk track: `demo/5-minute-demo.md`
+
+常用入口：
+
+```bash
+./scripts/regenerate-baseline-demo.sh
+./scripts/verify-baseline-demo.sh
+```
+
 ## 技术基线
 
 | 领域 | 基线 | 说明 |

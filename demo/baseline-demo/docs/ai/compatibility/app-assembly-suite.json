@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "fsp-app-assembly-compatibility-suite/v1",
+  "fixtures": {
+    "valid": [
+      {
+        "id": "default-baseline",
+        "manifestPath": "docs/ai/manifests/default-baseline-app.json",
+        "expectedProfile": "baseline-v1",
+        "expectedSelectedModules": [
+          "admin-shell",
+          "user-management",
+          "role-permission-management",
+          "project-management",
+          "project-repository-management",
+          "kanban-management",
+          "ticket-management"
+        ]
+      },
+      {
+        "id": "core-admin",
+        "manifestPath": "docs/ai/manifests/core-admin-app.json",
+        "expectedProfile": "core-admin",
+        "expectedSelectedModules": [
+          "admin-shell",
+          "user-management",
+          "role-permission-management"
+        ]
+      },
+      {
+        "id": "project-admin",
+        "manifestPath": "docs/ai/compatibility/fixtures/project-admin.manifest.json",
+        "expectedProfile": "project-admin",
+        "expectedSelectedModules": [
+          "admin-shell",
+          "user-management",
+          "role-permission-management",
+          "project-management"
+        ]
+      },
+      {
+        "id": "project-repository",
+        "manifestPath": "docs/ai/compatibility/fixtures/project-repository.manifest.json",
+        "expectedProfile": "project-repository",
+        "expectedSelectedModules": [
+          "admin-shell",
+          "user-management",
+          "role-permission-management",
+          "project-management",
+          "project-repository-management"
+        ]
+      },
+      {
+        "id": "project-kanban",
+        "manifestPath": "docs/ai/compatibility/fixtures/project-kanban.manifest.json",
+        "expectedProfile": "project-kanban",
+        "expectedSelectedModules": [
+          "admin-shell",
+          "user-management",
+          "role-permission-management",
+          "project-management",
+          "kanban-management"
+        ]
+      }
+    ],
+    "invalid": [
+      {
+        "id": "missing-required-core",
+        "manifestPath": "docs/ai/compatibility/fixtures/missing-required-core.manifest.json",
+        "expectedErrorIncludes": "required core module"
+      },
+      {
+        "id": "unknown-module",
+        "manifestPath": "docs/ai/compatibility/fixtures/unknown-module.manifest.json",
+        "expectedErrorIncludes": "Unknown module"
+      },
+      {
+        "id": "missing-dependency",
+        "manifestPath": "docs/ai/compatibility/fixtures/missing-dependency.manifest.json",
+        "expectedErrorIncludes": "requires dependency"
+      },
+      {
+        "id": "duplicate-module",
+        "manifestPath": "docs/ai/compatibility/fixtures/duplicate-module.manifest.json",
+        "expectedErrorIncludes": "modules must not contain duplicates"
+      },
+      {
+        "id": "kanban-without-project",
+        "manifestPath": "docs/ai/compatibility/fixtures/kanban-without-project.manifest.json",
+        "expectedErrorIncludes": "requires dependency project-management"
+      },
+      {
+        "id": "repository-without-project",
+        "manifestPath": "docs/ai/compatibility/fixtures/repository-without-project.manifest.json",
+        "expectedErrorIncludes": "requires dependency project-management"
+      },
+      {
+        "id": "invalid-package-prefix",
+        "manifestPath": "docs/ai/compatibility/fixtures/invalid-package-prefix.manifest.json",
+        "expectedErrorIncludes": "application.packagePrefix must be a dotted Java package prefix"
+      }
+    ]
+  },
+  "validation": {
+    "generatedAppVerificationContract": "docs/ai/generated-app-verification-contract.json",
+    "generatedOutputChecks": [
+      "required-files-present",
+      "verification-inputs-present",
+      "template-boundary-assets-present",
+      "module-selected-routes-match-registry",
+      "module-selected-backend-services-match-registry",
+      "module-selected-backend-tables-match-registry",
+      "generated-context-selected-modules-match-manifest"
+    ],
+    "mustValidateObservableBehaviorOnly": true
+  },
+  "compatibleImplementations": [
+    {
+      "id": "java-cli",
+      "scaffoldCommand": "./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>",
+      "generatedAppVerifier": "./scripts/verify-derived-app.sh <generated-app-dir>"
+    }
+  ]
+}

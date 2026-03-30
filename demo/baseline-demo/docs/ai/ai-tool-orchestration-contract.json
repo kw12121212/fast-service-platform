@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "fsp-ai-tool-orchestration-contract/v1",
+  "aiRole": "tool-orchestrator",
+  "defaultFacade": "./scripts/platform-tool.sh <group> <command> [...]",
+  "policy": {
+    "preferRepositoryOwnedTooling": true,
+    "directWorkflowReimplementation": "disallowed-for-supported-workflows",
+    "allowedFallbacks": [
+      "compatible-wrapper-when-facade-is-unavailable",
+      "compatible-wrapper-when-a-specific-implementation-or-verifier-path-is-required"
+    ],
+    "stopAndReportConditions": [
+      "required-contract-assets-missing",
+      "workflow-not-covered-by-supported-categories",
+      "repository-owned-tooling-and-compatible-wrapper-both-unavailable",
+      "non-recoverable-tooling-error-classified-by-contract"
+    ]
+  },
+  "supportedWorkflowCategories": [
+    {
+      "id": "assembly",
+      "readBefore": [
+        "docs/ai/context.yaml",
+        "docs/ai/ai-solution-input-contract.json",
+        "docs/ai/schemas/ai-solution-input.schema.json",
+        "docs/ai/playbooks/define-ai-solution-input.md",
+        "docs/ai/app-assembly-contract.json",
+        "docs/ai/module-registry.json",
+        "docs/ai/compatibility/app-assembly-suite.json",
+        "docs/ai/structured-app-template-contract.json"
+      ],
+      "defaultEntrypoint": "./scripts/platform-tool.sh assembly scaffold <manifest-path> <absolute-output-dir>",
+      "compatibleFallbacks": [
+        "./scripts/scaffold-derived-app-java.sh <manifest-path> <absolute-output-dir>"
+      ],
+      "successSignals": [
+        "solution-input-has-been-mapped-to-app-manifest",
+        "generated-app-output-created-outside-repository-workspace",
+        "generated-app-verification-ready"
+      ],
+      "nextWorkflowIds": [
+        "generated-app-verification"
+      ]
+    },
+    {
+      "id": "generated-app-verification",
+      "readBefore": [
+        "docs/ai/generated-app-verification-contract.json",
+        "docs/ai/app-assembly-contract.json",
+        "docs/ai/structured-app-template-contract.json",
+        "docs/ai/template-classifications/default-derived-app-template-map.json"
+      ],
+      "defaultEntrypoint": "./scripts/platform-tool.sh generated-app verify <generated-app-dir>",
+      "compatibleFallbacks": [
+        "./scripts/platform-tool.sh generated-app verify-java <generated-app-dir>",
+        "./scripts/verify-derived-app.sh <generated-app-dir>",
+        "./scripts/verify-derived-app-java.sh <generated-app-dir>"
+      ],
+      "successSignals": [
+        "verification-result-ok-true",
+        "contract-version-reported"
+      ],
+      "nextWorkflowIds": []
+    },
+    {
+      "id": "upgrade-target-selection",
+      "readBefore": [
+        "docs/ai/platform-release-history.json",
+        "docs/ai/derived-app-lifecycle-contract.json",
+        "docs/ai/playbooks/select-derived-app-upgrade-target.md"
+      ],
+      "defaultEntrypoint": "./scripts/platform-tool.sh upgrade targets [generated-app-dir]",
+      "compatibleFallbacks": [
+        "./scripts/list-platform-upgrade-targets.sh [generated-app-dir]"
+      ],
+      "successSignals": [
+        "recognized-releases-reported",
+        "available-target-releases-reported"
+      ],
+      "nextWorkflowIds": [
+        "release-advisory",
+        "upgrade-evaluation"
+      ]
+    },
+    {
+      "id": "release-advisory",
+      "readBefore": [
+        "docs/ai/platform-release-advisory.json",
+        "docs/ai/platform-release-history.json"
+      ],
+      "defaultEntrypoint": "./scripts/platform-tool.sh upgrade advisory [generated-app-dir]",
+      "compatibleFallbacks": [
+        "./scripts/show-platform-release-advisory.sh [generated-app-dir]"
+      ],
+      "successSignals": [
+        "release-delta-reported",
+        "recommended-checks-reported"
+      ],
+      "nextWorkflowIds": [
+        "upgrade-evaluation",
+        "upgrade-execution"
+      ]
+    },
+    {
+      "id": "upgrade-evaluation",
+      "readBefore": [
+        "docs/ai/derived-app-lifecycle-contract.json",
+        "docs/ai/platform-release-history.json",
+        "docs/ai/platform-release-advisory.json",
+        "docs/ai/structured-app-template-contract.json",
+        "docs/ai/template-classifications/default-derived-app-template-map.json"
+      ],
+      "defaultEntrypoint": "./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>",
+      "compatibleFallbacks": [
+        "./scripts/evaluate-derived-app-upgrade.sh <generated-app-dir>"
+      ],
+      "successSignals": [
+        "compatibility-result-reported",
+        "recommended-action-reported"
+      ],
+      "nextWorkflowIds": [
+        "upgrade-execution"
+      ]
+    },
+    {
+      "id": "upgrade-execution",
+      "readBefore": [
+        "docs/ai/derived-app-upgrade-execution-contract.json",
+        "docs/ai/derived-app-lifecycle-contract.json",
+        "docs/ai/platform-release-advisory.json",
+        "docs/ai/structured-app-template-contract.json",
+        "docs/ai/template-classifications/default-derived-app-template-map.json",
+        "docs/ai/playbooks/customize-derived-app-template-boundaries.md"
+      ],
+      "defaultEntrypoint": "./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]",
+      "compatibleFallbacks": [
+        "./scripts/execute-derived-app-upgrade.sh <generated-app-dir> [--apply]"
+      ],
+      "successSignals": [
+        "machine-readable-upgrade-plan-reported",
+        "post-upgrade-validation-paths-reported"
+      ],
+      "nextWorkflowIds": [
+        "generated-app-verification",
+        "upgrade-evaluation",
+        "release-advisory"
+      ]
+    }
+  ]
+}

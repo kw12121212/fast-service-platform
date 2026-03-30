@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "fsp-platform-release-history/v1",
+  "platform": {
+    "id": "fast-service-platform",
+    "name": "Fast Service Platform"
+  },
+  "currentReleaseId": "fast-service-platform/0.1.0-dev",
+  "releases": [
+    {
+      "releaseId": "fast-service-platform/0.0.0-bootstrap",
+      "version": "0.0.0-bootstrap",
+      "supportStatus": "historical-source-supported",
+      "lineageParentReleaseId": null,
+      "advisoryAsset": "docs/ai/advisories/fast-service-platform-0.0.0-bootstrap.json"
+    },
+    {
+      "releaseId": "fast-service-platform/0.1.0-dev",
+      "version": "0.1.0-dev",
+      "supportStatus": "current",
+      "lineageParentReleaseId": "fast-service-platform/0.0.0-bootstrap",
+      "advisoryAsset": "docs/ai/platform-release-advisory.json"
+    }
+  ],
+  "supportedUpgradePaths": [
+    {
+      "sourceReleaseId": "fast-service-platform/0.0.0-bootstrap",
+      "targetReleaseId": "fast-service-platform/0.1.0-dev",
+      "pathType": "direct",
+      "supportStatus": "supported",
+      "advisoryAsset": "docs/ai/platform-release-advisory.json",
+      "recommendedAction": "review-platform-delta-and-run-generated-app-verifiers"
+    },
+    {
+      "sourceReleaseId": "fast-service-platform/0.1.0-dev",
+      "targetReleaseId": "fast-service-platform/0.1.0-dev",
+      "pathType": "self",
+      "supportStatus": "supported",
+      "advisoryAsset": "docs/ai/platform-release-advisory.json",
+      "recommendedAction": "already-on-target-platform-release"
+    }
+  ],
+  "compatibilityWindow": {
+    "supportedSourceReleaseIds": [
+      "fast-service-platform/0.0.0-bootstrap",
+      "fast-service-platform/0.1.0-dev"
+    ],
+    "defaultTargetReleaseId": "fast-service-platform/0.1.0-dev",
+    "upgradeTargetSelectionEntrypoint": "./scripts/platform-tool.sh upgrade targets [generated-app-dir]"
+  }
+}

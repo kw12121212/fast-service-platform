@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/derived-app-upgrade-execution-contract.schema.json",
+  "title": "Fast Service Platform Derived App Upgrade Execution Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "repositoryOwnedEntrypoint",
+    "dryRunDefault",
+    "normativeAssets",
+    "supportedAutoApplyCategories",
+    "planResultShape",
+    "postUpgradeValidation",
+    "aiToolingGuidance"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-derived-app-upgrade-execution-contract/v1"
+    },
+    "repositoryOwnedEntrypoint": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dryRunDefault": {
+      "type": "boolean"
+    },
+    "normativeAssets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "executionContract",
+        "aiToolOrchestrationContract",
+        "aiToolOrchestrationContractSchema",
+        "executionContractSchema",
+        "assemblyContract",
+        "lifecycleContract",
+        "structuredAppTemplateContract",
+        "structuredAppTemplateContractSchema",
+        "templateClassificationMap",
+        "templateClassificationMapSchema",
+        "platformReleaseMetadata",
+        "platformReleaseHistory",
+        "platformReleaseAdvisory",
+        "moduleRegistry"
+      ],
+      "properties": {
+        "executionContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aiToolOrchestrationContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aiToolOrchestrationContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "executionContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assemblyContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lifecycleContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuredAppTemplateContract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuredAppTemplateContractSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateClassificationMapSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseMetadata": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseHistory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformReleaseAdvisory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "moduleRegistry": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "supportedAutoApplyCategories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "planResultShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planVersion",
+        "contractVersion",
+        "dryRun",
+        "compatible",
+        "sourcePlatformRelease",
+        "targetPlatformRelease",
+        "selectedModules",
+        "autoApplyItems",
+        "manualInterventionItems",
+        "postUpgradeValidation",
+        "recommendedNextActions"
+      ],
+      "properties": {
+        "planVersion": {
+          "const": "string"
+        },
+        "contractVersion": {
+          "const": "string"
+        },
+        "dryRun": {
+          "const": "boolean"
+        },
+        "compatible": {
+          "const": "boolean"
+        },
+        "sourcePlatformRelease": {
+          "const": "string"
+        },
+        "targetPlatformRelease": {
+          "const": "string"
+        },
+        "selectedModules": {
+          "const": "string[]"
+        },
+        "autoApplyItems": {
+          "const": "object[]"
+        },
+        "manualInterventionItems": {
+          "const": "object[]"
+        },
+        "postUpgradeValidation": {
+          "const": "string[]"
+        },
+        "recommendedNextActions": {
+          "const": "string[]"
+        }
+      }
+    },
+    "postUpgradeValidation": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "aiToolingGuidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultRole",
+        "preferredSequence",
+        "orchestrationContract"
+      ],
+      "properties": {
+        "defaultRole": {
+          "const": "tool-orchestrator"
+        },
+        "preferredSequence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "orchestrationContract": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
