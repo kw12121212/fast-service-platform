@@ -1,7 +1,8 @@
-import { type FormEvent, useState } from 'react'
+import { useState } from 'react'
 import { RefreshCcw } from 'lucide-react'
 
-import { MutationStatus } from '@/components/admin/mutation-status'
+import { DynamicForm } from '@/components/admin'
+import type { FormDescriptor } from '@/components/admin'
 import { PageHeader } from '@/components/admin/page-header'
 import { ResourceState } from '@/components/admin/resource-state'
 import { Badge } from '@/components/ui/badge'
@@ -15,33 +16,30 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useCreateUserAction, useUsersResource } from '@/lib/api/hooks'
+
+const createUserDescriptor: FormDescriptor = {
+  entityName: 'User',
+  fields: [
+    { key: 'username', label: 'Username', widget: 'text', required: true },
+    { key: 'displayName', label: 'Display name', widget: 'text', required: true },
+    { key: 'email', label: 'Email', widget: 'text', required: true },
+  ],
+}
 
 export function UsersPage() {
   const users = useUsersResource()
   const createUser = useCreateUserAction()
-  const [username, setUsername] = useState('')
-  const [displayName, setDisplayName] = useState('')
-  const [email, setEmail] = useState('')
+  const [formKey, setFormKey] = useState(0)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    try {
-      await createUser.submit({
-        username,
-        displayName,
-        email,
-      })
-      setUsername('')
-      setDisplayName('')
-      setEmail('')
-      users.reload()
-    } catch {
-      return
-    }
+  async function handleCreateUser(values: Record<string, string | number | boolean>) {
+    await createUser.submit({
+      username: String(values.username),
+      displayName: String(values.displayName),
+      email: String(values.email),
+    })
+    setFormKey((k) => k + 1)
+    users.reload()
   }
 
   return (
@@ -63,53 +61,17 @@ export function UsersPage() {
           <CardHeader>
             <CardTitle className="text-lg">Create user</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="space-y-2">
-                <Label htmlFor="create-user-username">Username</Label>
-                <Input
-                  id="create-user-username"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  placeholder="service-owner"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="create-user-display-name">Display name</Label>
-                <Input
-                  id="create-user-display-name"
-                  value={displayName}
-                  onChange={(event) => setDisplayName(event.target.value)}
-                  placeholder="Service Owner"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="create-user-email">Email</Label>
-                <Input
-                  id="create-user-email"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="service-owner@example.com"
-                  required
-                />
-              </div>
-
-              <MutationStatus
-                status={createUser.status}
-                error={createUser.error}
-                submittingMessage="Creating user through the backend service..."
-                successMessage="User created and the user list has been refreshed."
-              />
-
-              <Button type="submit" disabled={createUser.status === 'submitting'}>
-                Create user
-              </Button>
-            </form>
+          <CardContent>
+            <DynamicForm
+              key={formKey}
+              descriptor={createUserDescriptor}
+              onSubmit={handleCreateUser}
+              mutationStatus={createUser.status}
+              mutationError={createUser.error}
+              submittingMessage="Creating user through the backend service..."
+              successMessage="User created and the user list has been refreshed."
+              submitLabel="Create user"
+            />
           </CardContent>
         </Card>
 

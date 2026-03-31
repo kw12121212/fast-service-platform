@@ -1,6 +1,8 @@
 import { type FormEvent, useState } from 'react'
 import { RefreshCcw } from 'lucide-react'
 
+import { DynamicForm } from '@/components/admin'
+import type { FormDescriptor } from '@/components/admin'
 import { MutationStatus } from '@/components/admin/mutation-status'
 import { PageHeader } from '@/components/admin/page-header'
 import { ResourceState } from '@/components/admin/resource-state'
@@ -1012,29 +1014,28 @@ function ProjectRepositoryCard({
   )
 }
 
+const createProjectDescriptor: FormDescriptor = {
+  entityName: 'Project',
+  fields: [
+    { key: 'projectKey', label: 'Project key', widget: 'text', required: true },
+    { key: 'projectName', label: 'Project name', widget: 'text', required: true },
+    { key: 'description', label: 'Description', widget: 'textarea', required: true },
+  ],
+}
+
 export function ProjectsPage() {
   const projects = useProjectsResource()
   const createProject = useCreateProjectAction()
-  const [projectKey, setProjectKey] = useState('')
-  const [projectName, setProjectName] = useState('')
-  const [description, setDescription] = useState('')
+  const [formKey, setFormKey] = useState(0)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    try {
-      await createProject.submit({
-        projectKey,
-        projectName,
-        description,
-      })
-      setProjectKey('')
-      setProjectName('')
-      setDescription('')
-      projects.reload()
-    } catch {
-      return
-    }
+  async function handleCreateProject(values: Record<string, string | number | boolean>) {
+    await createProject.submit({
+      projectKey: String(values.projectKey),
+      projectName: String(values.projectName),
+      description: String(values.description),
+    })
+    setFormKey((k) => k + 1)
+    projects.reload()
   }
 
   return (
@@ -1056,53 +1057,17 @@ export function ProjectsPage() {
           <CardHeader>
             <CardTitle className="text-lg">Create project</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="space-y-2">
-                <Label htmlFor="create-project-key">Project key</Label>
-                <Input
-                  id="create-project-key"
-                  value={projectKey}
-                  onChange={(event) => setProjectKey(event.target.value)}
-                  placeholder="FSP"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="create-project-name">Project name</Label>
-                <Input
-                  id="create-project-name"
-                  value={projectName}
-                  onChange={(event) => setProjectName(event.target.value)}
-                  placeholder="Fast Service Platform"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="create-project-description">Description</Label>
-                <textarea
-                  id="create-project-description"
-                  className="min-h-28 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  placeholder="Describe the delivery scope this project anchors."
-                  required
-                />
-              </div>
-
-              <MutationStatus
-                status={createProject.status}
-                error={createProject.error}
-                submittingMessage="Creating project through the backend service..."
-                successMessage="Project created and the project list has been refreshed."
-              />
-
-              <Button type="submit" disabled={createProject.status === 'submitting'}>
-                Create project
-              </Button>
-            </form>
+          <CardContent>
+            <DynamicForm
+              key={formKey}
+              descriptor={createProjectDescriptor}
+              onSubmit={handleCreateProject}
+              mutationStatus={createProject.status}
+              mutationError={createProject.error}
+              submittingMessage="Creating project through the backend service..."
+              successMessage="Project created and the project list has been refreshed."
+              submitLabel="Create project"
+            />
           </CardContent>
         </Card>
 

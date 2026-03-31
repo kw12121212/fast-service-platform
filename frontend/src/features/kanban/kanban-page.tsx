@@ -1,21 +1,27 @@
-import { type FormEvent, startTransition, useState } from 'react'
+import { startTransition, useState } from 'react'
 import { RefreshCcw } from 'lucide-react'
 
-import { MutationStatus } from '@/components/admin/mutation-status'
+import { DynamicForm } from '@/components/admin'
+import type { FormDescriptor } from '@/components/admin'
 import { PageHeader } from '@/components/admin/page-header'
 import { ProjectScopeSelect } from '@/components/admin/project-scope-select'
 import { ResourceState } from '@/components/admin/resource-state'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   useCreateKanbanAction,
   useKanbansResource,
   useProjectsResource,
   useTicketsResource,
 } from '@/lib/api/hooks'
+
+const createBoardDescriptor: FormDescriptor = {
+  entityName: 'Board',
+  fields: [
+    { key: 'boardName', label: 'Board name', widget: 'text', required: true },
+  ],
+}
 
 export function KanbanPage() {
   const projects = useProjectsResource()
@@ -24,25 +30,16 @@ export function KanbanPage() {
   const kanbans = useKanbansResource(activeProjectId)
   const tickets = useTicketsResource(activeProjectId)
   const createKanban = useCreateKanbanAction()
-  const [boardName, setBoardName] = useState('')
+  const [formKey, setFormKey] = useState(0)
 
-  async function handleCreateBoard(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    if (activeProjectId === null) {
-      return
-    }
-
-    try {
-      await createKanban.submit({
-        projectId: activeProjectId,
-        boardName,
-      })
-      setBoardName('')
-      kanbans.reload()
-    } catch {
-      return
-    }
+  async function handleCreateBoard(values: Record<string, string | number | boolean>) {
+    if (activeProjectId === null) return
+    await createKanban.submit({
+      projectId: activeProjectId,
+      boardName: String(values.boardName),
+    })
+    setFormKey((k) => k + 1)
+    kanbans.reload()
   }
 
   return (
@@ -84,37 +81,16 @@ export function KanbanPage() {
             <CardHeader>
               <CardTitle className="text-lg">Create kanban board</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <form className="grid gap-4 md:grid-cols-[1fr_auto]" onSubmit={handleCreateBoard}>
-                <div className="space-y-2">
-                  <Label htmlFor="create-board-name">Board name</Label>
-                  <Input
-                    id="create-board-name"
-                    value={boardName}
-                    onChange={(event) => setBoardName(event.target.value)}
-                    placeholder="Iteration Board"
-                    required
-                  />
-                </div>
-
-                <div className="flex items-end">
-                  <Button
-                    type="submit"
-                    disabled={
-                      activeProjectId === null ||
-                      createKanban.status === 'submitting'
-                    }
-                  >
-                    Create board
-                  </Button>
-                </div>
-              </form>
-
-              <MutationStatus
-                status={createKanban.status}
-                error={createKanban.error}
+            <CardContent>
+              <DynamicForm
+                key={formKey}
+                descriptor={createBoardDescriptor}
+                onSubmit={handleCreateBoard}
+                mutationStatus={createKanban.status}
+                mutationError={createKanban.error}
                 submittingMessage="Creating board through the backend service..."
                 successMessage="Board created and the board list has been refreshed."
+                submitLabel="Create board"
               />
             </CardContent>
           </Card>

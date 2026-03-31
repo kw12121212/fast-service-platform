@@ -245,6 +245,7 @@ function FieldRow({ field, value, error, disabled, onChange }: FieldRowProps) {
           id={inputId}
           value={String(value)}
           disabled={disabled}
+          aria-label={field.label}
           aria-invalid={hasError ? true : undefined}
           onChange={(e) => onChange(e.target.value)}
           className="h-auto min-h-[80px] w-full resize-y rounded-lg border border-input bg-transparent px-2.5 py-2 text-base outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive md:text-sm dark:bg-input/30"
@@ -254,6 +255,7 @@ function FieldRow({ field, value, error, disabled, onChange }: FieldRowProps) {
           id={inputId}
           value={String(value)}
           disabled={disabled}
+          aria-label={field.label}
           aria-invalid={hasError ? true : undefined}
           onChange={(e) => onChange(e.target.value)}
           className="h-8 w-full cursor-pointer rounded-lg border border-input bg-transparent px-2.5 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive md:text-sm dark:bg-input/30"
@@ -271,6 +273,7 @@ function FieldRow({ field, value, error, disabled, onChange }: FieldRowProps) {
           type={field.widget}
           value={String(value)}
           disabled={disabled}
+          aria-label={field.label}
           aria-invalid={hasError ? true : undefined}
           onChange={(e) => onChange(e.target.value)}
         />
