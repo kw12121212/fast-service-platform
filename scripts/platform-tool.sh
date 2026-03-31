@@ -10,6 +10,7 @@ Usage:
   ./scripts/platform-tool.sh assembly verify
   ./scripts/platform-tool.sh assembly compatibility
   ./scripts/platform-tool.sh generated-app verify [generated-app-dir]
+  ./scripts/platform-tool.sh generated-app smoke [generated-app-dir]
   ./scripts/platform-tool.sh generated-app verify-java [generated-app-dir]
   ./scripts/platform-tool.sh upgrade targets [generated-app-dir]
   ./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>
@@ -53,6 +54,10 @@ case "$group/$command" in
   generated-app/verify)
     target_dir="${1:-$(pwd)}"
     "$ROOT_DIR/scripts/verify-derived-app.sh" "$target_dir"
+    ;;
+  generated-app/smoke)
+    target_dir="${1:-$(pwd)}"
+    "$ROOT_DIR/scripts/verify-derived-app-runtime-smoke.sh" "$target_dir"
     ;;
   generated-app/verify-reference)
     target_dir="${1:-$(pwd)}"

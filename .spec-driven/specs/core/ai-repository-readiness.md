@@ -135,6 +135,15 @@ The repository MUST provide an automated smoke-validation path that exercises th
 - WHEN the contributor runs the documented smoke-validation entrypoint
 - THEN the repository validates the current end-to-end integration path through `/service/*` instead of limiting verification to isolated backend or frontend checks
 
+### Requirement: Repository Exposes Derived-App Runtime Smoke Validation Guidance
+The repository MUST expose the derived-app runtime smoke validation path as a first-class repository validation entrypoint in its AI-facing guidance so contributors can tell when runtime proof is required in addition to generated-app contract verification.
+
+#### Scenario: A contributor chooses how to validate a derived application
+- GIVEN a contributor has generated or regenerated a derived application
+- WHEN they inspect the repository's quickstart, AI context, or related playbooks
+- THEN they can identify the derived-app runtime smoke entrypoint
+- AND they can distinguish it from generated-app contract verification and main-workspace full-stack smoke validation
+
 ### Requirement: Repository Provides AI-Oriented Troubleshooting Guidance
 The repository MUST provide troubleshooting guidance for the current local setup so contributors can resolve common environment, dependency, and integration failures without guessing.
 

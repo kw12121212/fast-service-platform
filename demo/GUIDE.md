@@ -60,8 +60,9 @@
 这个验证会做三件事：
 
 1. 对 `demo/baseline-demo/` 运行 repository-owned generated-app verify
-2. 对 `demo/baseline-demo/backend` 运行 `mvn -q test`
-3. 对 `demo/baseline-demo/frontend` 运行 `bun install --frozen-lockfile`、`bun run build`、`bun run lint`
+2. 对 `demo/baseline-demo/` 运行 repository-owned derived-app runtime smoke
+3. 对 `demo/baseline-demo/backend` 运行 `mvn -q test`
+4. 对 `demo/baseline-demo/frontend` 运行 `bun install --frozen-lockfile`、`bun run build`、`bun run lint`
 
 ## 启动 demo backend
 

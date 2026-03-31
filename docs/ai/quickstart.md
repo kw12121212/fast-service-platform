@@ -24,6 +24,7 @@
 
 - AI 在这个仓库里的默认角色是 `tool orchestrator`，不是现有 platform workflow 的替代实现。
 - 对 assembly、generated-app verification、upgrade target selection、advisory、evaluation 和 execution，优先走 `./scripts/platform-tool.sh`。
+- 对 derived app 的 runtime smoke，也优先走 `./scripts/platform-tool.sh generated-app smoke ...`，不要自己重写临时启动链路。
 - 先读 `docs/ai/ai-tool-orchestration-contract.json`，再决定是否需要走特定兼容实现或 wrapper。
 - 如果默认 façade 和 contract 允许的 fallback 都不可用，停止并上报 blocker，不要自己临时重写 workflow。
 
@@ -73,6 +74,7 @@
   - `scripts/verify-backend.sh`
   - `scripts/verify-frontend.sh`
   - `scripts/verify-fullstack.sh`
+  - `scripts/verify-derived-app-runtime-smoke.sh`
 
 参考 playbook：
 - `docs/ai/playbooks/integration-demo-and-smoke.md`
@@ -94,6 +96,7 @@
 - `verify-backend-sandbox-runtime.sh` 跑 backend 的重型 sandbox runtime 验证，实际执行 `podman` image/container 路径
 - `verify-frontend.sh` 跑 frontend 的 `test`、`build`、`lint`
 - `verify-fullstack.sh` 会准备 backend 运行时、启动 backend 和 Vite dev server，并通过 frontend 的 `/service/*` 代理做 smoke 验证
+- `verify-derived-app-runtime-smoke.sh` 面向 derived app 目录执行同类 smoke，证明 generated frontend 和 generated backend 的真实代理链路可用
 
 ## 如果你要展示仓库内置 baseline demo
 
@@ -106,12 +109,13 @@
 ```bash
 ./scripts/regenerate-baseline-demo.sh
 ./scripts/verify-baseline-demo.sh
+./scripts/platform-tool.sh generated-app smoke demo/baseline-demo
 ```
 
 说明：
 
 - `regenerate-baseline-demo.sh` 用 repository-owned assembly path 重新生成 committed baseline demo
-- `verify-baseline-demo.sh` 会验证 generated-app contract，并检查 demo backend 和 frontend 的最小可运行校验路径
+- `verify-baseline-demo.sh` 会验证 generated-app contract、derived-app runtime smoke，以及 demo backend 和 frontend 的最小校验路径
 
 ## 高价值改动顺序
 
@@ -210,6 +214,12 @@ docs/ai/playbooks/define-ai-solution-input.md
 
 ```bash
 ./scripts/platform-tool.sh generated-app verify ../core-admin-console
+```
+
+如果你要补一层真实运行证明，而不是只做结构验证：
+
+```bash
+./scripts/platform-tool.sh generated-app smoke ../core-admin-console
 ```
 
 如果你要走 Java verifier 路径：

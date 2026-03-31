@@ -25,7 +25,7 @@ wait_for_url() {
   local sleep_seconds="${3:-1}"
 
   for ((attempt = 1; attempt <= attempts; attempt++)); do
-    if curl -fsS "$url" >/dev/null 2>&1; then
+    if curl -fsS --connect-timeout 1 --max-time 2 "$url" >/dev/null 2>&1; then
       return 0
     fi
     sleep "$sleep_seconds"
@@ -35,24 +35,41 @@ wait_for_url() {
   return 1
 }
 
-ensure_frontend_deps() {
+port_is_open() {
+  local host="${1:-127.0.0.1}"
+  local port="$2"
+
+  (echo >"/dev/tcp/${host}/${port}") >/dev/null 2>&1
+}
+
+ensure_frontend_deps_for_dir() {
+  local frontend_dir="$1"
   require_command bun
 
-  if [[ ! -d "$ROOT_DIR/frontend/node_modules" ]]; then
+  if [[ ! -d "$frontend_dir/node_modules" ]]; then
     log "Installing frontend dependencies with bun..."
     (
-      cd "$ROOT_DIR/frontend"
+      cd "$frontend_dir"
       bun install --frozen-lockfile
     )
   fi
 }
 
-prepare_backend_runtime() {
+ensure_frontend_deps() {
+  ensure_frontend_deps_for_dir "$ROOT_DIR/frontend"
+}
+
+prepare_backend_runtime_for_dir() {
+  local backend_dir="$1"
   log "Preparing backend runtime classpath..."
   (
-    cd "$ROOT_DIR/backend"
+    cd "$backend_dir"
     "$MVN_BIN" -q -DskipTests package dependency:build-classpath \
       -Dmdep.outputFile=target/runtime-classpath.txt \
       -DincludeScope=runtime
   )
+}
+
+prepare_backend_runtime() {
+  prepare_backend_runtime_for_dir "$ROOT_DIR/backend"
 }

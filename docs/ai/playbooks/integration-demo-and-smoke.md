@@ -28,6 +28,28 @@
 4. 通过 frontend dev server 的 `/service/*` 代理请求 backend
 5. 校验用户列表和项目列表接口返回 JSON 数组
 
+## Derived app 的 smoke path
+
+如果你要验证一个 derived app，而不是当前仓库主 workspace，从源平台仓库根目录执行：
+
+```bash
+./scripts/platform-tool.sh generated-app smoke /absolute/path/to/derived-app
+```
+
+这条路径会：
+
+1. 准备 generated backend runtime classpath
+2. 启动 generated backend
+3. 启动 generated frontend dev server
+4. 通过 generated frontend 的 `/service/*` 代理请求 generated backend
+5. 校验最小读接口返回有效 JSON
+
+注意：
+
+- 这条路径和 `generated-app verify` 分层存在
+- `generated-app verify` 证明结构与 contract 资产
+- `generated-app smoke` 证明真实运行链路
+
 ## 什么时候需要补看 demo 数据
 
 - 页面依赖非空数据态才可观察

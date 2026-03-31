@@ -21,6 +21,9 @@ fi
 log "Verifying generated-app contract for $DEMO_DIR..."
 "$ROOT_DIR/scripts/platform-tool.sh" generated-app verify "$DEMO_DIR"
 
+log "Running derived-app runtime smoke validation..."
+"$ROOT_DIR/scripts/platform-tool.sh" generated-app smoke "$DEMO_DIR"
+
 log "Running generated backend tests..."
 (
   cd "$BACKEND_DIR"

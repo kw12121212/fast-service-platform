@@ -300,6 +300,10 @@ test('generated app verification contract is exposed as a normative asset', asyn
     true
   )
   assert.equal(
+    aiContextText.includes('derived_app_runtime_smoke: ./scripts/platform-tool.sh generated-app smoke <generated-app-dir>'),
+    true
+  )
+  assert.equal(
     aiContextText.includes('- docs/ai/playbooks/define-ai-solution-input.md'),
     true
   )
@@ -312,6 +316,7 @@ test('generated app verification contract is exposed as a normative asset', asyn
     true
   )
   assert.equal(quickstartText.includes('docs/ai/structured-app-template-contract.json'), true)
+  assert.equal(quickstartText.includes('./scripts/platform-tool.sh generated-app smoke ../core-admin-console'), true)
 })
 
 test('compatibility suite passes for the java reference implementation', async () => {

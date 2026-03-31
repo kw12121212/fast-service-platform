@@ -52,6 +52,7 @@ AI 编排顺序：
 4. 先把 solution input 映射成 `app-manifest`
 5. 通过 `platform-tool.sh assembly scaffold ...` 执行装配
 6. 装配完成后立刻执行 `platform-tool.sh generated-app verify ...`
+7. 如果当前环境可启动 generated backend/frontend，再执行 `platform-tool.sh generated-app smoke ...` 补 runtime 证明
 
 只有在 orchestration contract 明确允许时，才回退到具体 wrapper 或实现专用路径。
 
@@ -97,6 +98,14 @@ AI 编排顺序：
 ```bash
 ./scripts/platform-tool.sh generated-app verify ../core-admin-console
 ```
+
+如果你要验证这个 generated app 的真实运行链路：
+
+```bash
+./scripts/platform-tool.sh generated-app smoke ../core-admin-console
+```
+
+这个入口会启动 generated backend 和 generated frontend，并通过 frontend `/service/*` 代理验证最小读接口。
 
 如果你要显式走兼容 Java verifier：
 

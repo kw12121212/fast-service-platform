@@ -18,6 +18,7 @@
 - `core/ai-solution-input-model.md` - Machine-readable structured AI solution input, required/optional field boundaries, and mapping guidance into manifest-driven assembly.
 - `core/ai-tool-orchestration-contract.md` - Machine-readable AI tool-selection, workflow ordering, fallback behavior, and blocker semantics for repository-owned platform tooling.
 - `core/derived-app-lifecycle-and-upgrade-contract.md` - Machine-readable lifecycle metadata, platform-origin semantics, upgrade compatibility inputs, and repository-owned upgrade evaluation for derived applications.
+- `core/derived-app-runtime-smoke-validation.md` - Repository-owned runtime smoke validation for derived applications, frontend proxy-boundary proof, narrow success checks, and actionable failure stages.
 - `core/generated-app-verification-contract.md` - Machine-readable verifier inputs, observable checks, result semantics, and reference-verifier role for generated applications.
 - `core/platform-release-history-and-version-lineage.md` - Machine-readable platform release history, lineage relationships, supported upgrade paths, and repository-owned release lookup behavior.
 - `core/repository-owned-baseline-demo.md` - Dedicated demo area, regenerable baseline demo artifact, human demonstration behavior, and demo validation guidance.
