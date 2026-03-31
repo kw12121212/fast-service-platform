@@ -44,6 +44,15 @@ When software project management, kanban management, and ticket management modul
 - THEN they can create software projects, kanban boards, and tickets
 - AND they can advance tickets through the minimal delivery-state flow
 
+### Requirement: Platform Baseline Includes A Reusable Dynamic Form Component
+The system MUST include the dynamic form component as a reusable platform capability available to any derived application, so that AI-generated enterprise management workflows can produce consistent, backend-connected forms from declarative descriptors without re-implementing widget selection, validation, or mutation feedback per entity.
+
+#### Scenario: A contributor checks the platform baseline for reusable form capabilities
+- GIVEN a contributor reviews the repository's reusable component baseline
+- WHEN they check whether form generation is a platform-owned capability
+- THEN they can identify the dynamic form component as a reusable baseline capability
+- AND they can confirm it is accessible from the platform component index rather than embedded in a single page
+
 ### Requirement: Current Runnable Baseline Remains Reproducible As A Default Assembly
 The system MUST preserve a default assembly profile that reproduces the repository's current runnable baseline application behavior even when the optional delivery-management area is decomposed into smaller module units.
 The system MUST provide a repository-owned baseline demo path that allows contributors to demonstrate that default assembly behavior to human reviewers without reconstructing the baseline from scattered setup notes.
