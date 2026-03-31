@@ -28,6 +28,7 @@
 - `frontend/admin-shell.md` - Runnable PC admin frontend workspace and coherent V1 admin shell behavior.
 - `frontend/data-access.md` - Consistent frontend data-access convention for backend-connected admin pages.
 - `frontend/dynamic-form-component.md` - Platform-owned reusable dynamic form component: descriptor contract, V1 widget types, validation, onSubmit handoff, and mutation feedback integration.
+- `frontend/dynamic-report-component.md` - Platform-owned reusable dynamic report component: descriptor contract, V1 section types (summary cards, table, bar/line/pie charts), caller-provided aggregated results, and data-access ownership boundary.
 - `frontend/management-write-workflows.md` - Minimum admin creation workflows, mutation feedback behavior, and ticket state progression behavior.
 - `frontend/minimum-admin-pages.md` - Minimum visible admin page set and backend-backed page behavior for the first frontend baseline.
 - `frontend/project-git-management.md` - Projects-page Git context display, local branch visibility, safe branch switching, and mutation feedback behavior.

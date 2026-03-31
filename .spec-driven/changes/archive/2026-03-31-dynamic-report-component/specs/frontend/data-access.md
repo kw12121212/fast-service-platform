@@ -1,12 +1,6 @@
 # Frontend Data Access
 
-### Requirement: Frontend Uses A Consistent Data-Access Convention
-The system MUST provide a consistent frontend data-access convention for the first admin frontend, covering both backend reads and supported admin write workflows instead of scattering ad hoc backend requests across pages.
-
-#### Scenario: A contributor reviews frontend backend integration
-- GIVEN the first admin frontend has been implemented
-- WHEN the contributor inspects how pages read from and write to backend data
-- THEN they can identify a consistent data-access pattern used across the supported minimum V1 pages
+## MODIFIED Requirements
 
 ### Requirement: Dynamic Reports Follow The Existing Data-Access Convention
 The system MUST keep dynamic report integrations inside the existing frontend data-access convention, so report data is obtained through the same page-owned or shared API access patterns rather than ad hoc backend requests from the report component itself.

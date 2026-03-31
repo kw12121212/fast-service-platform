@@ -1,5 +1,7 @@
 import { Activity, FolderKanban, ShieldCheck, Ticket, Users } from 'lucide-react'
 
+import { DynamicReport } from '@/components/admin'
+import type { ReportDescriptor, ReportResults } from '@/components/admin'
 import { PageHeader } from '@/components/admin/page-header'
 import { ResourceState } from '@/components/admin/resource-state'
 import { StatCard } from '@/components/admin/stat-card'
@@ -20,6 +22,25 @@ export function DashboardPage() {
   const permissions = useRolePermissionsResource(200)
   const kanbans = useKanbansResource(selectedProject?.id ?? null)
   const tickets = useTicketsResource(selectedProject?.id ?? null)
+
+  const ticketStateReport: ReportDescriptor = {
+    sections: [
+      {
+        type: 'chart',
+        sectionKey: 'ticket-states',
+        chartType: 'bar',
+        title: 'Ticket state breakdown',
+      },
+    ],
+  }
+
+  const ticketStateResults: ReportResults = {
+    'ticket-states': [
+      { label: 'TODO', value: tickets.data.filter((t) => t.state === 'TODO').length },
+      { label: 'In Progress', value: tickets.data.filter((t) => t.state === 'IN_PROGRESS').length },
+      { label: 'Done', value: tickets.data.filter((t) => t.state === 'DONE').length },
+    ],
+  }
 
   return (
     <div className="space-y-8">
@@ -181,6 +202,8 @@ export function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <DynamicReport descriptor={ticketStateReport} results={ticketStateResults} />
     </div>
   )
 }
