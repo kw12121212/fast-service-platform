@@ -61,9 +61,9 @@ The platform does not most urgently need another language implementation or more
 
 ## Priority Roadmap
 
-### P0
+### P0 (Done)
 
-#### 1. Dynamic Form Component
+#### 1. Dynamic Form Component (Done)
 
 - Why next:
   The platform already has runnable admin pages and backend-backed management workflows, but it still lacks a reusable component for turning structured business descriptions plus table definitions into editable, savable forms.
@@ -77,9 +77,9 @@ The platform does not most urgently need another language implementation or more
 - Suggested change name:
   `dynamic-form-component`
 
-### P1
+### P1 (Done)
 
-#### 2. Dynamic Report Component
+#### 2. Dynamic Report Component (Done)
 
 - Why next:
   Once the platform can generate structured data-entry experiences, the next adjacent reusable capability is reporting. AI-generated enterprise systems need a controlled way to turn business descriptions plus live data into platform-owned report views.
@@ -93,7 +93,7 @@ The platform does not most urgently need another language implementation or more
 - Suggested change name:
   `dynamic-report-component`
 
-#### 3. Derived-App Runtime Smoke Validation
+#### 3. Derived-App Runtime Smoke Validation (Done)
 
 - Why next:
   The repository already validates contracts and generated-app structure well. The next trust gap is runtime proof: a derived app should be demonstrably buildable and smokable, not just structurally compatible.
@@ -108,7 +108,7 @@ The platform does not most urgently need another language implementation or more
 
 ### P2
 
-#### 5. Operational Module Assembly Completion
+#### 5. Operational Module Assembly Completion (Done)
 
 - Why later:
   The platform already describes optional modules well, but optionality should become more operationally real. A module should be removable or selectable without hidden baseline assumptions leaking through routes, navigation, dependencies, or verification flow.
@@ -154,7 +154,7 @@ The platform does not most urgently need another language implementation or more
 1. [x] `dynamic-form-component`
 2. [x] `dynamic-report-component`
 3. [x] `add-derived-app-runtime-smoke`
-4. [ ] `complete-optional-module-assembly`
+4. [x] `complete-optional-module-assembly`
 5. [ ] `harden-release-upgrade-smoke`
 6. [ ] `expand-structured-template-variants`
 
