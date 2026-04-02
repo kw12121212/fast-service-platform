@@ -46,6 +46,10 @@ The platform does not most urgently need another language implementation or more
 - [x] `project-worktree-management`
 - [x] `project-merge-support`
 - [x] `project-sandbox-environment`
+- [x] `dynamic-form-component`
+- [x] `migrate-admin-forms-to-dynamic-form`
+- [x] `dynamic-report-component`
+- [x] `add-derived-app-runtime-smoke`
 
 ## Roadmap Principles
 
@@ -147,9 +151,9 @@ The platform does not most urgently need another language implementation or more
 
 ## Recommended Order
 
-1. [ ] `dynamic-form-component`
-2. [ ] `dynamic-report-component`
-3. [ ] `add-derived-app-runtime-smoke`
+1. [x] `dynamic-form-component`
+2. [x] `dynamic-report-component`
+3. [x] `add-derived-app-runtime-smoke`
 4. [ ] `complete-optional-module-assembly`
 5. [ ] `harden-release-upgrade-smoke`
 6. [ ] `expand-structured-template-variants`

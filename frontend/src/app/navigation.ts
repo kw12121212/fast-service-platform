@@ -8,6 +8,8 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
+import { moduleSelection } from '@/app/module-selection'
+
 export type AdminRouteMeta = {
   title: string
   description: string
@@ -55,39 +57,51 @@ export const adminNavigation: AdminNavigationItem[] = [
         'Inspect role-based permission assignments using the backend access control service.',
     },
   },
-  {
-    to: '/projects',
-    label: 'Projects',
-    eyebrow: 'Delivery',
-    icon: FolderKanban,
-    meta: {
-      title: 'Software Project Management',
-      description:
-        'Track the software projects currently available from the backend project service.',
-    },
-  },
-  {
-    to: '/tickets',
-    label: 'Tickets',
-    eyebrow: 'Delivery',
-    icon: Ticket,
-    meta: {
-      title: 'Ticket Management',
-      description:
-        'Browse project tickets and their current delivery states through the backend ticket service.',
-    },
-  },
-  {
-    to: '/kanban',
-    label: 'Kanban',
-    eyebrow: 'Delivery',
-    icon: KanbanSquare,
-    meta: {
-      title: 'Kanban Management',
-      description:
-        'Inspect project boards and minimal state flow using the current backend kanban model.',
-    },
-  },
+  ...(moduleSelection.project
+    ? [
+        {
+          to: '/projects',
+          label: 'Projects',
+          eyebrow: 'Delivery',
+          icon: FolderKanban,
+          meta: {
+            title: 'Software Project Management',
+            description:
+              'Track the software projects currently available from the backend project service.',
+          },
+        },
+      ]
+    : []),
+  ...(moduleSelection.ticket
+    ? [
+        {
+          to: '/tickets',
+          label: 'Tickets',
+          eyebrow: 'Delivery',
+          icon: Ticket,
+          meta: {
+            title: 'Ticket Management',
+            description:
+              'Browse project tickets and their current delivery states through the backend ticket service.',
+          },
+        },
+      ]
+    : []),
+  ...(moduleSelection.kanban
+    ? [
+        {
+          to: '/kanban',
+          label: 'Kanban',
+          eyebrow: 'Delivery',
+          icon: KanbanSquare,
+          meta: {
+            title: 'Kanban Management',
+            description:
+              'Inspect project boards and minimal state flow using the current backend kanban model.',
+          },
+        },
+      ]
+    : []),
 ]
 
 export function findNavigationItem(pathname: string) {

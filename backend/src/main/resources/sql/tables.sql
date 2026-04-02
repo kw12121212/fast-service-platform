@@ -1,6 +1,7 @@
 set @packageName 'com.fastservice.platform.backend.generated.model';
 set @modelSrcDir './target/generated-sources/lealone-model';
 
+-- MODULE: user-management
 create table if not exists app_user (
   id long auto_increment primary key,
   username varchar,
@@ -9,6 +10,7 @@ create table if not exists app_user (
   enabled boolean
 ) package @packageName generate code @modelSrcDir;
 
+-- MODULE: role-permission-management
 create table if not exists app_role (
   id long auto_increment primary key,
   role_code varchar,
@@ -32,6 +34,7 @@ create table if not exists app_role_permission (
   permission_id long
 ) package @packageName generate code @modelSrcDir;
 
+-- MODULE: project-management
 create table if not exists software_project (
   id long auto_increment primary key,
   project_key varchar,
@@ -40,11 +43,13 @@ create table if not exists software_project (
   active boolean
 ) package @packageName generate code @modelSrcDir;
 
+-- MODULE: project-repository-management
 create table if not exists project_repository_binding (
   project_id long primary key,
   repository_root_path varchar
 ) package @packageName generate code @modelSrcDir;
 
+-- MODULE: project-repository-management (worktree sandbox)
 create table if not exists project_worktree_sandbox (
   project_id long,
   worktree_path varchar,
@@ -57,12 +62,14 @@ create table if not exists project_worktree_sandbox (
   primary key (project_id, worktree_path)
 ) package @packageName generate code @modelSrcDir;
 
+-- MODULE: kanban-management
 create table if not exists kanban_board (
   id long auto_increment primary key,
   project_id long,
   board_name varchar
 ) package @packageName generate code @modelSrcDir;
 
+-- MODULE: ticket-management
 create table if not exists ticket (
   id long auto_increment primary key,
   project_id long,

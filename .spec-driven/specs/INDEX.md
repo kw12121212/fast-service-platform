@@ -30,6 +30,7 @@
 - `frontend/dynamic-form-component.md` - Platform-owned reusable dynamic form component: descriptor contract, V1 widget types, validation, onSubmit handoff, and mutation feedback integration.
 - `frontend/dynamic-report-component.md` - Platform-owned reusable dynamic report component: descriptor contract, V1 section types (summary cards, table, bar/line/pie charts), caller-provided aggregated results, and data-access ownership boundary.
 - `frontend/management-write-workflows.md` - Minimum admin creation workflows, mutation feedback behavior, and ticket state progression behavior.
+- `frontend/module-selection.md` - Module-selection config contract: route and nav conditionality, assembly-time selection, and default all-active platform baseline.
 - `frontend/minimum-admin-pages.md` - Minimum visible admin page set and backend-backed page behavior for the first frontend baseline.
 - `frontend/project-git-management.md` - Projects-page Git context display, local branch visibility, safe branch switching, and mutation feedback behavior.
 - `frontend/project-merge-support.md` - Projects-page merge support context, linked-worktree merge requests, restricted merge states, and merge outcome visibility.

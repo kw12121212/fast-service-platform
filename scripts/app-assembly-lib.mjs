@@ -766,6 +766,16 @@ ${helperMethods.join('\n')}
 `
 }
 
+function buildModuleSelectionTs(selectedModules) {
+  const selected = new Set(selectedModules)
+  return `export const moduleSelection = {
+  project: ${selected.has('project-management')},
+  ticket: ${selected.has('ticket-management')},
+  kanban: ${selected.has('kanban-management')},
+} as const
+`
+}
+
 function buildRouterTsx(selectedModules) {
   const selected = new Set(selectedModules)
   const routeModules = ROUTE_MODULES.filter((module) => selected.has(module.id))
@@ -1574,6 +1584,10 @@ async function writeGeneratedApp(outputDir, manifest, registry, contract, select
       buildProjectServiceExecutor(includeRepositoryManagement)
     )
   }
+  await writeFile(
+    path.join(outputDir, 'frontend/src/app/module-selection.ts'),
+    buildModuleSelectionTs(selectedModules)
+  )
   await writeFile(path.join(outputDir, 'frontend/src/app/router.tsx'), buildRouterTsx(selectedModules))
   await writeFile(path.join(outputDir, 'frontend/src/app/navigation.ts'), buildNavigationTs(selectedModules))
   await writeFile(

@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 
 import AdminShell from '@/app/admin-shell'
+import { moduleSelection } from '@/app/module-selection'
 import { DashboardPage } from '@/features/dashboard/dashboard-page'
 import { KanbanPage } from '@/features/kanban/kanban-page'
 import { ProjectsPage } from '@/features/projects/projects-page'
@@ -34,18 +35,15 @@ export const adminRoutes: RouteObject[] = [
         path: 'roles',
         element: <RolePermissionsPage />,
       },
-      {
-        path: 'projects',
-        element: <ProjectsPage />,
-      },
-      {
-        path: 'tickets',
-        element: <TicketsPage />,
-      },
-      {
-        path: 'kanban',
-        element: <KanbanPage />,
-      },
+      ...(moduleSelection.project
+        ? [{ path: 'projects', element: <ProjectsPage /> }]
+        : []),
+      ...(moduleSelection.ticket
+        ? [{ path: 'tickets', element: <TicketsPage /> }]
+        : []),
+      ...(moduleSelection.kanban
+        ? [{ path: 'kanban', element: <KanbanPage /> }]
+        : []),
       {
         path: '*',
         element: <MissingRoutePage />,

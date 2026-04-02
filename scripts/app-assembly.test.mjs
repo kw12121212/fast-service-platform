@@ -68,6 +68,35 @@ test('scaffoldDerivedApp generates a core-only app without delivery routes', asy
     assert.equal(servicesSql.includes('project_service'), false)
     assert.equal(servicesSql.includes('ticket_service'), false)
     assert.equal(servicesSql.includes('kanban_service'), false)
+
+    const moduleSelectionTs = await readFile(
+      path.join(outputDir, 'frontend/src/app/module-selection.ts'),
+      'utf8'
+    )
+    assert.ok(moduleSelectionTs.includes('project: false'))
+    assert.ok(moduleSelectionTs.includes('ticket: false'))
+    assert.ok(moduleSelectionTs.includes('kanban: false'))
+  } finally {
+    await rm(outputDir, { recursive: true, force: true })
+  }
+})
+
+test('scaffoldDerivedApp emits all-true module-selection.ts for baseline-v1 profile', async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), 'fsp-baseline-'))
+
+  try {
+    await scaffoldDerivedApp({
+      manifestPath: path.join(REPO_ROOT, 'docs/ai/manifests/default-baseline-app.json'),
+      outputDir
+    })
+
+    const moduleSelectionTs = await readFile(
+      path.join(outputDir, 'frontend/src/app/module-selection.ts'),
+      'utf8'
+    )
+    assert.ok(moduleSelectionTs.includes('project: true'))
+    assert.ok(moduleSelectionTs.includes('ticket: true'))
+    assert.ok(moduleSelectionTs.includes('kanban: true'))
   } finally {
     await rm(outputDir, { recursive: true, force: true })
   }

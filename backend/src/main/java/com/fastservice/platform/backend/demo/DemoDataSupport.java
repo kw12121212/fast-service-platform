@@ -29,16 +29,23 @@ public final class DemoDataSupport {
             throw new IllegalStateException("Unable to load demo data", e);
         }
 
-        ProjectServiceImpl projectService = new ProjectServiceImpl();
-        KanbanServiceImpl kanbanService = new KanbanServiceImpl();
-        TicketServiceImpl ticketService = new TicketServiceImpl();
+        if (ModuleSelection.PROJECT) {
+            ProjectServiceImpl projectService = new ProjectServiceImpl();
+            long projectId = ensureProject(projectService);
 
-        long projectId = ensureProject(projectService);
-        long boardId = ensureBoard(projectId, kanbanService);
-        ensureTicket(projectId, boardId, "FSP-1", "Bootstrap backend core",
-                "Establish the first backend core", "TODO", ticketService);
-        ensureTicket(projectId, boardId, "FSP-2", "Verify demo workflow",
-                "Exercise minimal kanban state flow", "IN_PROGRESS", ticketService);
+            if (ModuleSelection.KANBAN) {
+                KanbanServiceImpl kanbanService = new KanbanServiceImpl();
+                long boardId = ensureBoard(projectId, kanbanService);
+
+                if (ModuleSelection.TICKET) {
+                    TicketServiceImpl ticketService = new TicketServiceImpl();
+                    ensureTicket(projectId, boardId, "FSP-1", "Bootstrap backend core",
+                            "Establish the first backend core", "TODO", ticketService);
+                    ensureTicket(projectId, boardId, "FSP-2", "Verify demo workflow",
+                            "Exercise minimal kanban state flow", "IN_PROGRESS", ticketService);
+                }
+            }
+        }
     }
 
     private static boolean hasDemoUser(Connection connection) throws SQLException {

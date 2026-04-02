@@ -1,6 +1,7 @@
 set @packageName 'com.fastservice.platform.backend.generated.service';
 set @serviceSrcDir './target/generated-sources/lealone-service';
 
+-- MODULE: user-management
 create service if not exists user_service (
   createUser(username varchar, displayName varchar, email varchar) long,
   listUsers() varchar
@@ -9,6 +10,7 @@ package @packageName
 implement by 'com.fastservice.platform.backend.user.UserServiceImpl'
 generate code @serviceSrcDir;
 
+-- MODULE: role-permission-management
 create service if not exists access_control_service (
   createRole(roleCode varchar, roleName varchar) long,
   createPermission(permissionCode varchar, permissionName varchar, scope varchar) long,
@@ -23,6 +25,7 @@ package @packageName
 implement by 'com.fastservice.platform.backend.access.AccessControlServiceImpl'
 generate code @serviceSrcDir;
 
+-- MODULE: project-management
 create service if not exists project_service (
   createProject(projectKey varchar, projectName varchar, description varchar) long,
   bindProjectRepository(projectId long, repositoryPath varchar) varchar,
@@ -41,6 +44,7 @@ package @packageName
 implement by 'com.fastservice.platform.backend.project.ProjectServiceImpl'
 generate code @serviceSrcDir;
 
+-- MODULE: kanban-management
 create service if not exists kanban_service (
   createKanban(projectId long, boardName varchar) long,
   listKanbansByProject(projectId long) varchar
@@ -49,6 +53,7 @@ package @packageName
 implement by 'com.fastservice.platform.backend.kanban.KanbanServiceImpl'
 generate code @serviceSrcDir;
 
+-- MODULE: ticket-management
 create service if not exists ticket_service (
   createTicket(projectId long, kanbanId long, ticketKey varchar, title varchar, description varchar, assigneeUserId long) long,
   moveTicket(ticketId long, targetState varchar) varchar,
