@@ -25,6 +25,7 @@ The platform does not most urgently need another language implementation or more
 - completing the remaining engineering-support workflow gaps around real project repositories
 - increasing trust that derived applications are runnable, verifiable, and maintainable
 - making optional platform modules more operationally composable, not just conceptually separated
+- lifting common enterprise workflow patterns into reusable platform-owned components instead of re-implementing them per module
 
 ## Recently Completed Foundations
 
@@ -137,10 +138,24 @@ The platform does not most urgently need another language implementation or more
 
 ### P3
 
-#### 7. Template Variant Expansion
+#### 7. Workflow Component
+
+- Why before template expansion:
+  Dynamic forms and reports cover data entry and data reading, but enterprise applications also repeatedly need structured workflow execution such as submit, review, approve, reject, reassign, and audit visibility. That pattern is common enough that the platform should own a narrow reusable workflow component instead of leaving each derived app to invent its own process UI and state handoff.
+- Scope direction:
+  - define a platform-owned workflow descriptor that can express a bounded approval or task-flow sequence
+  - support common enterprise workflow states, assignee presentation, transition actions, comments, and history display
+  - connect workflow actions to backend-backed transition execution rather than stopping at a static stepper UI
+  - keep V1 narrow around single-record or single-process-instance workflows, not a full BPM engine
+- Main risk:
+  Workflow scope can quickly sprawl into a general orchestration engine, designer, or rules platform unless the first version stays focused on observable task and approval flows.
+- Suggested change name:
+  `workflow-component`
+
+#### 8. Template Variant Expansion
 
 - Why last:
-  The structured template system now exists. It should expand only after merge, sandbox, derived-app runtime proof, and operational module assembly are stronger, otherwise new template variants will amplify shaky foundations.
+  The structured template system now exists. It should expand only after merge, sandbox, derived-app runtime proof, operational module assembly, and the most common reusable enterprise interaction components are stronger, otherwise new template variants will amplify shaky foundations.
 - Scope direction:
   - add more explicit slot and template variants
   - improve controlled customization points for derived apps
@@ -157,7 +172,8 @@ The platform does not most urgently need another language implementation or more
 3. [x] `add-derived-app-runtime-smoke`
 4. [x] `complete-optional-module-assembly`
 5. [x] `harden-release-upgrade-smoke`
-6. [ ] `expand-structured-template-variants`
+6. [ ] `workflow-component`
+7. [ ] `expand-structured-template-variants`
 
 ## Explicitly Not A Near-Term Priority
 
