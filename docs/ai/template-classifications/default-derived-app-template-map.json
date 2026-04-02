@@ -146,6 +146,115 @@
       "upgradeBehavior": "preserve-by-default",
       "pathMayBeAbsentUntilCustomized": true,
       "description": "Preferred derived-app-owned backend customization zone."
+    },
+    {
+      "id": "admin-shell-layout-fragment",
+      "matchKind": "exact",
+      "path": "frontend/src/app/admin-shell.tsx",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "admin-shell",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The admin shell layout is contributed by the admin-shell module."
+    },
+    {
+      "id": "admin-shell-dashboard-fragment",
+      "matchKind": "exact",
+      "path": "frontend/src/features/dashboard/dashboard-page.tsx",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "admin-shell",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The dashboard entry page is contributed by the admin-shell module."
+    },
+    {
+      "id": "user-management-page-fragment",
+      "matchKind": "exact",
+      "path": "frontend/src/features/users/users-page.tsx",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "user-management",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The users page is emitted when user management is selected."
+    },
+    {
+      "id": "user-management-service-fragment",
+      "matchKind": "exact",
+      "path": "backend/src/main/java/com/fastservice/platform/backend/user/UserServiceImpl.java",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "user-management",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The user service implementation is emitted when user management is selected."
+    },
+    {
+      "id": "role-permission-management-page-fragment",
+      "matchKind": "exact",
+      "path": "frontend/src/features/roles/role-permissions-page.tsx",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "role-permission-management",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The role-permissions page is emitted when role-permission management is selected."
+    },
+    {
+      "id": "role-permission-management-service-fragment",
+      "matchKind": "exact",
+      "path": "backend/src/main/java/com/fastservice/platform/backend/access/AccessControlServiceImpl.java",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "role-permission-management",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The access control service implementation is emitted when role-permission management is selected."
+    },
+    {
+      "id": "kanban-management-page-fragment",
+      "matchKind": "exact",
+      "path": "frontend/src/features/kanban/kanban-page.tsx",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "kanban-management",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The kanban page is emitted when kanban management is selected."
+    },
+    {
+      "id": "kanban-management-service-fragment",
+      "matchKind": "exact",
+      "path": "backend/src/main/java/com/fastservice/platform/backend/kanban/KanbanServiceImpl.java",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "kanban-management",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The kanban service implementation is emitted when kanban management is selected."
+    },
+    {
+      "id": "ticket-management-page-fragment",
+      "matchKind": "exact",
+      "path": "frontend/src/features/tickets/tickets-page.tsx",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "ticket-management",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The tickets page is emitted when ticket management is selected."
+    },
+    {
+      "id": "ticket-management-service-fragment",
+      "matchKind": "exact",
+      "path": "backend/src/main/java/com/fastservice/platform/backend/ticket/TicketServiceImpl.java",
+      "unitType": "module-fragment",
+      "ownership": "module-managed",
+      "moduleId": "ticket-management",
+      "upgradeBehavior": "review-before-overwrite",
+      "description": "The ticket service implementation is emitted when ticket management is selected."
+    },
+    {
+      "id": "module-selection-config",
+      "matchKind": "exact",
+      "path": "frontend/src/app/module-selection.ts",
+      "unitType": "customization-zone",
+      "ownership": "derived-managed",
+      "upgradeBehavior": "preserve-by-default",
+      "description": "The module-selection configuration is the derived-app-owned entry point for choosing the active module profile."
     }
   ]
 }
