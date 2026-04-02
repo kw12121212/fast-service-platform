@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "upgrade-smoke-fixture-app",
+    "name": "Upgrade Smoke Fixture App",
+    "packagePrefix": "com.example.smoketest"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management"
+  ]
+}

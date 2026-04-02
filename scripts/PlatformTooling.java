@@ -80,6 +80,17 @@ public final class PlatformTooling {
                 Map<String, Object> result = executeDerivedAppUpgrade(targetDir, apply, repoRoot);
                 System.out.println(SimpleJson.stringify(result));
             }
+            case "upgrade-smoke" -> {
+                Map<String, Object> result = runUpgradeSmokeSuite(repoRoot);
+                if (!Boolean.TRUE.equals(result.get("ok"))) {
+                    StringBuilder builder = new StringBuilder("Upgrade smoke suite failed");
+                    for (String issue : asOptionalStringList(result.get("issues"))) {
+                        builder.append(System.lineSeparator()).append("- ").append(issue);
+                    }
+                    throw new IllegalStateException(builder.toString());
+                }
+                System.out.println(SimpleJson.stringify(result));
+            }
             default -> throw new IllegalArgumentException("Unknown command: " + command);
         }
     }
@@ -214,6 +225,140 @@ public final class PlatformTooling {
         return result;
     }
 
+    private static Map<String, Object> runUpgradeSmokeSuite(Path repoRoot) throws IOException {
+        List<String> issues = new ArrayList<>();
+        List<Map<String, Object>> passed = new ArrayList<>();
+        List<Map<String, Object>> failed = new ArrayList<>();
+
+        Map<String, Object> suite = readJson(repoRoot.resolve("docs/ai/compatibility/upgrade-smoke-suite.json"));
+        Map<String, Object> fixtures = asMap(suite.get("fixtures"), "Suite must include fixtures");
+
+        for (Map<String, Object> fixture : asMapList(fixtures.get("valid"), "Suite valid fixtures must be an array")) {
+            runUpgradeSmokeFixtureCases(fixture, repoRoot, issues, passed, failed);
+        }
+        for (Map<String, Object> fixture : asMapList(fixtures.get("invalid"), "Suite invalid fixtures must be an array")) {
+            runUpgradeSmokeFixtureCases(fixture, repoRoot, issues, passed, failed);
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("ok", issues.isEmpty());
+        result.put("issues", issues);
+        result.put("passed", passed);
+        result.put("failed", failed);
+        return result;
+    }
+
+    private static void runUpgradeSmokeFixtureCases(
+            Map<String, Object> fixture,
+            Path repoRoot,
+            List<String> issues,
+            List<Map<String, Object>> passed,
+            List<Map<String, Object>> failed) throws IOException {
+        String fixtureId = asString(fixture.get("id"));
+        Path fixtureDir = repoRoot.resolve(asString(fixture.get("fixturePath")));
+
+        for (Map<String, Object> testCase : asMapList(fixture.get("cases"), "Fixture cases must be an array")) {
+            String command = asString(testCase.get("command"));
+            String label = fixtureId + "/" + command;
+            List<String> caseIssues = new ArrayList<>();
+
+            try {
+                switch (command) {
+                    case "upgrade-targets" -> {
+                        Map<String, Object> result = listPlatformUpgradeTargets(fixtureDir, repoRoot);
+                        String expectedSource = asStringOrNull(testCase.get("expectedSourceReleaseId"));
+                        if (expectedSource != null && !expectedSource.equals(result.get("sourceReleaseId"))) {
+                            caseIssues.add("expected sourceReleaseId=" + expectedSource
+                                    + " but got " + result.get("sourceReleaseId"));
+                        }
+                        Object countAtLeast = testCase.get("expectedAvailableTargetCountAtLeast");
+                        if (countAtLeast instanceof Number minCount) {
+                            List<?> targets = (List<?>) result.get("availableTargetReleases");
+                            if (targets == null || targets.size() < minCount.intValue()) {
+                                caseIssues.add("expected at least " + minCount + " availableTargetReleases but got "
+                                        + (targets == null ? 0 : targets.size()));
+                            }
+                        }
+                    }
+                    case "upgrade-advisory" -> {
+                        Map<String, Object> result = readPlatformReleaseAdvisory(fixtureDir, repoRoot);
+                        String expectedReleaseId = asStringOrNull(testCase.get("expectedReleaseId"));
+                        if (expectedReleaseId != null && !expectedReleaseId.equals(result.get("releaseId"))) {
+                            caseIssues.add("expected releaseId=" + expectedReleaseId
+                                    + " but got " + result.get("releaseId"));
+                        }
+                        String expectedPrev = asStringOrNull(testCase.get("expectedPreviousReleaseId"));
+                        if (expectedPrev != null && !expectedPrev.equals(result.get("previousReleaseId"))) {
+                            caseIssues.add("expected previousReleaseId=" + expectedPrev
+                                    + " but got " + result.get("previousReleaseId"));
+                        }
+                    }
+                    case "upgrade-evaluate" -> {
+                        Map<String, Object> result = evaluateDerivedAppUpgrade(fixtureDir, repoRoot);
+                        Object expectedCompatible = testCase.get("expectedCompatible");
+                        if (expectedCompatible != null && !expectedCompatible.equals(result.get("compatible"))) {
+                            caseIssues.add("expected compatible=" + expectedCompatible
+                                    + " but got " + result.get("compatible"));
+                        }
+                        String expectedSource = asStringOrNull(testCase.get("expectedSourcePlatformRelease"));
+                        if (expectedSource != null && !expectedSource.equals(result.get("sourcePlatformRelease"))) {
+                            caseIssues.add("expected sourcePlatformRelease=" + expectedSource
+                                    + " but got " + result.get("sourcePlatformRelease"));
+                        }
+                        String expectedTarget = asStringOrNull(testCase.get("expectedTargetPlatformRelease"));
+                        if (expectedTarget != null && !expectedTarget.equals(result.get("targetPlatformRelease"))) {
+                            caseIssues.add("expected targetPlatformRelease=" + expectedTarget
+                                    + " but got " + result.get("targetPlatformRelease"));
+                        }
+                        String expectedIssueIncludes = asStringOrNull(testCase.get("expectedIssueIncludes"));
+                        if (expectedIssueIncludes != null) {
+                            boolean found = asOptionalStringList(result.get("issues")).stream()
+                                    .anyMatch(i -> i.contains(expectedIssueIncludes));
+                            if (!found) {
+                                caseIssues.add("expected an issue containing '" + expectedIssueIncludes
+                                        + "' but issues were: " + result.get("issues"));
+                            }
+                        }
+                    }
+                    case "upgrade-execute-dry-run" -> {
+                        Map<String, Object> result = executeDerivedAppUpgrade(fixtureDir, false, repoRoot);
+                        Object expectedCompatible = testCase.get("expectedCompatible");
+                        if (expectedCompatible != null && !expectedCompatible.equals(result.get("compatible"))) {
+                            caseIssues.add("expected compatible=" + expectedCompatible
+                                    + " but got " + result.get("compatible"));
+                        }
+                        Object expectedDryRun = testCase.get("expectedDryRun");
+                        if (expectedDryRun != null && !expectedDryRun.equals(result.get("dryRun"))) {
+                            caseIssues.add("expected dryRun=" + expectedDryRun
+                                    + " but got " + result.get("dryRun"));
+                        }
+                        Object expectedApplied = testCase.get("expectedApplied");
+                        if (expectedApplied != null && !expectedApplied.equals(result.get("applied"))) {
+                            caseIssues.add("expected applied=" + expectedApplied
+                                    + " but got " + result.get("applied"));
+                        }
+                    }
+                    default -> caseIssues.add("Unknown smoke suite command: " + command);
+                }
+            } catch (Exception error) {
+                caseIssues.add("Exception running " + label + ": " + error);
+            }
+
+            Map<String, Object> caseResult = new LinkedHashMap<>();
+            caseResult.put("fixture", fixtureId);
+            caseResult.put("command", command);
+            if (caseIssues.isEmpty()) {
+                passed.add(caseResult);
+            } else {
+                caseResult.put("issues", caseIssues);
+                failed.add(caseResult);
+                for (String issue : caseIssues) {
+                    issues.add(label + ": " + issue);
+                }
+            }
+        }
+    }
+
     private static Map<String, Object> listPlatformUpgradeTargets(Path targetDir, Path repoRoot) throws IOException {
         Map<String, Object> releaseHistory = readJson(repoRoot.resolve("docs/ai/platform-release-history.json"));
         Map<String, Map<String, Object>> releaseIndex = buildReleaseIndex(releaseHistory);
@@ -246,14 +391,18 @@ public final class PlatformTooling {
                 if (!"supported".equals(asString(upgradePath.get("supportStatus")))) {
                     continue;
                 }
-                Map<String, Object> release = releaseIndex.getOrDefault(
-                        asString(upgradePath.get("targetReleaseId")),
-                        Map.of(
-                                "releaseId", asString(upgradePath.get("targetReleaseId")),
-                                "version", "unavailable",
-                                "supportStatus", "unknown",
-                                "lineageParentReleaseId", null,
-                                "advisoryAsset", asStringOrNull(upgradePath.get("advisoryAsset"))));
+                String targetReleaseId = asString(upgradePath.get("targetReleaseId"));
+                Map<String, Object> release;
+                if (releaseIndex.containsKey(targetReleaseId)) {
+                    release = releaseIndex.get(targetReleaseId);
+                } else {
+                    release = new LinkedHashMap<>();
+                    release.put("releaseId", targetReleaseId);
+                    release.put("version", "unavailable");
+                    release.put("supportStatus", "unknown");
+                    release.put("lineageParentReleaseId", null);
+                    release.put("advisoryAsset", asStringOrNull(upgradePath.get("advisoryAsset")));
+                }
                 Map<String, Object> payload = new LinkedHashMap<>();
                 payload.put("releaseId", release.get("releaseId"));
                 payload.put("version", release.get("version"));

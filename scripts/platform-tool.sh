@@ -16,6 +16,7 @@ Usage:
   ./scripts/platform-tool.sh upgrade evaluate <generated-app-dir>
   ./scripts/platform-tool.sh upgrade advisory [generated-app-dir]
   ./scripts/platform-tool.sh upgrade execute <generated-app-dir> [--apply]
+  ./scripts/platform-tool.sh upgrade smoke
 EOF
 }
 
@@ -97,6 +98,9 @@ case "$group/$command" in
     fi
     shift
     "$ROOT_DIR/scripts/execute-derived-app-upgrade.sh" "$target_dir" "$@"
+    ;;
+  upgrade/smoke)
+    "$ROOT_DIR/scripts/run-upgrade-smoke-suite.sh"
     ;;
   *)
     printf 'Unknown platform-tool command: %s %s\n' "$group" "$command" >&2

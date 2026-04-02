@@ -50,6 +50,7 @@ The platform does not most urgently need another language implementation or more
 - [x] `migrate-admin-forms-to-dynamic-form`
 - [x] `dynamic-report-component`
 - [x] `add-derived-app-runtime-smoke`
+- [x] `harden-release-upgrade-smoke`
 
 ## Roadmap Principles
 
@@ -121,7 +122,7 @@ The platform does not most urgently need another language implementation or more
 - Suggested change name:
   `complete-optional-module-assembly`
 
-#### 6. Platform Release And Upgrade Smoke Hardening
+#### 6. Platform Release And Upgrade Smoke Hardening (Done)
 
 - Why later:
   Release history, upgrade targets, and advisory flows are already defined. The next maturity step is proving those flows against real repository-owned fixtures rather than mostly contract-level guarantees.
@@ -155,7 +156,7 @@ The platform does not most urgently need another language implementation or more
 2. [x] `dynamic-report-component`
 3. [x] `add-derived-app-runtime-smoke`
 4. [x] `complete-optional-module-assembly`
-5. [ ] `harden-release-upgrade-smoke`
+5. [x] `harden-release-upgrade-smoke`
 6. [ ] `expand-structured-template-variants`
 
 ## Explicitly Not A Near-Term Priority

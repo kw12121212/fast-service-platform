@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "fsp-upgrade-smoke-suite/v1",
+  "fixtures": {
+    "valid": [
+      {
+        "id": "bootstrap-core-admin",
+        "fixturePath": "docs/ai/compatibility/upgrade-smoke-fixture",
+        "description": "Minimal core-admin derived app originated from fast-service-platform/0.0.0-bootstrap",
+        "cases": [
+          {
+            "command": "upgrade-targets",
+            "expectedSourceReleaseId": "fast-service-platform/0.0.0-bootstrap",
+            "expectedAvailableTargetCountAtLeast": 1
+          },
+          {
+            "command": "upgrade-advisory",
+            "expectedReleaseId": "fast-service-platform/0.1.0-dev",
+            "expectedPreviousReleaseId": "fast-service-platform/0.0.0-bootstrap"
+          },
+          {
+            "command": "upgrade-evaluate",
+            "expectedCompatible": true,
+            "expectedSourcePlatformRelease": "fast-service-platform/0.0.0-bootstrap",
+            "expectedTargetPlatformRelease": "fast-service-platform/0.1.0-dev"
+          },
+          {
+            "command": "upgrade-execute-dry-run",
+            "expectedCompatible": true,
+            "expectedDryRun": true,
+            "expectedApplied": false
+          }
+        ]
+      }
+    ],
+    "invalid": [
+      {
+        "id": "unknown-source-release",
+        "fixturePath": "docs/ai/compatibility/upgrade-smoke-invalid-source-fixture",
+        "description": "Derived app declaring an unrecognized source platform release",
+        "cases": [
+          {
+            "command": "upgrade-evaluate",
+            "expectedCompatible": false,
+            "expectedIssueIncludes": "Unknown source platform release"
+          }
+        ]
+      }
+    ]
+  }
+}
