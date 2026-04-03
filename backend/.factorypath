@@ -1,21 +1,7 @@
 <factorypath>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-main/8.0.0-SNAPSHOT/lealone-main-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-client/8.0.0-SNAPSHOT/lealone-client-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-server/8.0.0-SNAPSHOT/lealone-server-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-net/8.0.0-SNAPSHOT/lealone-net-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-common/8.0.0-SNAPSHOT/lealone-common-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/apache/logging/log4j/log4j-core/2.25.3/log4j-core-2.25.3.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/apache/logging/log4j/log4j-api/2.25.3/log4j-api-2.25.3.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-aote/8.0.0-SNAPSHOT/lealone-aote-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-sci/8.0.0-SNAPSHOT/lealone-sci-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-aose/8.0.0-SNAPSHOT/lealone-aose-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-sql/8.0.0-SNAPSHOT/lealone-sql-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-db/8.0.0-SNAPSHOT/lealone-db-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-orm/8.0.0-SNAPSHOT/lealone-orm-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/core/jackson-core/2.13.1/jackson-core-2.13.1.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-service/8.0.0-SNAPSHOT/lealone-service-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-http/8.0.0-SNAPSHOT/lealone-http-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/lealone/lealone-agent/8.0.0-SNAPSHOT/lealone-agent-8.0.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/volcengine/volcengine-java-sdk-ark-runtime/1.0.9/volcengine-java-sdk-ark-runtime-1.0.9.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/volcengine/volcengine-java-sdk-ark/1.0.9/volcengine-java-sdk-ark-1.0.9.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/volcengine/volcengine-java-sdk-core/1.0.9/volcengine-java-sdk-core-1.0.9.jar" enabled="true" runInBatchMode="false"/>

@@ -1787,6 +1787,50 @@ describe('admin write workflows', () => {
     expect(await screen.findByText('Latest request was rejected')).toBeInTheDocument()
   })
 
+  it('shows execution failure feedback for project-scoped derived-app assembly requests', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    await screen.findAllByText('/workspace/fast-service-platform')
+
+    fireEvent.change(await screen.findByLabelText('App manifest JSON'), {
+      target: {
+        value: `{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "fail-assembly",
+    "name": "Failure App",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management"
+  ]
+}`,
+      },
+    })
+    fireEvent.change(screen.getByLabelText('Output directory'), {
+      target: { value: '/tmp/generated-fsp-app-failure' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Run derived-app assembly' }),
+    )
+
+    expect(
+      await screen.findByText(
+        'Backend request failed with 409: Repository-owned assembly tooling failed',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Latest run failed')).toBeInTheDocument()
+  })
+
   it('shows restricted derived-app verification state until a project has a successful assembly output', async () => {
     renderRoute('/projects')
 

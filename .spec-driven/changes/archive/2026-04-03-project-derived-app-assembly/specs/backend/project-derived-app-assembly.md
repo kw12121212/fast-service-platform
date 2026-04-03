@@ -21,6 +21,7 @@ The first project-scoped assembly path MUST use the bound project's main reposit
 
 ### Requirement: Project-Scoped Assembly Accepts Manifest Input And Explicit Output Directory
 The system MUST allow a bound software project to request derived-app assembly by providing a valid `app-manifest` input and an explicit absolute output directory.
+The first project-scoped assembly path MUST accept a pre-existing output directory only when that directory is empty.
 
 #### Scenario: A contributor requests project-scoped assembly with valid input
 - GIVEN a software project is bound to a local Git repository
@@ -28,15 +29,24 @@ The system MUST allow a bound software project to request derived-app assembly b
 - THEN the repository-owned assembly workflow is executed for that project
 - AND the generated application is written to the requested output directory
 
+#### Scenario: A contributor requests project-scoped assembly into an existing empty output directory
+- GIVEN a software project is bound to a local Git repository
+- AND the requested absolute output directory already exists
+- AND that output directory is empty
+- WHEN the contributor submits a valid project-scoped assembly request
+- THEN the repository-owned assembly workflow is executed for that project
+- AND the generated application is written to that existing empty output directory
+
 #### Scenario: A contributor requests project-scoped assembly with invalid input
 - GIVEN a software project is bound to a local Git repository
-- WHEN the contributor submits an invalid manifest input or a non-absolute output directory through the project's assembly workflow
+- WHEN the contributor submits an invalid manifest input, a non-absolute output directory, or a non-empty existing output directory through the project's assembly workflow
 - THEN the request is rejected
 - AND the project's assembly context remains readable afterward
 
 ### Requirement: Project-Scoped Assembly Reports Actionable Outcomes
 The system MUST surface project-scoped derived-app assembly outcomes in a way that distinguishes invalid request input from repository-owned assembly execution failure.
 The first project-scoped assembly path MUST expose the latest visible outcome without requiring persistent run-history browsing.
+The latest visible project-scoped assembly outcome MUST remain readable after service restart.
 
 #### Scenario: A contributor inspects a successful project-scoped assembly outcome
 - GIVEN a software project is bound to a local Git repository
@@ -51,6 +61,13 @@ The first project-scoped assembly path MUST expose the latest visible outcome wi
 - WHEN the contributor reads the project's assembly context
 - THEN they can identify the latest visible assembly outcome
 - AND they do not need a persistent history log to interpret the current project-scoped assembly state in the first release
+
+#### Scenario: A contributor inspects the latest assembly outcome after service restart
+- GIVEN a software project is bound to a local Git repository
+- AND the contributor has already run a project-scoped assembly request whose outcome was recorded
+- AND the service has restarted since that request completed
+- WHEN the contributor reads the project's assembly context
+- THEN they can still identify the latest visible assembly outcome
 
 #### Scenario: A contributor encounters an assembly execution failure
 - GIVEN a software project is bound to a local Git repository

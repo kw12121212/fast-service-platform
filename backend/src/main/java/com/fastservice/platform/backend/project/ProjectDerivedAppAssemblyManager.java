@@ -3,6 +3,7 @@ package com.fastservice.platform.backend.project;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -83,6 +84,7 @@ final class ProjectDerivedAppAssemblyManager {
 
         try {
             validateManifestRequest(manifest, repoRoot.root());
+            validateOutputDirectory(outputDir);
         } catch (IllegalArgumentException error) {
             persistOutcome(projectId, new AssemblyRecord(
                     STATUS_AVAILABLE,
@@ -349,6 +351,22 @@ final class ProjectDerivedAppAssemblyManager {
             throw new IllegalArgumentException(label + " must be absolute: " + pathValue);
         }
         return path.toAbsolutePath();
+    }
+
+    private static void validateOutputDirectory(Path outputDir) {
+        if (!Files.exists(outputDir)) {
+            return;
+        }
+        if (!Files.isDirectory(outputDir)) {
+            throw new IllegalArgumentException("Output directory already exists but is not a directory: " + outputDir);
+        }
+        try (Stream<Path> entries = Files.list(outputDir)) {
+            if (entries.findAny().isPresent()) {
+                throw new IllegalArgumentException("Output directory already exists and must be empty: " + outputDir);
+            }
+        } catch (IOException error) {
+            throw new IllegalStateException("Unable to inspect output directory: " + outputDir, error);
+        }
     }
 
     private static RepoRootResolution resolveRepoRoot() {

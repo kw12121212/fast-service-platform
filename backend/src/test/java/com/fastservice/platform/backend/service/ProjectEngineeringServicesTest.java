@@ -461,14 +461,61 @@ class ProjectEngineeringServicesTest extends ProjectServiceTestSupport {
     }
 
     @Test
+    void rejectsDerivedAppAssemblyRequestWhenExistingOutputDirectoryIsNotEmpty() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("ASM1C", "Assembly Output Validation", "Assembly output directory validation test");
+        Path repositoryDir = createGitRepository();
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+        Path outputDir = Files.createTempDirectory("fsp-project-derived-app-non-empty-");
+
+        try {
+            Files.writeString(outputDir.resolve("existing.txt"), "occupied\n", StandardCharsets.UTF_8);
+
+            IllegalArgumentException error = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> projects.requestProjectDerivedAppAssembly(
+                            projectId,
+                            """
+                                    {
+                                      "schemaVersion": "fsp-app-manifest/v1",
+                                      "application": {
+                                        "id": "assembly-existing-output-app",
+                                        "name": "Assembly Existing Output App",
+                                        "packagePrefix": "com.fastservice.platform.derived"
+                                      },
+                                      "modules": [
+                                        "admin-shell",
+                                        "user-management",
+                                        "role-permission-management"
+                                      ]
+                                    }
+                                    """,
+                            outputDir.toString()));
+
+            assertEquals(
+                    "Output directory already exists and must be empty: " + outputDir,
+                    error.getMessage());
+            String payload = projects.getProjectDerivedAppAssembly(projectId);
+            assertTrue(payload.contains("\"category\":\"REQUEST_VALIDATION\""));
+            assertTrue(payload.contains("\"status\":\"FAILED\""));
+            assertTrue(payload.contains(escapeJson(outputDir.toString())));
+        } finally {
+            deleteRecursively(outputDir);
+        }
+    }
+
+    @Test
     void runsDerivedAppAssemblyThroughRepositoryOwnedToolingAndStoresLatestOutcome() throws Exception {
         ProjectServiceImpl projects = new ProjectServiceImpl();
         long projectId = projects.createProject("ASM2", "Assembly Success", "Assembly success test");
         Path repositoryDir = createGitRepository();
+        Path repoRoot = createFakePlatformToolRepoRoot();
         projects.bindProjectRepository(projectId, repositoryDir.toString());
         Path outputDir = Files.createTempDirectory("fsp-project-derived-app-");
+        String previousRepoRoot = System.getProperty("fsp.repo-root");
 
         try {
+            System.setProperty("fsp.repo-root", repoRoot.toString());
             String payload = projects.requestProjectDerivedAppAssembly(
                     projectId,
                     """
@@ -496,8 +543,71 @@ class ProjectEngineeringServicesTest extends ProjectServiceTestSupport {
             assertTrue(payload.contains("\"status\":\"SUCCESS\""));
             assertTrue(payload.contains("project-derived-success-app"));
             assertTrue(payload.contains(escapeJson(outputDir.toString())));
+
+            ProjectServiceImpl restartedProjects = new ProjectServiceImpl();
+            String restartedPayload = restartedProjects.getProjectDerivedAppAssembly(projectId);
+            assertTrue(restartedPayload.contains("\"latestOutcome\":{"));
+            assertTrue(restartedPayload.contains("\"status\":\"SUCCESS\""));
+            assertTrue(restartedPayload.contains("project-derived-success-app"));
+            assertTrue(restartedPayload.contains(escapeJson(outputDir.toString())));
         } finally {
+            if (previousRepoRoot == null) {
+                System.clearProperty("fsp.repo-root");
+            } else {
+                System.setProperty("fsp.repo-root", previousRepoRoot);
+            }
             deleteRecursively(outputDir);
+            deleteRecursively(repoRoot);
+        }
+    }
+
+    @Test
+    void reportsAssemblyExecutionFailureSeparatelyFromRequestValidation() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("ASM2B", "Assembly Failure", "Assembly execution failure test");
+        Path repositoryDir = createGitRepository();
+        Path repoRoot = createFakePlatformToolRepoRoot();
+        Path outputDir = Files.createTempDirectory("fsp-project-derived-app-fail-");
+        String previousRepoRoot = System.getProperty("fsp.repo-root");
+
+        try {
+            projects.bindProjectRepository(projectId, repositoryDir.toString());
+            System.setProperty("fsp.repo-root", repoRoot.toString());
+
+            IllegalStateException error = assertThrows(
+                    IllegalStateException.class,
+                    () -> projects.requestProjectDerivedAppAssembly(
+                            projectId,
+                            """
+                                    {
+                                      "schemaVersion": "fsp-app-manifest/v1",
+                                      "application": {
+                                        "id": "fail-assembly",
+                                        "name": "Assembly Failure App",
+                                        "packagePrefix": "com.fastservice.platform.derived"
+                                      },
+                                      "modules": [
+                                        "admin-shell",
+                                        "user-management",
+                                        "role-permission-management"
+                                      ]
+                                    }
+                                    """,
+                            outputDir.toString()));
+
+            assertEquals("Repository-owned assembly tooling failed", error.getMessage());
+            String payload = projects.getProjectDerivedAppAssembly(projectId);
+            assertTrue(payload.contains("\"category\":\"ASSEMBLY_EXECUTION\""));
+            assertTrue(payload.contains("\"status\":\"FAILED\""));
+            assertTrue(payload.contains("Repository-owned assembly tooling failed"));
+        } finally {
+            if (previousRepoRoot == null) {
+                System.clearProperty("fsp.repo-root");
+            } else {
+                System.setProperty("fsp.repo-root", previousRepoRoot);
+            }
+            deleteRecursively(outputDir);
+            deleteRecursively(repoRoot);
         }
     }
 

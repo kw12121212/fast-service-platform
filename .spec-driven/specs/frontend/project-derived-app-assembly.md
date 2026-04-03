@@ -21,6 +21,7 @@ The first project-scoped assembly path MUST be presented against the bound proje
 
 ### Requirement: Projects Experience Supports Manifest-Driven Derived-App Assembly Requests
 The system MUST allow contributors to request project-scoped derived-app assembly from the current Projects experience by submitting a valid `app-manifest` input and an explicit output directory.
+The first Projects experience for project-scoped derived-app assembly MUST support direct editing or pasting of raw `app-manifest` content.
 
 #### Scenario: A contributor requests project-scoped assembly from the Projects experience
 - GIVEN the admin frontend is running against the current backend core
@@ -28,6 +29,12 @@ The system MUST allow contributors to request project-scoped derived-app assembl
 - WHEN the contributor submits a valid project-scoped assembly request from the Projects experience
 - THEN the request is sent through the backend-backed project assembly workflow
 - AND the visible project state reflects the successful assembly outcome after the request completes
+
+#### Scenario: A contributor prepares manifest input in the Projects experience
+- GIVEN the admin frontend is running against the current backend core
+- AND a software project is bound to a local Git repository
+- WHEN the contributor uses the project's derived-app assembly area
+- THEN they can directly paste or edit raw `app-manifest` content for the assembly request
 
 ### Requirement: Projects Experience Shows Restricted Assembly States Clearly
 The system MUST show clear restricted or unavailable project-scoped assembly states from the current Projects experience.
@@ -55,3 +62,10 @@ The first assembly surface MUST let contributors identify the latest visible out
 - WHEN the repository-owned assembly workflow fails during execution
 - THEN the Projects experience shows a clear failed outcome
 - AND it does not present the failure as an invalid-input-only response
+
+#### Scenario: A contributor sees the latest assembly outcome after service restart
+- GIVEN the admin frontend is running against the current backend core
+- AND a project-scoped assembly outcome has already been recorded for a bound project
+- AND the backend service has restarted since that outcome was recorded
+- WHEN the contributor opens the project's derived-app assembly area in the Projects experience
+- THEN the Projects experience still reflects the latest visible assembly outcome

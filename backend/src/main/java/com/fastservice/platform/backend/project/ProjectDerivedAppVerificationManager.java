@@ -212,20 +212,18 @@ final class ProjectDerivedAppVerificationManager {
             return null;
         }
         Map<String, Object> latestOutcome = new LinkedHashMap<>();
+        Map<String, Object> generatedAppVerification = new LinkedHashMap<>();
+        generatedAppVerification.put("status", persisted.latestGeneratedAppVerificationStatus());
+        generatedAppVerification.put("message", persisted.latestGeneratedAppVerificationMessage());
+        Map<String, Object> runtimeSmoke = new LinkedHashMap<>();
+        runtimeSmoke.put("status", persisted.latestRuntimeSmokeStatus());
+        runtimeSmoke.put("message", persisted.latestRuntimeSmokeMessage());
         latestOutcome.put("status", persisted.latestOutcomeStatus());
         latestOutcome.put("category", persisted.latestOutcomeCategory());
         latestOutcome.put("message", persisted.latestOutcomeMessage());
         latestOutcome.put("targetOutputDirectory", persisted.latestTargetOutputDirectory());
-        latestOutcome.put(
-                "generatedAppVerification",
-                Map.of(
-                        "status", persisted.latestGeneratedAppVerificationStatus(),
-                        "message", persisted.latestGeneratedAppVerificationMessage()));
-        latestOutcome.put(
-                "runtimeSmoke",
-                Map.of(
-                        "status", persisted.latestRuntimeSmokeStatus(),
-                        "message", persisted.latestRuntimeSmokeMessage()));
+        latestOutcome.put("generatedAppVerification", generatedAppVerification);
+        latestOutcome.put("runtimeSmoke", runtimeSmoke);
         latestOutcome.put("updatedAt", persisted.updatedAt());
         return latestOutcome;
     }

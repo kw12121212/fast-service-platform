@@ -2,21 +2,21 @@
 
 ## Implementation
 
-- [x] Finalize delta specs for the project-scoped derived-app assembly contract, backend behavior, and frontend experience.
-- [x] Add backend project-scoped assembly orchestration that accepts `app-manifest` input, validates request boundaries, and delegates to repository-owned assembly tooling.
-- [x] Add frontend Projects experience support for project-scoped assembly, including request submission and visible restricted and outcome states.
-- [x] Keep the first assembly path scoped to project-triggered assembly only, without silently adding verification, smoke, upgrade, or solution-input planning behavior.
+- [x] Add backend project-derived-app-assembly context for bound and unbound software projects, including normal and restricted state reporting.
+- [x] Add backend project-scoped assembly request handling that validates `app-manifest` input and explicit absolute output directories before delegating to repository-owned assembly tooling.
+- [x] Add backend outcome reporting that exposes the latest visible assembly result and distinguishes invalid input from assembly execution failure.
+- [x] Extend the existing Projects experience to show assembly availability, restricted states, manifest submission, output-directory input, and visible assembly outcomes.
+- [x] Refresh project assembly state in the frontend after successful project-scoped assembly requests.
 
 ## Testing
 
-- [x] Backend: `mvn -q test`
-- [x] Frontend: `bun run test`
-- [x] Frontend: `bun run build`
-- [x] Frontend: `bun run lint`
-- [x] Verify the project-scoped assembly path still drives repository-owned tooling and backend-backed `/service/*` flows rather than local-only mocks where feasible.
+- [x] Add backend tests covering bound-project context, unbound-project restrictions, valid assembly request handling, invalid input rejection, and execution-failure reporting.
+- [x] Add frontend tests covering assembly availability, restricted states, successful submission feedback, and execution-failure feedback in the Projects experience.
+- [x] Run backend verification with `./scripts/verify-backend.sh`.
+- [x] Run frontend verification with `./scripts/verify-frontend.sh`.
 
 ## Verification
 
-- [x] Verify unbound projects and other restricted states do not expose normal assembly execution.
-- [x] Verify existing direct `./scripts/platform-tool.sh assembly scaffold ...` usage remains valid and unchanged.
-- [x] Verify scope remains within the first project-scoped assembly milestone step.
+- [x] Verify the final implementation preserves repository-owned assembly tooling boundaries instead of re-implementing assembly logic in the UI or project layer.
+- [x] Verify the first release remains scoped to the main bound repository context and does not silently expand into linked-worktree source selection.
+- [x] Verify the final implementation matches the proposal and delta specs.
