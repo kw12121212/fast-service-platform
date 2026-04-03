@@ -8,6 +8,7 @@ import type {
   AppUser,
   BackendResource,
   KanbanBoard,
+  ProjectDerivedAppAssemblyContext,
   SoftwareProject,
   Ticket,
   TicketWorkflow,
@@ -232,6 +233,21 @@ export function useProjectsResource() {
   })
 }
 
+export function useProjectDerivedAppAssemblyResource(
+  projectId: number,
+  repositoryRootPath: string | null,
+) {
+  return useBackendResource({
+    key: `project-derived-app-assembly:${projectId}:${repositoryRootPath ?? 'unbound'}`,
+    initialData: null as ProjectDerivedAppAssemblyContext | null,
+    load: () =>
+      getJson<ProjectDerivedAppAssemblyContext>(
+        'project_service/getProjectDerivedAppAssembly',
+        { projectId },
+      ),
+  })
+}
+
 export function useRolesResource() {
   return useBackendResource({
     key: 'roles',
@@ -415,6 +431,20 @@ export function usePruneProjectWorktreesAction() {
     run: (args: {
       projectId: number
     }) => invokeService<string>('project_service/pruneProjectWorktrees', args),
+  })
+}
+
+export function useRequestProjectDerivedAppAssemblyAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+      manifestJson: string
+      outputDirectory: string
+    }) =>
+      invokeService<ProjectDerivedAppAssemblyContext>(
+        'project_service/requestProjectDerivedAppAssembly',
+        args,
+      ),
   })
 }
 

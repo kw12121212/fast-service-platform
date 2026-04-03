@@ -81,6 +81,17 @@ public class ProjectServiceExecutor implements ServiceExecutor {
             String result = service.pruneprojectworktrees(methodArgs[0].getLong());
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
         }
+        case "GETPROJECTDERIVEDAPPASSEMBLY" -> {
+            String result = service.getprojectderivedappassembly(methodArgs[0].getLong());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "REQUESTPROJECTDERIVEDAPPASSEMBLY" -> {
+            String result = service.requestprojectderivedappassembly(
+                    methodArgs[0].getLong(),
+                    methodArgs[1].getString(),
+                    methodArgs[2].getString());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
         case "LISTPROJECTS" -> {
             String result = service.listprojects();
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
@@ -125,6 +136,12 @@ public class ProjectServiceExecutor implements ServiceExecutor {
                 toLong("PROJECTID", methodArgs));
         case "PRUNEPROJECTWORKTREES" -> service.pruneprojectworktrees(
                 toLong("PROJECTID", methodArgs));
+        case "GETPROJECTDERIVEDAPPASSEMBLY" -> service.getprojectderivedappassembly(
+                toLong("PROJECTID", methodArgs));
+        case "REQUESTPROJECTDERIVEDAPPASSEMBLY" -> service.requestprojectderivedappassembly(
+                toLong("PROJECTID", methodArgs),
+                toString("MANIFESTJSON", methodArgs),
+                toString("OUTPUTDIRECTORY", methodArgs));
         case "LISTPROJECTS" -> service.listprojects();
         default -> throw noMethodException(methodName);
         };
@@ -176,6 +193,14 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "PRUNEPROJECTWORKTREES" -> {
             JsonArray ja = new JsonArray(json);
             yield service.pruneprojectworktrees(ja.getLong(0));
+        }
+        case "GETPROJECTDERIVEDAPPASSEMBLY" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.getprojectderivedappassembly(ja.getLong(0));
+        }
+        case "REQUESTPROJECTDERIVEDAPPASSEMBLY" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.requestprojectderivedappassembly(ja.getLong(0), ja.getString(1), ja.getString(2));
         }
         case "LISTPROJECTS" -> service.listprojects();
         default -> throw noMethodException(methodName);

@@ -16,6 +16,7 @@ public class ProjectServiceImpl {
 
     private final GitRepositoryInspector gitRepositoryInspector = new GitRepositoryInspector();
     private final ProjectSandboxManager projectSandboxManager = new ProjectSandboxManager();
+    private final ProjectDerivedAppAssemblyManager projectDerivedAppAssemblyManager = new ProjectDerivedAppAssemblyManager();
 
     // Lealone-generated service executors dispatch to lowercase method names.
     public long createproject(String projectKey, String projectName, String description) {
@@ -60,6 +61,14 @@ public class ProjectServiceImpl {
 
     public String pruneprojectworktrees(long projectId) {
         return pruneProjectWorktrees(projectId);
+    }
+
+    public String getprojectderivedappassembly(long projectId) {
+        return getProjectDerivedAppAssembly(projectId);
+    }
+
+    public String requestprojectderivedappassembly(long projectId, String manifestJson, String outputDirectory) {
+        return requestProjectDerivedAppAssembly(projectId, manifestJson, outputDirectory);
     }
 
     public String listprojects() {
@@ -172,6 +181,17 @@ public class ProjectServiceImpl {
         return prunedPath;
     }
 
+    public String getProjectDerivedAppAssembly(long projectId) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        return projectDerivedAppAssemblyManager.readAssemblyContext(projectId, readBoundRepositoryPath(projectId));
+    }
+
+    public String requestProjectDerivedAppAssembly(long projectId, String manifestJson, String outputDirectory) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return projectDerivedAppAssemblyManager.requestAssembly(projectId, repositoryRootPath, manifestJson, outputDirectory);
+    }
+
     public String listProjects() {
         String sql = """
                 SELECT p.id, p.project_key, p.project_name, p.active, b.repository_root_path
@@ -234,13 +254,21 @@ public class ProjectServiceImpl {
     }
 
     private String requireBoundRepositoryPath(long projectId) {
+        String repositoryRootPath = readBoundRepositoryPath(projectId);
+        if (repositoryRootPath == null) {
+            throw new IllegalArgumentException("Project repository is not bound: " + projectId);
+        }
+        return repositoryRootPath;
+    }
+
+    private String readBoundRepositoryPath(long projectId) {
         String sql = "SELECT repository_root_path FROM project_repository_binding WHERE project_id = ?";
         try (Connection connection = JdbcSupport.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, projectId);
             try (ResultSet rs = statement.executeQuery()) {
                 if (!rs.next()) {
-                    throw new IllegalArgumentException("Project repository is not bound: " + projectId);
+                    return null;
                 }
                 return rs.getString(1);
             }

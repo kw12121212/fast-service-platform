@@ -17,6 +17,27 @@ type MockProject = {
   key: string
   name: string
   active: boolean
+  derivedAppAssembly?: {
+    available: boolean
+    status: 'AVAILABLE' | 'RESTRICTED'
+    restricted: boolean
+    restriction: string | null
+    sourceRepositoryPath: string | null
+    sourceContext: {
+      type: 'BOUND_MAIN_REPOSITORY'
+    }
+    latestOutcome: {
+      status: 'SUCCESS' | 'FAILED'
+      category: 'REQUEST_VALIDATION' | 'ASSEMBLY_EXECUTION'
+      message: string
+      outputDirectory: string | null
+      manifestAppId: string | null
+      manifestName: string | null
+      requestedManifest: string | null
+      requestedOutputDirectory: string | null
+      updatedAt: string | null
+    } | null
+  }
   repository: {
     rootPath: string
     headState: 'BRANCH' | 'DETACHED'
@@ -372,6 +393,35 @@ function withSandboxSupport(repository: NonNullable<MockProject['repository']>) 
 function installBackendMock() {
   const state = createBackendState()
 
+  function buildAssemblyContext(project: MockProject) {
+    if (!project.repository) {
+      return {
+        available: false,
+        status: 'RESTRICTED' as const,
+        restricted: true,
+        restriction:
+          'Bind a repository first to run project-scoped derived-app assembly.',
+        sourceRepositoryPath: null,
+        sourceContext: {
+          type: 'BOUND_MAIN_REPOSITORY' as const,
+        },
+        latestOutcome: project.derivedAppAssembly?.latestOutcome ?? null,
+      }
+    }
+
+    return {
+      available: true,
+      status: 'AVAILABLE' as const,
+      restricted: false,
+      restriction: null,
+      sourceRepositoryPath: project.repository.rootPath,
+      sourceContext: {
+        type: 'BOUND_MAIN_REPOSITORY' as const,
+      },
+      latestOutcome: project.derivedAppAssembly?.latestOutcome ?? null,
+    }
+  }
+
   const fetchMock = vi.fn(async (input: string | URL | Request) => {
     const url = typeof input === 'string'
       ? new URL(input, 'http://localhost')
@@ -402,6 +452,15 @@ function installBackendMock() {
 
     if (path === '/service/project_service/listProjects') {
       return jsonResponse(state.projects)
+    }
+
+    if (path === '/service/project_service/getProjectDerivedAppAssembly') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (!project) {
+        return errorResponse(404, 'Project not found')
+      }
+      return jsonResponse(buildAssemblyContext(project))
     }
 
     if (path === '/service/project_service/createProject') {
@@ -711,6 +770,100 @@ function installBackendMock() {
       withMergeSupport(project.repository)
       withSandboxSupport(project.repository)
       return textResponse(project.repository.rootPath)
+    }
+
+    if (path === '/service/project_service/requestProjectDerivedAppAssembly') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const manifestJson = url.searchParams.get('manifestJson') ?? ''
+      const outputDirectory = url.searchParams.get('outputDirectory') ?? ''
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (!project) {
+        return errorResponse(404, 'Project not found')
+      }
+      if (!project.repository) {
+        return errorResponse(409, 'Project repository is not bound')
+      }
+      if (!outputDirectory.startsWith('/')) {
+        project.derivedAppAssembly = {
+          ...buildAssemblyContext(project),
+          latestOutcome: {
+            status: 'FAILED',
+            category: 'REQUEST_VALIDATION',
+            message: `Output directory must be absolute: ${outputDirectory}`,
+            outputDirectory,
+            manifestAppId: null,
+            manifestName: null,
+            requestedManifest: manifestJson,
+            requestedOutputDirectory: outputDirectory,
+            updatedAt: '2026-04-03T00:00:00Z',
+          },
+        }
+        return errorResponse(
+          409,
+          `Output directory must be absolute: ${outputDirectory}`,
+        )
+      }
+
+      let manifest: {
+        application?: {
+          id?: string
+          name?: string
+        }
+      }
+      try {
+        manifest = JSON.parse(manifestJson)
+      } catch {
+        project.derivedAppAssembly = {
+          ...buildAssemblyContext(project),
+          latestOutcome: {
+            status: 'FAILED',
+            category: 'REQUEST_VALIDATION',
+            message: 'Manifest JSON must be a valid JSON object',
+            outputDirectory,
+            manifestAppId: null,
+            manifestName: null,
+            requestedManifest: manifestJson,
+            requestedOutputDirectory: outputDirectory,
+            updatedAt: '2026-04-03T00:00:00Z',
+          },
+        }
+        return errorResponse(409, 'Manifest JSON must be a valid JSON object')
+      }
+
+      if (manifest.application?.id === 'fail-assembly') {
+        project.derivedAppAssembly = {
+          ...buildAssemblyContext(project),
+          latestOutcome: {
+            status: 'FAILED',
+            category: 'ASSEMBLY_EXECUTION',
+            message: 'Repository-owned assembly tooling failed',
+            outputDirectory,
+            manifestAppId: manifest.application?.id ?? null,
+            manifestName: manifest.application?.name ?? null,
+            requestedManifest: manifestJson,
+            requestedOutputDirectory: outputDirectory,
+            updatedAt: '2026-04-03T00:00:00Z',
+          },
+        }
+        return errorResponse(409, 'Repository-owned assembly tooling failed')
+      }
+
+      project.derivedAppAssembly = {
+        ...buildAssemblyContext(project),
+        latestOutcome: {
+          status: 'SUCCESS',
+          category: 'ASSEMBLY_EXECUTION',
+          message: 'Derived app assembly completed through repository-owned tooling.',
+          outputDirectory,
+          manifestAppId: manifest.application?.id ?? null,
+          manifestName: manifest.application?.name ?? null,
+          requestedManifest: manifestJson,
+          requestedOutputDirectory: outputDirectory,
+          updatedAt: '2026-04-03T00:00:00Z',
+        },
+      }
+
+      return jsonResponse(buildAssemblyContext(project))
     }
 
     if (path === '/service/kanban_service/listKanbansByProject') {
@@ -1371,6 +1524,73 @@ describe('admin write workflows', () => {
         'Stale worktree records pruned and the project list has been refreshed.',
       ),
     ).toBeInTheDocument()
+  })
+
+  it('shows restricted derived-app assembly state for an unbound project', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    expect(
+      await screen.findByText(
+        'Bind a repository first to run project-scoped derived-app assembly.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('runs project-scoped derived-app assembly from the projects page', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    await screen.findAllByText('/workspace/fast-service-platform')
+
+    fireEvent.change(await screen.findByLabelText('Output directory'), {
+      target: { value: '/tmp/generated-fsp-app' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Run derived-app assembly' }),
+    )
+
+    expect(
+      await screen.findByText(
+        'Derived-app assembly completed and the latest project outcome has been refreshed.',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Latest run succeeded')).toBeInTheDocument()
+    expect(await screen.findByText('/tmp/generated-fsp-app')).toBeInTheDocument()
+  })
+
+  it('shows validation feedback for rejected project-scoped derived-app assembly requests', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    await screen.findAllByText('/workspace/fast-service-platform')
+
+    fireEvent.change(await screen.findByLabelText('Output directory'), {
+      target: { value: 'relative-output' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Run derived-app assembly' }),
+    )
+
+    expect(
+      await screen.findByText(
+        'Backend request failed with 409: Output directory must be absolute: relative-output',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Latest request was rejected')).toBeInTheDocument()
   })
 
   it('creates a kanban board from the kanban page', async () => {

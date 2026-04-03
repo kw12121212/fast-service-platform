@@ -101,6 +101,30 @@ export type ProjectRepositorySummary = {
   worktrees: ProjectWorktreeSummary[]
 }
 
+export type ProjectDerivedAppAssemblyOutcome = {
+  status: 'SUCCESS' | 'FAILED' | string
+  category: 'REQUEST_VALIDATION' | 'ASSEMBLY_EXECUTION' | string
+  message: string
+  outputDirectory: string | null
+  manifestAppId: string | null
+  manifestName: string | null
+  requestedManifest: string | null
+  requestedOutputDirectory: string | null
+  updatedAt: string | null
+}
+
+export type ProjectDerivedAppAssemblyContext = {
+  available: boolean
+  status: 'AVAILABLE' | 'RESTRICTED' | string
+  restricted: boolean
+  restriction: string | null
+  sourceRepositoryPath: string | null
+  sourceContext: {
+    type: 'BOUND_MAIN_REPOSITORY' | string
+  }
+  latestOutcome: ProjectDerivedAppAssemblyOutcome | null
+}
+
 export type SoftwareProject = {
   id: number
   key: string

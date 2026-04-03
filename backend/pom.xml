@@ -88,6 +88,7 @@
           <excludedGroups>${test.excludedGroups}</excludedGroups>
           <systemPropertyVariables>
             <fsp.base-dir>${project.build.directory}/test-lealone</fsp.base-dir>
+            <fsp.repo-root>${project.basedir}/..</fsp.repo-root>
           </systemPropertyVariables>
         </configuration>
       </plugin>

@@ -62,6 +62,23 @@ create table if not exists project_worktree_sandbox (
   primary key (project_id, worktree_path)
 ) package @packageName generate code @modelSrcDir;
 
+create table if not exists project_derived_app_assembly (
+  project_id long primary key,
+  status varchar,
+  restricted boolean,
+  restriction varchar,
+  source_repository_path varchar,
+  latest_outcome_status varchar,
+  latest_outcome_category varchar,
+  latest_outcome_message varchar,
+  latest_output_directory varchar,
+  latest_manifest_app_id varchar,
+  latest_manifest_name varchar,
+  latest_request_manifest varchar,
+  latest_request_output_directory varchar,
+  updated_at varchar
+) package @packageName generate code @modelSrcDir;
+
 -- MODULE: kanban-management
 create table if not exists kanban_board (
   id long auto_increment primary key,

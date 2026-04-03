@@ -38,6 +38,8 @@ create service if not exists project_service (
   deleteProjectSandboxContainer(projectId long, worktreePath varchar) varchar,
   repairProjectWorktrees(projectId long) varchar,
   pruneProjectWorktrees(projectId long) varchar,
+  getProjectDerivedAppAssembly(projectId long) varchar,
+  requestProjectDerivedAppAssembly(projectId long, manifestJson varchar, outputDirectory varchar) varchar,
   listProjects() varchar
 )
 package @packageName

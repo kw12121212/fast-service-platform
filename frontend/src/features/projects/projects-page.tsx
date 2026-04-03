@@ -20,12 +20,19 @@ import {
   useDeleteProjectSandboxContainerAction,
   useDeleteProjectWorktreeAction,
   useMergeProjectWorktreeAction,
+  useProjectDerivedAppAssemblyResource,
   useProjectsResource,
   usePruneProjectWorktreesAction,
   useRepairProjectWorktreesAction,
+  useRequestProjectDerivedAppAssemblyAction,
   useSwitchProjectBranchAction,
 } from '@/lib/api/hooks'
-import type { ProjectRepositorySummary, ProjectWorktreeSummary, SoftwareProject } from '@/lib/api/types'
+import type {
+  ProjectDerivedAppAssemblyContext,
+  ProjectRepositorySummary,
+  ProjectWorktreeSummary,
+  SoftwareProject,
+} from '@/lib/api/types'
 
 function repositoryStateTone(
   workingTreeState: string,
@@ -181,6 +188,209 @@ function scriptSourceLabel(source: string) {
 type ProjectRepositoryCardProps = {
   project: SoftwareProject
   onRepositoryBound: () => void
+}
+
+function formatAssemblyOutcomeLabel(context: ProjectDerivedAppAssemblyContext | null) {
+  const latestOutcome = context?.latestOutcome
+  if (!latestOutcome) {
+    return 'No assembly run yet'
+  }
+
+  if (latestOutcome.status === 'SUCCESS') {
+    return 'Latest run succeeded'
+  }
+
+  return latestOutcome.category === 'REQUEST_VALIDATION'
+    ? 'Latest request was rejected'
+    : 'Latest run failed'
+}
+
+function assemblyOutcomeTone(context: ProjectDerivedAppAssemblyContext | null) {
+  const latestOutcome = context?.latestOutcome
+  if (!latestOutcome) {
+    return 'bg-muted text-muted-foreground'
+  }
+
+  if (latestOutcome.status === 'SUCCESS') {
+    return 'bg-emerald-500/12 text-emerald-700'
+  }
+
+  return latestOutcome.category === 'REQUEST_VALIDATION'
+    ? 'bg-amber-500/14 text-amber-700'
+    : 'bg-rose-500/12 text-rose-700'
+}
+
+function ProjectDerivedAppAssemblyCard({
+  project,
+}: {
+  project: SoftwareProject
+}) {
+  const assembly = useProjectDerivedAppAssemblyResource(
+    project.id,
+    project.repository?.rootPath ?? null,
+  )
+  const requestAssembly = useRequestProjectDerivedAppAssemblyAction()
+  const [manifestJson, setManifestJson] = useState(`{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "${project.key.toLowerCase()}-admin-console",
+    "name": "${project.name}",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management",
+    "project-management"
+  ]
+}`)
+  const [outputDirectory, setOutputDirectory] = useState('')
+
+  async function handleAssemblyRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    try {
+      await requestAssembly.submit({
+        projectId: project.id,
+        manifestJson,
+        outputDirectory,
+      })
+      assembly.reload()
+    } catch {
+      assembly.reload()
+    }
+  }
+
+  const context = assembly.data
+  const latestOutcome = context?.latestOutcome ?? null
+
+  return (
+    <div className="space-y-4 rounded-[20px] border border-border/60 bg-background/80 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            Derived-app assembly
+          </div>
+          <div className="mt-2 text-sm text-muted-foreground">
+            Trigger repository-owned app assembly from this project&apos;s bound main repository context.
+          </div>
+        </div>
+        <Badge className={assemblyOutcomeTone(context)}>
+          {formatAssemblyOutcomeLabel(context)}
+        </Badge>
+      </div>
+
+      <ResourceState
+        status={assembly.status}
+        error={assembly.error}
+        empty={false}
+        emptyTitle="Assembly context unavailable"
+        emptyMessage="Refresh the project assembly state to inspect derived-app assembly availability."
+        onRetry={assembly.reload}
+        skeletonCount={2}
+      >
+        <div className="space-y-4">
+          {context?.restricted ? (
+            <div className="rounded-[18px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+              {context.restriction}
+            </div>
+          ) : context ? (
+            <>
+              <div className="rounded-[18px] border border-border/60 bg-muted/24 p-3 text-sm text-muted-foreground">
+                Source context{' '}
+                <span className="font-medium text-foreground">
+                  {context.sourceContext.type}
+                </span>
+                <br />
+                Repository root{' '}
+                <span className="font-medium text-foreground">
+                  {context.sourceRepositoryPath}
+                </span>
+              </div>
+
+              <form className="space-y-4" onSubmit={handleAssemblyRequest}>
+                <div className="space-y-2">
+                  <Label htmlFor={`project-assembly-manifest-${project.id}`}>
+                    App manifest JSON
+                  </Label>
+                  <textarea
+                    id={`project-assembly-manifest-${project.id}`}
+                    className="min-h-48 w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    value={manifestJson}
+                    onChange={(event) => setManifestJson(event.target.value)}
+                    spellCheck={false}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`project-assembly-output-${project.id}`}>
+                    Output directory
+                  </Label>
+                  <Input
+                    id={`project-assembly-output-${project.id}`}
+                    value={outputDirectory}
+                    onChange={(event) => setOutputDirectory(event.target.value)}
+                    placeholder="/absolute/path/to/generated-app"
+                    required
+                  />
+                </div>
+
+                <MutationStatus
+                  status={requestAssembly.status}
+                  error={requestAssembly.error}
+                  submittingMessage="Running repository-owned derived-app assembly for this project..."
+                  successMessage="Derived-app assembly completed and the latest project outcome has been refreshed."
+                />
+
+                <Button
+                  type="submit"
+                  disabled={requestAssembly.status === 'submitting'}
+                >
+                  Run derived-app assembly
+                </Button>
+              </form>
+            </>
+          ) : null}
+
+          {latestOutcome ? (
+            <div className="space-y-3 rounded-[18px] border border-border/60 bg-muted/24 p-4 text-sm text-muted-foreground">
+              <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                Latest visible outcome
+              </div>
+              <div>
+                Outcome{' '}
+                <span className="font-medium text-foreground">
+                  {latestOutcome.status}
+                </span>
+                {' · '}
+                <span className="font-medium text-foreground">
+                  {latestOutcome.category}
+                </span>
+              </div>
+              <div>{latestOutcome.message}</div>
+              {latestOutcome.manifestAppId ? (
+                <div>
+                  App id{' '}
+                  <span className="font-medium text-foreground">
+                    {latestOutcome.manifestAppId}
+                  </span>
+                </div>
+              ) : null}
+              {latestOutcome.outputDirectory ? (
+                <div>
+                  Output directory{' '}
+                  <span className="font-medium text-foreground break-all">
+                    {latestOutcome.outputDirectory}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </ResourceState>
+    </div>
+  )
 }
 
 function ProjectRepositoryCard({
@@ -1009,6 +1219,8 @@ function ProjectRepositoryCard({
             Bind repository
           </Button>
         </form>
+
+        <ProjectDerivedAppAssemblyCard project={project} />
       </CardContent>
     </Card>
   )

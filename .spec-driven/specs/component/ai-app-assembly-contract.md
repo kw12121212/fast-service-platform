@@ -32,6 +32,7 @@ The system MUST provide a machine-readable module registry that exposes the avai
 ### Requirement: Repository Generates An Independent Application Skeleton
 The system MUST provide a repository-owned scaffolding and assembly path that generates an independent monolithic application skeleton from the application manifest and selected modules, and that generated output MUST expose the machine-readable lifecycle metadata needed for later upgrade evaluation, with Java as the repository-owned tooling runtime for that platform workflow.
 The system MUST require any repository-owned committed derived-application example to preserve explicit assembly provenance so contributors can identify which assembly input and repository-owned entrypoint produced that example.
+The system MUST allow a bound software project to invoke that same repository-owned scaffolding and assembly path through a project-scoped lifecycle workflow, while keeping `app-manifest` as the direct assembly runtime input.
 
 #### Scenario: A contributor scaffolds a new application through the repository-owned path
 - GIVEN a contributor has provided a valid application-assembly input
@@ -45,6 +46,13 @@ The system MUST require any repository-owned committed derived-application examp
 - THEN they can identify the manifest or equivalent assembly input used to produce it
 - AND they can identify the repository-owned assembly entrypoint used to generate it
 - AND they do not need to infer whether the example was created through a special undocumented path
+
+#### Scenario: A contributor invokes assembly from a bound project context
+- GIVEN a contributor has provided a valid application-assembly input
+- AND a software project is bound to a local Git repository
+- WHEN they run the project-scoped assembly workflow
+- THEN it uses the same repository-owned scaffolding and assembly path
+- AND the project-scoped workflow does not replace `app-manifest` with a different runtime contract
 
 ### Requirement: Scaffolded Output Includes Repository-Approved Validation Guidance
 The system MUST define scaffolded-application validation and lifecycle guidance through language-neutral contracts that may be satisfied by multiple compatible implementations rather than only through a single verifier script.

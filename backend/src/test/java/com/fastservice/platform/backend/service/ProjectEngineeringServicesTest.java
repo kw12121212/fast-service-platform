@@ -371,4 +371,133 @@ class ProjectEngineeringServicesTest extends ProjectServiceTestSupport {
 
         projects.deleteProjectWorktree(projectId, worktreePath);
     }
+
+    @Test
+    void exposesRestrictedDerivedAppAssemblyStateForUnboundProjects() {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("ASM0", "Assembly Restricted", "Assembly restriction validation");
+
+        String payload = projects.getProjectDerivedAppAssembly(projectId);
+
+        assertTrue(payload.contains("\"available\":false"));
+        assertTrue(payload.contains("\"status\":\"RESTRICTED\""));
+        assertTrue(payload.contains("Bind a repository first to run project-scoped derived-app assembly."));
+    }
+
+    @Test
+    void rejectsDerivedAppAssemblyRequestWithRelativeOutputDirectoryAndKeepsOutcomeReadable() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("ASM1", "Assembly Validation", "Assembly validation test");
+        Path repositoryDir = createGitRepository();
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> projects.requestProjectDerivedAppAssembly(
+                        projectId,
+                        """
+                                {
+                                  "schemaVersion": "fsp-app-manifest/v1",
+                                  "application": {
+                                    "id": "assembly-validation-app",
+                                    "name": "Assembly Validation App",
+                                    "packagePrefix": "com.fastservice.platform.derived"
+                                  },
+                                  "modules": [
+                                    "admin-shell",
+                                    "user-management",
+                                    "role-permission-management"
+                                  ]
+                                }
+                                """,
+                        "relative-output"));
+
+        assertEquals("Output directory must be absolute: relative-output", error.getMessage());
+        String payload = projects.getProjectDerivedAppAssembly(projectId);
+        assertTrue(payload.contains("\"category\":\"REQUEST_VALIDATION\""));
+        assertTrue(payload.contains("\"status\":\"FAILED\""));
+        assertTrue(payload.contains("Output directory must be absolute: relative-output"));
+    }
+
+    @Test
+    void rejectsDerivedAppAssemblyRequestWithUnknownModuleAsRequestValidationFailure() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("ASM1B", "Assembly Contract Validation", "Assembly contract validation test");
+        Path repositoryDir = createGitRepository();
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+        Path outputDir = Files.createTempDirectory("fsp-project-derived-app-invalid-");
+
+        try {
+            IllegalArgumentException error = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> projects.requestProjectDerivedAppAssembly(
+                            projectId,
+                            """
+                                    {
+                                      "schemaVersion": "fsp-app-manifest/v1",
+                                      "application": {
+                                        "id": "assembly-contract-validation-app",
+                                        "name": "Assembly Contract Validation App",
+                                        "packagePrefix": "com.fastservice.platform.derived"
+                                      },
+                                      "modules": [
+                                        "admin-shell",
+                                        "user-management",
+                                        "role-permission-management",
+                                        "unknown-module"
+                                      ]
+                                    }
+                                    """,
+                            outputDir.toString()));
+
+            assertEquals("Unknown module: unknown-module", error.getMessage());
+            String payload = projects.getProjectDerivedAppAssembly(projectId);
+            assertTrue(payload.contains("\"category\":\"REQUEST_VALIDATION\""));
+            assertTrue(payload.contains("\"status\":\"FAILED\""));
+            assertTrue(payload.contains("Unknown module: unknown-module"));
+        } finally {
+            deleteRecursively(outputDir);
+        }
+    }
+
+    @Test
+    void runsDerivedAppAssemblyThroughRepositoryOwnedToolingAndStoresLatestOutcome() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("ASM2", "Assembly Success", "Assembly success test");
+        Path repositoryDir = createGitRepository();
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+        Path outputDir = Files.createTempDirectory("fsp-project-derived-app-");
+
+        try {
+            String payload = projects.requestProjectDerivedAppAssembly(
+                    projectId,
+                    """
+                            {
+                              "schemaVersion": "fsp-app-manifest/v1",
+                              "application": {
+                                "id": "project-derived-success-app",
+                                "name": "Project Derived Success App",
+                                "packagePrefix": "com.fastservice.platform.derived"
+                              },
+                              "modules": [
+                                "admin-shell",
+                                "user-management",
+                                "role-permission-management",
+                                "project-management"
+                              ]
+                            }
+                            """,
+                    outputDir.toString());
+
+            assertTrue(Files.exists(outputDir.resolve("app-manifest.json")));
+            assertTrue(payload.contains("\"status\":\"AVAILABLE\""));
+            assertTrue(payload.contains("\"latestOutcome\":{"));
+            assertTrue(payload.contains("\"category\":\"ASSEMBLY_EXECUTION\""));
+            assertTrue(payload.contains("\"status\":\"SUCCESS\""));
+            assertTrue(payload.contains("project-derived-success-app"));
+            assertTrue(payload.contains(escapeJson(outputDir.toString())));
+        } finally {
+            deleteRecursively(outputDir);
+        }
+    }
 }
