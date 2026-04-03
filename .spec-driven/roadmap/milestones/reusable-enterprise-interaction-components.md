@@ -24,4 +24,4 @@ Lift repeated enterprise interaction patterns into reusable platform-owned front
 
 ## Status
 
-- Declared: proposed
+- Declared: complete

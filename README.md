@@ -250,7 +250,6 @@ The V1 platform baseline must still provide:
 ├── vendor/           # Lealone source dependency
 ├── AGENTS.md         # repository agent instructions
 ├── RTK.md            # repository technical knowledge
-├── ROADMAP.md        # future directions and prioritization
 └── README.md         # project overview
 ```
 
