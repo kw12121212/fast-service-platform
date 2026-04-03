@@ -18,6 +18,7 @@ public class ProjectServiceImpl {
     private final ProjectSandboxManager projectSandboxManager = new ProjectSandboxManager();
     private final ProjectDerivedAppAssemblyManager projectDerivedAppAssemblyManager = new ProjectDerivedAppAssemblyManager();
     private final ProjectDerivedAppVerificationManager projectDerivedAppVerificationManager = new ProjectDerivedAppVerificationManager();
+    private final ProjectDerivedAppUpgradeSupportManager projectDerivedAppUpgradeSupportManager = new ProjectDerivedAppUpgradeSupportManager();
 
     // Lealone-generated service executors dispatch to lowercase method names.
     public long createproject(String projectKey, String projectName, String description) {
@@ -78,6 +79,14 @@ public class ProjectServiceImpl {
 
     public String requestprojectderivedappverification(long projectId) {
         return requestProjectDerivedAppVerification(projectId);
+    }
+
+    public String getprojectderivedappupgradesupport(long projectId) {
+        return getProjectDerivedAppUpgradeSupport(projectId);
+    }
+
+    public String requestprojectderivedappupgradesupport(long projectId, String requestType, String targetReleaseId) {
+        return requestProjectDerivedAppUpgradeSupport(projectId, requestType, targetReleaseId);
     }
 
     public String listprojects() {
@@ -210,6 +219,17 @@ public class ProjectServiceImpl {
         EntityExistence.requireExists("software_project", projectId, "Project");
         String repositoryRootPath = requireBoundRepositoryPath(projectId);
         return projectDerivedAppVerificationManager.requestVerification(projectId, repositoryRootPath);
+    }
+
+    public String getProjectDerivedAppUpgradeSupport(long projectId) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        return projectDerivedAppUpgradeSupportManager.readUpgradeSupportContext(projectId, readBoundRepositoryPath(projectId));
+    }
+
+    public String requestProjectDerivedAppUpgradeSupport(long projectId, String requestType, String targetReleaseId) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return projectDerivedAppUpgradeSupportManager.requestUpgradeSupport(projectId, repositoryRootPath, requestType, targetReleaseId);
     }
 
     public String listProjects() {

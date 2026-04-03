@@ -751,4 +751,161 @@ class ProjectEngineeringServicesTest extends ProjectServiceTestSupport {
             deleteRecursively(repoRoot);
         }
     }
+
+    @Test
+    void exposesRestrictedDerivedAppUpgradeSupportStateForUnboundProjects() {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("UPG0", "Upgrade Restricted", "Upgrade support restriction validation");
+
+        String payload = projects.getProjectDerivedAppUpgradeSupport(projectId);
+
+        assertTrue(payload.contains("\"available\":false"));
+        assertTrue(payload.contains("\"status\":\"RESTRICTED\""));
+        assertTrue(payload.contains("Bind a repository first to run project-scoped derived-app upgrade support."));
+    }
+
+    @Test
+    void rejectsDerivedAppUpgradeSupportWhenNoSuccessfulAssemblyOutputIsAvailable() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("UPG1", "Upgrade Missing Target", "Upgrade support target validation");
+        Path repositoryDir = createGitRepository();
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> projects.requestProjectDerivedAppUpgradeSupport(projectId, "SUPPORTED_TARGETS", null));
+
+        assertEquals(
+                "Run project-scoped derived-app assembly successfully before requesting upgrade support.",
+                error.getMessage());
+        String payload = projects.getProjectDerivedAppUpgradeSupport(projectId);
+        assertTrue(payload.contains("\"category\":\"REQUEST_VALIDATION\""));
+        assertTrue(payload.contains("\"status\":\"FAILED\""));
+        assertTrue(payload.contains("\"requestType\":\"SUPPORTED_TARGETS\""));
+    }
+
+    @Test
+    void runsDerivedAppUpgradeSupportThroughRepositoryOwnedToolingAndStoresLatestOutcome() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("UPG2", "Upgrade Success", "Upgrade support success test");
+        Path repositoryDir = createGitRepository();
+        Path repoRoot = createFakePlatformToolRepoRoot();
+        Path outputDir = Files.createTempDirectory("fsp-project-derived-app-upgrade-bootstrap-");
+        String previousRepoRoot = System.getProperty("fsp.repo-root");
+
+        try {
+            projects.bindProjectRepository(projectId, repositoryDir.toString());
+            projects.requestProjectDerivedAppAssembly(
+                    projectId,
+                    """
+                            {
+                              "schemaVersion": "fsp-app-manifest/v1",
+                              "application": {
+                                "id": "project-derived-upgrade-app",
+                                "name": "Project Derived Upgrade App",
+                                "packagePrefix": "com.fastservice.platform.derived"
+                              },
+                              "modules": [
+                                "admin-shell",
+                                "user-management",
+                                "role-permission-management",
+                                "project-management"
+                              ]
+                            }
+                            """,
+                    outputDir.toString());
+            System.setProperty("fsp.repo-root", repoRoot.toString());
+
+            String targetsPayload = projects.requestProjectDerivedAppUpgradeSupport(projectId, "SUPPORTED_TARGETS", null);
+            assertTrue(targetsPayload.contains("\"requestType\":\"SUPPORTED_TARGETS\""));
+            assertTrue(targetsPayload.contains("\"availableTargetReleases\":[{"));
+            assertTrue(targetsPayload.contains("fast-service-platform/0.1.0-dev"));
+
+            String advisoryPayload = projects.requestProjectDerivedAppUpgradeSupport(projectId, "ADVISORY", null);
+            assertTrue(advisoryPayload.contains("\"requestType\":\"ADVISORY\""));
+            assertTrue(advisoryPayload.contains("Repository-owned advisory for " + escapeJson(outputDir.toString())));
+
+            String evaluatePayload = projects.requestProjectDerivedAppUpgradeSupport(projectId, "EVALUATE", null);
+            assertTrue(evaluatePayload.contains("\"requestType\":\"EVALUATE\""));
+            assertTrue(evaluatePayload.contains("\"compatible\":true"));
+
+            String dryRunPayload = projects.requestProjectDerivedAppUpgradeSupport(
+                    projectId,
+                    "DRY_RUN_EXECUTE",
+                    "fast-service-platform/0.1.0-dev");
+            assertTrue(dryRunPayload.contains("\"requestType\":\"DRY_RUN_EXECUTE\""));
+            assertTrue(dryRunPayload.contains("\"dryRun\":true"));
+            assertTrue(dryRunPayload.contains("\"applied\":false"));
+            assertTrue(dryRunPayload.contains("\"targetPlatformRelease\":\"fast-service-platform/0.1.0-dev\""));
+
+            String restartedPayload = new ProjectServiceImpl().getProjectDerivedAppUpgradeSupport(projectId);
+            assertTrue(restartedPayload.contains("\"requestType\":\"DRY_RUN_EXECUTE\""));
+            assertTrue(restartedPayload.contains("\"targetReleaseId\":\"fast-service-platform/0.1.0-dev\""));
+        } finally {
+            if (previousRepoRoot == null) {
+                System.clearProperty("fsp.repo-root");
+            } else {
+                System.setProperty("fsp.repo-root", previousRepoRoot);
+            }
+            deleteRecursively(outputDir);
+            deleteRecursively(repoRoot);
+        }
+    }
+
+    @Test
+    void rejectsDerivedAppUpgradeDryRunWhenTargetReleaseIsNotSupported() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("UPG3", "Upgrade Invalid Target", "Upgrade support invalid target test");
+        Path repositoryDir = createGitRepository();
+        Path repoRoot = createFakePlatformToolRepoRoot();
+        Path outputDir = Files.createTempDirectory("fsp-project-derived-app-upgrade-bootstrap-invalid-");
+        String previousRepoRoot = System.getProperty("fsp.repo-root");
+
+        try {
+            projects.bindProjectRepository(projectId, repositoryDir.toString());
+            projects.requestProjectDerivedAppAssembly(
+                    projectId,
+                    """
+                            {
+                              "schemaVersion": "fsp-app-manifest/v1",
+                              "application": {
+                                "id": "project-derived-upgrade-invalid-app",
+                                "name": "Project Derived Upgrade Invalid App",
+                                "packagePrefix": "com.fastservice.platform.derived"
+                              },
+                              "modules": [
+                                "admin-shell",
+                                "user-management",
+                                "role-permission-management",
+                                "project-management"
+                              ]
+                            }
+                            """,
+                    outputDir.toString());
+            System.setProperty("fsp.repo-root", repoRoot.toString());
+
+            IllegalArgumentException error = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> projects.requestProjectDerivedAppUpgradeSupport(
+                            projectId,
+                            "DRY_RUN_EXECUTE",
+                            "fast-service-platform/9.9.9"));
+
+            assertEquals(
+                    "Target release is not supported for this project-derived app: fast-service-platform/9.9.9",
+                    error.getMessage());
+            String payload = projects.getProjectDerivedAppUpgradeSupport(projectId);
+            assertTrue(payload.contains("\"category\":\"REQUEST_VALIDATION\""));
+            assertTrue(payload.contains("\"requestType\":\"DRY_RUN_EXECUTE\""));
+            assertTrue(payload.contains("\"targetReleaseId\":\"fast-service-platform/9.9.9\""));
+        } finally {
+            if (previousRepoRoot == null) {
+                System.clearProperty("fsp.repo-root");
+            } else {
+                System.setProperty("fsp.repo-root", previousRepoRoot);
+            }
+            deleteRecursively(outputDir);
+            deleteRecursively(repoRoot);
+        }
+    }
 }

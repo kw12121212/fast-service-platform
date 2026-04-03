@@ -92,6 +92,25 @@ public class ProjectServiceExecutor implements ServiceExecutor {
                     methodArgs[2].getString());
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
         }
+        case "GETPROJECTDERIVEDAPPVERIFICATION" -> {
+            String result = service.getprojectderivedappverification(methodArgs[0].getLong());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "REQUESTPROJECTDERIVEDAPPVERIFICATION" -> {
+            String result = service.requestprojectderivedappverification(methodArgs[0].getLong());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "GETPROJECTDERIVEDAPPUPGRADESUPPORT" -> {
+            String result = service.getprojectderivedappupgradesupport(methodArgs[0].getLong());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
+        case "REQUESTPROJECTDERIVEDAPPUPGRADESUPPORT" -> {
+            String result = service.requestprojectderivedappupgradesupport(
+                    methodArgs[0].getLong(),
+                    methodArgs[1].getString(),
+                    methodArgs[2].getString());
+            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
+        }
         case "LISTPROJECTS" -> {
             String result = service.listprojects();
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
@@ -142,6 +161,16 @@ public class ProjectServiceExecutor implements ServiceExecutor {
                 toLong("PROJECTID", methodArgs),
                 toString("MANIFESTJSON", methodArgs),
                 toString("OUTPUTDIRECTORY", methodArgs));
+        case "GETPROJECTDERIVEDAPPVERIFICATION" -> service.getprojectderivedappverification(
+                toLong("PROJECTID", methodArgs));
+        case "REQUESTPROJECTDERIVEDAPPVERIFICATION" -> service.requestprojectderivedappverification(
+                toLong("PROJECTID", methodArgs));
+        case "GETPROJECTDERIVEDAPPUPGRADESUPPORT" -> service.getprojectderivedappupgradesupport(
+                toLong("PROJECTID", methodArgs));
+        case "REQUESTPROJECTDERIVEDAPPUPGRADESUPPORT" -> service.requestprojectderivedappupgradesupport(
+                toLong("PROJECTID", methodArgs),
+                toString("REQUESTTYPE", methodArgs),
+                toString("TARGETRELEASEID", methodArgs));
         case "LISTPROJECTS" -> service.listprojects();
         default -> throw noMethodException(methodName);
         };
@@ -201,6 +230,22 @@ public class ProjectServiceExecutor implements ServiceExecutor {
         case "REQUESTPROJECTDERIVEDAPPASSEMBLY" -> {
             JsonArray ja = new JsonArray(json);
             yield service.requestprojectderivedappassembly(ja.getLong(0), ja.getString(1), ja.getString(2));
+        }
+        case "GETPROJECTDERIVEDAPPVERIFICATION" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.getprojectderivedappverification(ja.getLong(0));
+        }
+        case "REQUESTPROJECTDERIVEDAPPVERIFICATION" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.requestprojectderivedappverification(ja.getLong(0));
+        }
+        case "GETPROJECTDERIVEDAPPUPGRADESUPPORT" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.getprojectderivedappupgradesupport(ja.getLong(0));
+        }
+        case "REQUESTPROJECTDERIVEDAPPUPGRADESUPPORT" -> {
+            JsonArray ja = new JsonArray(json);
+            yield service.requestprojectderivedappupgradesupport(ja.getLong(0), ja.getString(1), ja.getString(2));
         }
         case "LISTPROJECTS" -> service.listprojects();
         default -> throw noMethodException(methodName);

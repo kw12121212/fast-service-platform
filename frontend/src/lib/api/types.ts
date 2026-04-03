@@ -161,6 +161,103 @@ export type ProjectDerivedAppVerificationContext = {
   latestOutcome: ProjectDerivedAppVerificationOutcome | null
 }
 
+export type ProjectDerivedAppUpgradeSupportRequestType =
+  | 'SUPPORTED_TARGETS'
+  | 'ADVISORY'
+  | 'EVALUATE'
+  | 'DRY_RUN_EXECUTE'
+  | string
+
+export type ProjectDerivedAppUpgradeTargetSummary = {
+  releaseId: string
+  version: string
+  supportStatus: string
+  lineageParentReleaseId: string | null
+  advisoryAsset: string | null
+}
+
+export type ProjectDerivedAppUpgradeTargetsResult = {
+  platformId: string
+  currentReleaseId: string
+  sourceReleaseId: string | null
+  selectedModules: string[] | null
+  recognizedReleases: Array<Record<string, unknown>>
+  supportedUpgradePaths: Array<Record<string, unknown>>
+  availableTargetReleases: ProjectDerivedAppUpgradeTargetSummary[]
+  defaultTargetReleaseId: string | null
+  lookupEntrypoint: string | null
+}
+
+export type ProjectDerivedAppUpgradeAdvisoryResult = {
+  releaseId: string
+  previousReleaseId: string | null
+  overallCompatibilityPosture: string
+  selectedModules: string[] | null
+  summary: string
+  changes: Array<Record<string, unknown>>
+  relevantChanges: Array<Record<string, unknown>>
+  recommendedChecks: string[]
+  recommendedNextActions: string[]
+}
+
+export type ProjectDerivedAppUpgradeEvaluationResult = {
+  compatible: boolean
+  issues: string[]
+  sourcePlatformRelease: string
+  targetPlatformRelease: string
+  recommendedAction: string
+}
+
+export type ProjectDerivedAppUpgradeDryRunResult = {
+  planVersion: string
+  contractVersion: string
+  dryRun: boolean
+  compatible: boolean
+  applied: boolean
+  sourcePlatformRelease: string
+  targetPlatformRelease: string
+  selectedModules: string[]
+  autoApplyItems: Array<Record<string, unknown>>
+  manualInterventionItems: Array<Record<string, unknown>>
+  postUpgradeValidation: string[]
+  recommendedNextActions: string[]
+  appliedItems: Array<Record<string, unknown>>
+}
+
+export type ProjectDerivedAppUpgradeSupportOutcome = {
+  status: 'SUCCESS' | 'FAILED' | string
+  category: 'REQUEST_VALIDATION' | 'UPGRADE_EXECUTION' | string
+  requestType: ProjectDerivedAppUpgradeSupportRequestType
+  message: string
+  targetReleaseId: string | null
+  targetOutputDirectory: string | null
+  result:
+    | ProjectDerivedAppUpgradeTargetsResult
+    | ProjectDerivedAppUpgradeAdvisoryResult
+    | ProjectDerivedAppUpgradeEvaluationResult
+    | ProjectDerivedAppUpgradeDryRunResult
+    | Record<string, unknown>
+    | null
+  updatedAt: string | null
+}
+
+export type ProjectDerivedAppUpgradeSupportContext = {
+  available: boolean
+  status: 'AVAILABLE' | 'RESTRICTED' | string
+  restricted: boolean
+  restriction: string | null
+  sourceRepositoryPath: string | null
+  sourceContext: {
+    type: 'BOUND_MAIN_REPOSITORY' | string
+  }
+  targetContext: {
+    type: 'LATEST_SUCCESSFUL_ASSEMBLY_OUTPUT' | string
+    outputDirectory: string | null
+  }
+  supportedRequestTypes: ProjectDerivedAppUpgradeSupportRequestType[]
+  latestOutcome: ProjectDerivedAppUpgradeSupportOutcome | null
+}
+
 export type SoftwareProject = {
   id: number
   key: string

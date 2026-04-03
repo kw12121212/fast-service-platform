@@ -42,6 +42,8 @@ create service if not exists project_service (
   requestProjectDerivedAppAssembly(projectId long, manifestJson varchar, outputDirectory varchar) varchar,
   getProjectDerivedAppVerification(projectId long) varchar,
   requestProjectDerivedAppVerification(projectId long) varchar,
+  getProjectDerivedAppUpgradeSupport(projectId long) varchar,
+  requestProjectDerivedAppUpgradeSupport(projectId long, requestType varchar, targetReleaseId varchar) varchar,
   listProjects() varchar
 )
 package @packageName

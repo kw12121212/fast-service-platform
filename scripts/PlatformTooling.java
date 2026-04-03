@@ -71,13 +71,17 @@ public final class PlatformTooling {
             }
             case "upgrade-evaluate" -> {
                 Path targetDir = requiredPath(options, "target");
-                Map<String, Object> result = evaluateDerivedAppUpgrade(targetDir, repoRoot);
+                Map<String, Object> result = evaluateDerivedAppUpgrade(targetDir, repoRoot, options.get("target-release"));
                 System.out.println(SimpleJson.stringify(result));
             }
             case "upgrade-execute" -> {
                 Path targetDir = requiredPath(options, "target");
                 boolean apply = Boolean.parseBoolean(options.getOrDefault("apply", "false"));
-                Map<String, Object> result = executeDerivedAppUpgrade(targetDir, apply, repoRoot);
+                Map<String, Object> result = executeDerivedAppUpgrade(
+                        targetDir,
+                        options.get("target-release"),
+                        apply,
+                        repoRoot);
                 System.out.println(SimpleJson.stringify(result));
             }
             case "upgrade-smoke" -> {
@@ -294,7 +298,7 @@ public final class PlatformTooling {
                         }
                     }
                     case "upgrade-evaluate" -> {
-                        Map<String, Object> result = evaluateDerivedAppUpgrade(fixtureDir, repoRoot);
+                        Map<String, Object> result = evaluateDerivedAppUpgrade(fixtureDir, repoRoot, null);
                         Object expectedCompatible = testCase.get("expectedCompatible");
                         if (expectedCompatible != null && !expectedCompatible.equals(result.get("compatible"))) {
                             caseIssues.add("expected compatible=" + expectedCompatible
@@ -321,7 +325,7 @@ public final class PlatformTooling {
                         }
                     }
                     case "upgrade-execute-dry-run" -> {
-                        Map<String, Object> result = executeDerivedAppUpgrade(fixtureDir, false, repoRoot);
+                        Map<String, Object> result = executeDerivedAppUpgrade(fixtureDir, null, false, repoRoot);
                         Object expectedCompatible = testCase.get("expectedCompatible");
                         if (expectedCompatible != null && !expectedCompatible.equals(result.get("compatible"))) {
                             caseIssues.add("expected compatible=" + expectedCompatible
@@ -431,7 +435,8 @@ public final class PlatformTooling {
         return result;
     }
 
-    private static Map<String, Object> evaluateDerivedAppUpgrade(Path targetDir, Path repoRoot) throws IOException {
+    private static Map<String, Object> evaluateDerivedAppUpgrade(Path targetDir, Path repoRoot, String requestedTargetRelease)
+            throws IOException {
         List<String> issues = new ArrayList<>();
         Map<String, Object> lifecycleContract = readJson(repoRoot.resolve("docs/ai/derived-app-lifecycle-contract.json"));
         Map<String, Object> platformRelease = readJson(repoRoot.resolve("docs/ai/platform-release.json"));
@@ -471,12 +476,14 @@ public final class PlatformTooling {
                 lifecycleMetadata.get("sourcePlatform"),
                 "Lifecycle metadata must include sourcePlatform");
         String sourceRelease = asStringOrDefault(sourcePlatform.get("releaseId"), "unavailable");
-        String targetRelease = asStringOrDefault(
-                upgradeSupport.get("defaultTargetReleaseId"),
-                asStringOrDefault(asMap(
-                        releaseHistory.get("compatibilityWindow"),
-                        "Release history must include compatibilityWindow").get("defaultTargetReleaseId"),
-                        asStringOrDefault(currentRelease.get("releaseId"), "unavailable")));
+        String targetRelease = requestedTargetRelease != null && !requestedTargetRelease.isBlank()
+                ? requestedTargetRelease
+                : asStringOrDefault(
+                        upgradeSupport.get("defaultTargetReleaseId"),
+                        asStringOrDefault(asMap(
+                                releaseHistory.get("compatibilityWindow"),
+                                "Release history must include compatibilityWindow").get("defaultTargetReleaseId"),
+                                asStringOrDefault(currentRelease.get("releaseId"), "unavailable")));
 
         if (!asOptionalStringList(upgradeSupport.get("supportedSourcePlatformIds"))
                 .contains(asStringOrDefault(sourcePlatform.get("id"), "unavailable"))) {
@@ -600,8 +607,9 @@ public final class PlatformTooling {
         return result;
     }
 
-    private static Map<String, Object> planDerivedAppUpgrade(Path targetDir, Path repoRoot) throws IOException {
-        Map<String, Object> evaluation = evaluateDerivedAppUpgrade(targetDir, repoRoot);
+    private static Map<String, Object> planDerivedAppUpgrade(Path targetDir, Path repoRoot, String requestedTargetRelease)
+            throws IOException {
+        Map<String, Object> evaluation = evaluateDerivedAppUpgrade(targetDir, repoRoot, requestedTargetRelease);
         Map<String, Object> advisory = readPlatformReleaseAdvisory(targetDir, repoRoot);
         ManagedAssets managedAssets = buildDerivedAppManagedAssetMap(targetDir, repoRoot);
         Map<String, Object> templateMap = readJson(repoRoot.resolve(DERIVED_APP_TEMPLATE_MAP_PATH));
@@ -661,8 +669,12 @@ public final class PlatformTooling {
         return plan;
     }
 
-    private static Map<String, Object> executeDerivedAppUpgrade(Path targetDir, boolean apply, Path repoRoot) throws IOException {
-        Map<String, Object> plan = planDerivedAppUpgrade(targetDir, repoRoot);
+    private static Map<String, Object> executeDerivedAppUpgrade(
+            Path targetDir,
+            String requestedTargetRelease,
+            boolean apply,
+            Path repoRoot) throws IOException {
+        Map<String, Object> plan = planDerivedAppUpgrade(targetDir, repoRoot, requestedTargetRelease);
         if (!apply || !Boolean.TRUE.equals(plan.get("compatible"))) {
             Map<String, Object> payload = new LinkedHashMap<>(plan);
             payload.put("dryRun", !apply);

@@ -71,6 +71,37 @@ type MockProject = {
       updatedAt: string | null
     } | null
   }
+  derivedAppUpgradeSupport?: {
+    available: boolean
+    status: 'AVAILABLE' | 'RESTRICTED'
+    restricted: boolean
+    restriction: string | null
+    sourceRepositoryPath: string | null
+    sourceContext: {
+      type: 'BOUND_MAIN_REPOSITORY'
+    }
+    targetContext: {
+      type: 'LATEST_SUCCESSFUL_ASSEMBLY_OUTPUT'
+      outputDirectory: string | null
+    }
+    supportedRequestTypes: Array<
+      'SUPPORTED_TARGETS' | 'ADVISORY' | 'EVALUATE' | 'DRY_RUN_EXECUTE'
+    >
+    latestOutcome: {
+      status: 'SUCCESS' | 'FAILED'
+      category: 'REQUEST_VALIDATION' | 'UPGRADE_EXECUTION'
+      requestType:
+        | 'SUPPORTED_TARGETS'
+        | 'ADVISORY'
+        | 'EVALUATE'
+        | 'DRY_RUN_EXECUTE'
+      message: string
+      targetReleaseId: string | null
+      targetOutputDirectory: string | null
+      result: Record<string, unknown> | null
+      updatedAt: string | null
+    } | null
+  }
   repository: {
     rootPath: string
     headState: 'BRANCH' | 'DETACHED'
@@ -160,6 +191,17 @@ type MockTicketWorkflowHistoryEntry = {
   previousAssigneeUserId: number | null
   nextAssigneeUserId: number | null
   comment: string
+}
+
+function upgradeSupportRequestTypes(): NonNullable<
+  MockProject['derivedAppUpgradeSupport']
+>['supportedRequestTypes'] {
+  return [
+    'SUPPORTED_TARGETS',
+    'ADVISORY',
+    'EVALUATE',
+    'DRY_RUN_EXECUTE',
+  ]
 }
 
 function createBackendState() {
@@ -516,6 +558,76 @@ function installBackendMock() {
     }
   }
 
+  function buildUpgradeSupportContext(project: MockProject) {
+    if (!project.repository) {
+      return {
+        available: false,
+        status: 'RESTRICTED' as const,
+        restricted: true,
+        restriction:
+          'Bind a repository first to run project-scoped derived-app upgrade support.',
+        sourceRepositoryPath: null,
+        sourceContext: {
+          type: 'BOUND_MAIN_REPOSITORY' as const,
+        },
+        targetContext: {
+          type: 'LATEST_SUCCESSFUL_ASSEMBLY_OUTPUT' as const,
+          outputDirectory: null,
+        },
+        supportedRequestTypes: [
+          ...upgradeSupportRequestTypes(),
+        ],
+        latestOutcome: project.derivedAppUpgradeSupport?.latestOutcome ?? null,
+      }
+    }
+
+    const latestAssemblyOutput =
+      project.derivedAppAssembly?.latestOutcome?.status === 'SUCCESS'
+        ? (project.derivedAppAssembly.latestOutcome.outputDirectory ?? null)
+        : null
+
+    if (!latestAssemblyOutput) {
+      return {
+        available: false,
+        status: 'RESTRICTED' as const,
+        restricted: true,
+        restriction:
+          'Run project-scoped derived-app assembly successfully before requesting upgrade support.',
+        sourceRepositoryPath: project.repository.rootPath,
+        sourceContext: {
+          type: 'BOUND_MAIN_REPOSITORY' as const,
+        },
+        targetContext: {
+          type: 'LATEST_SUCCESSFUL_ASSEMBLY_OUTPUT' as const,
+          outputDirectory: null,
+        },
+        supportedRequestTypes: [
+          ...upgradeSupportRequestTypes(),
+        ],
+        latestOutcome: project.derivedAppUpgradeSupport?.latestOutcome ?? null,
+      }
+    }
+
+    return {
+      available: true,
+      status: 'AVAILABLE' as const,
+      restricted: false,
+      restriction: null,
+      sourceRepositoryPath: project.repository.rootPath,
+      sourceContext: {
+        type: 'BOUND_MAIN_REPOSITORY' as const,
+      },
+      targetContext: {
+        type: 'LATEST_SUCCESSFUL_ASSEMBLY_OUTPUT' as const,
+        outputDirectory: latestAssemblyOutput,
+      },
+      supportedRequestTypes: [
+        ...upgradeSupportRequestTypes(),
+      ],
+      latestOutcome: project.derivedAppUpgradeSupport?.latestOutcome ?? null,
+    }
+  }
+
   const fetchMock = vi.fn(async (input: string | URL | Request) => {
     const url = typeof input === 'string'
       ? new URL(input, 'http://localhost')
@@ -564,6 +676,15 @@ function installBackendMock() {
         return errorResponse(404, 'Project not found')
       }
       return jsonResponse(buildVerificationContext(project))
+    }
+
+    if (path === '/service/project_service/getProjectDerivedAppUpgradeSupport') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (!project) {
+        return errorResponse(404, 'Project not found')
+      }
+      return jsonResponse(buildUpgradeSupportContext(project))
     }
 
     if (path === '/service/project_service/createProject') {
@@ -1056,6 +1177,231 @@ function installBackendMock() {
       }
 
       return jsonResponse(buildVerificationContext(project))
+    }
+
+    if (path === '/service/project_service/requestProjectDerivedAppUpgradeSupport') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const requestType = url.searchParams.get('requestType') ?? ''
+      const targetReleaseId = url.searchParams.get('targetReleaseId')
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (!project) {
+        return errorResponse(404, 'Project not found')
+      }
+      if (!project.repository) {
+        return errorResponse(409, 'Project repository is not bound')
+      }
+
+      const upgradeSupportContext = buildUpgradeSupportContext(project)
+      const outputDirectory = upgradeSupportContext.targetContext.outputDirectory
+      if (!outputDirectory) {
+        project.derivedAppUpgradeSupport = {
+          ...upgradeSupportContext,
+          latestOutcome: {
+            status: 'FAILED',
+            category: 'REQUEST_VALIDATION',
+            requestType: 'SUPPORTED_TARGETS',
+            message:
+              'Run project-scoped derived-app assembly successfully before requesting upgrade support.',
+            targetReleaseId: null,
+            targetOutputDirectory: null,
+            result: null,
+            updatedAt: '2026-04-03T00:00:00Z',
+          },
+        }
+        return errorResponse(
+          409,
+          'Run project-scoped derived-app assembly successfully before requesting upgrade support.',
+        )
+      }
+
+      const supportedTargetsResult = {
+        platformId: 'fast-service-platform',
+        currentReleaseId: 'fast-service-platform/0.1.0-dev',
+        sourceReleaseId: outputDirectory.includes('bootstrap')
+          ? 'fast-service-platform/0.0.0-bootstrap'
+          : 'fast-service-platform/0.1.0-dev',
+        selectedModules: [
+          'admin-shell',
+          'user-management',
+          'role-permission-management',
+          'project-management',
+        ],
+        recognizedReleases: [
+          {
+            releaseId: 'fast-service-platform/0.0.0-bootstrap',
+            version: '0.0.0-bootstrap',
+          },
+          {
+            releaseId: 'fast-service-platform/0.1.0-dev',
+            version: '0.1.0-dev',
+          },
+        ],
+        supportedUpgradePaths: [
+          {
+            sourceReleaseId: 'fast-service-platform/0.0.0-bootstrap',
+            targetReleaseId: 'fast-service-platform/0.1.0-dev',
+            supportStatus: 'supported',
+          },
+        ],
+        availableTargetReleases: [
+          {
+            releaseId: 'fast-service-platform/0.1.0-dev',
+            version: '0.1.0-dev',
+            supportStatus: 'current',
+            lineageParentReleaseId: 'fast-service-platform/0.0.0-bootstrap',
+            advisoryAsset: 'docs/ai/platform-release-advisory.json',
+          },
+        ],
+        defaultTargetReleaseId: 'fast-service-platform/0.1.0-dev',
+        lookupEntrypoint: './scripts/platform-tool.sh upgrade targets [generated-app-dir]',
+      }
+
+      if (requestType === 'SUPPORTED_TARGETS') {
+        project.derivedAppUpgradeSupport = {
+          ...upgradeSupportContext,
+          latestOutcome: {
+            status: 'SUCCESS',
+            category: 'UPGRADE_EXECUTION',
+            requestType: 'SUPPORTED_TARGETS',
+            message:
+              'Supported target releases were loaded through repository-owned tooling.',
+            targetReleaseId: supportedTargetsResult.defaultTargetReleaseId,
+            targetOutputDirectory: outputDirectory,
+            result: supportedTargetsResult,
+            updatedAt: '2026-04-03T00:00:00Z',
+          },
+        }
+        return jsonResponse(buildUpgradeSupportContext(project))
+      }
+
+      if (requestType === 'ADVISORY') {
+        project.derivedAppUpgradeSupport = {
+          ...upgradeSupportContext,
+          latestOutcome: {
+            status: 'SUCCESS',
+            category: 'UPGRADE_EXECUTION',
+            requestType: 'ADVISORY',
+            message:
+              'Release advisory guidance was loaded through repository-owned tooling.',
+            targetReleaseId: 'fast-service-platform/0.1.0-dev',
+            targetOutputDirectory: outputDirectory,
+            result: {
+              releaseId: 'fast-service-platform/0.1.0-dev',
+              previousReleaseId: 'fast-service-platform/0.0.0-bootstrap',
+              overallCompatibilityPosture: 'compatible-with-review',
+              selectedModules: supportedTargetsResult.selectedModules,
+              summary:
+                'The current platform release adds derived-app lifecycle metadata, machine-readable template-boundary guidance, and repository-owned release guidance for derived applications.',
+              changes: [],
+              relevantChanges: [],
+              recommendedChecks: [
+                'run-derived-app-upgrade-evaluation',
+                'review-platform-release-advisory',
+              ],
+              recommendedNextActions: [
+                'list-supported-upgrade-targets',
+                'review-platform-release-advisory',
+              ],
+            },
+            updatedAt: '2026-04-03T00:00:00Z',
+          },
+        }
+        return jsonResponse(buildUpgradeSupportContext(project))
+      }
+
+      if (requestType === 'EVALUATE') {
+        project.derivedAppUpgradeSupport = {
+          ...upgradeSupportContext,
+          latestOutcome: {
+            status: 'SUCCESS',
+            category: 'UPGRADE_EXECUTION',
+            requestType: 'EVALUATE',
+            message:
+              'Upgrade compatibility evaluation completed through repository-owned tooling.',
+            targetReleaseId: 'fast-service-platform/0.1.0-dev',
+            targetOutputDirectory: outputDirectory,
+            result: {
+              compatible: !outputDirectory.includes('upgrade-incompatible'),
+              issues: outputDirectory.includes('upgrade-incompatible')
+                ? ['Unsupported upgrade path: fast-service-platform/0.0.0-bootstrap -> fast-service-platform/0.1.0-dev']
+                : [],
+              sourcePlatformRelease: supportedTargetsResult.sourceReleaseId,
+              targetPlatformRelease: 'fast-service-platform/0.1.0-dev',
+              recommendedAction: outputDirectory.includes('upgrade-incompatible')
+                ? 'manual-migration-or-re-derive-required'
+                : 'review-platform-delta-and-run-generated-app-verifiers',
+            },
+            updatedAt: '2026-04-03T00:00:00Z',
+          },
+        }
+        return jsonResponse(buildUpgradeSupportContext(project))
+      }
+
+      if (requestType === 'DRY_RUN_EXECUTE') {
+        if (targetReleaseId !== 'fast-service-platform/0.1.0-dev') {
+          project.derivedAppUpgradeSupport = {
+            ...upgradeSupportContext,
+            latestOutcome: {
+              status: 'FAILED',
+              category: 'REQUEST_VALIDATION',
+              requestType: 'DRY_RUN_EXECUTE',
+              message:
+                `Target release is not supported for this project-derived app: ${targetReleaseId}`,
+              targetReleaseId,
+              targetOutputDirectory: outputDirectory,
+              result: null,
+              updatedAt: '2026-04-03T00:00:00Z',
+            },
+          }
+          return errorResponse(
+            409,
+            `Target release is not supported for this project-derived app: ${targetReleaseId}`,
+          )
+        }
+
+        project.derivedAppUpgradeSupport = {
+          ...upgradeSupportContext,
+          latestOutcome: {
+            status: 'SUCCESS',
+            category: 'UPGRADE_EXECUTION',
+            requestType: 'DRY_RUN_EXECUTE',
+            message:
+              'Upgrade dry-run planning completed through repository-owned tooling.',
+            targetReleaseId,
+            targetOutputDirectory: outputDirectory,
+            result: {
+              planVersion: 'fsp-derived-app-upgrade-plan/v1',
+              contractVersion: 'fsp-derived-app-upgrade-execution-contract/v1',
+              dryRun: true,
+              compatible: true,
+              applied: false,
+              sourcePlatformRelease: supportedTargetsResult.sourceReleaseId,
+              targetPlatformRelease: targetReleaseId,
+              selectedModules: supportedTargetsResult.selectedModules,
+              autoApplyItems: [
+                { path: 'docs/ai/context.json', action: 'update' },
+                { path: 'docs/ai/derived-app-lifecycle.json', action: 'update' },
+              ],
+              manualInterventionItems: [
+                { id: 'review-platform-release-advisory' },
+              ],
+              postUpgradeValidation: [
+                './scripts/platform-tool.sh upgrade targets [generated-app-dir]',
+                './scripts/platform-tool.sh generated-app verify <generated-app-dir>',
+              ],
+              recommendedNextActions: [
+                'review-platform-release-advisory',
+                'run-generated-app-verifiers',
+              ],
+              appliedItems: [],
+            },
+            updatedAt: '2026-04-03T00:00:00Z',
+          },
+        }
+        return jsonResponse(buildUpgradeSupportContext(project))
+      }
+
+      return errorResponse(409, `Unsupported project upgrade support requestType: ${requestType}`)
     }
 
     if (path === '/service/kanban_service/listKanbansByProject') {
@@ -1939,6 +2285,114 @@ describe('admin write workflows', () => {
         'Generated-app verification SUCCESS · Generated-app verification completed through repository-owned tooling.',
       ),
     ).toBeInTheDocument()
+  })
+
+  it('shows restricted derived-app upgrade support state until a project has a successful assembly output', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    expect(
+      await screen.findByText(
+        'Bind a repository first to run project-scoped derived-app upgrade support.',
+      ),
+    ).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(
+      await screen.findByText(
+        'Run project-scoped derived-app assembly successfully before requesting upgrade support.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('runs project-scoped derived-app upgrade support from the projects page', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    await screen.findAllByText('/workspace/fast-service-platform')
+
+    fireEvent.change(await screen.findByLabelText('Output directory'), {
+      target: { value: '/tmp/generated-fsp-bootstrap-app' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Run derived-app assembly' }),
+    )
+    await screen.findByText(
+      'Derived-app assembly completed and the latest project outcome has been refreshed.',
+    )
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('button', { name: 'Load supported targets' }),
+        ).toBeInTheDocument()
+      },
+      { timeout: 3000 },
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Load supported targets' }))
+
+    expect(
+      await screen.findByText(
+        'Derived-app upgrade support completed and the latest project outcome has been refreshed.',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Latest upgrade check succeeded')).toBeInTheDocument()
+    expect(await screen.findByText('Available target releases')).toBeInTheDocument()
+    expect(
+      await screen.findByText((_, element) =>
+        element?.textContent === 'fast-service-platform/0.1.0-dev · current',
+      ),
+    ).toBeInTheDocument()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Review advisory' }))
+    expect(
+      await screen.findByText(
+        'Release advisory guidance was loaded through repository-owned tooling.',
+      ),
+    ).toBeInTheDocument()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Evaluate upgrade' }))
+    expect(
+      await screen.findByText(
+        'Upgrade compatibility evaluation completed through repository-owned tooling.',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText((_, element) =>
+        element?.textContent === 'Compatibility true',
+      ),
+    ).toBeInTheDocument()
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Generate dry-run plan' }),
+    )
+    expect(
+      await screen.findByText(
+        'Upgrade dry-run planning completed through repository-owned tooling.',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText((_, element) =>
+        element?.textContent === 'Dry run true · Compatible true',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText((_, element) =>
+        element?.textContent === 'Auto-apply items 2',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('--apply')).not.toBeInTheDocument()
   })
 
   it('creates a kanban board from the kanban page', async () => {

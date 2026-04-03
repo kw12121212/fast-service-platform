@@ -9,6 +9,7 @@ import type {
   BackendResource,
   KanbanBoard,
   ProjectDerivedAppAssemblyContext,
+  ProjectDerivedAppUpgradeSupportContext,
   ProjectDerivedAppVerificationContext,
   SoftwareProject,
   Ticket,
@@ -265,6 +266,22 @@ export function useProjectDerivedAppVerificationResource(
   })
 }
 
+export function useProjectDerivedAppUpgradeSupportResource(
+  projectId: number,
+  repositoryRootPath: string | null,
+  refreshNonce: number,
+) {
+  return useBackendResource({
+    key: `project-derived-app-upgrade-support:${projectId}:${repositoryRootPath ?? 'unbound'}:${refreshNonce}`,
+    initialData: null as ProjectDerivedAppUpgradeSupportContext | null,
+    load: () =>
+      getJson<ProjectDerivedAppUpgradeSupportContext>(
+        'project_service/getProjectDerivedAppUpgradeSupport',
+        { projectId },
+      ),
+  })
+}
+
 export function useRolesResource() {
   return useBackendResource({
     key: 'roles',
@@ -470,6 +487,20 @@ export function useRequestProjectDerivedAppVerificationAction() {
     run: (args: { projectId: number }) =>
       invokeService<ProjectDerivedAppVerificationContext>(
         'project_service/requestProjectDerivedAppVerification',
+        args,
+      ),
+  })
+}
+
+export function useRequestProjectDerivedAppUpgradeSupportAction() {
+  return useBackendMutation({
+    run: (args: {
+      projectId: number
+      requestType: string
+      targetReleaseId: string | null
+    }) =>
+      invokeService<ProjectDerivedAppUpgradeSupportContext>(
+        'project_service/requestProjectDerivedAppUpgradeSupport',
         args,
       ),
   })

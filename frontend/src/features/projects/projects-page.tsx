@@ -21,16 +21,19 @@ import {
   useDeleteProjectWorktreeAction,
   useMergeProjectWorktreeAction,
   useProjectDerivedAppAssemblyResource,
+  useProjectDerivedAppUpgradeSupportResource,
   useProjectDerivedAppVerificationResource,
   useProjectsResource,
   usePruneProjectWorktreesAction,
   useRepairProjectWorktreesAction,
   useRequestProjectDerivedAppAssemblyAction,
+  useRequestProjectDerivedAppUpgradeSupportAction,
   useRequestProjectDerivedAppVerificationAction,
   useSwitchProjectBranchAction,
 } from '@/lib/api/hooks'
 import type {
   ProjectDerivedAppAssemblyContext,
+  ProjectDerivedAppUpgradeSupportContext,
   ProjectDerivedAppVerificationContext,
   ProjectRepositorySummary,
   ProjectWorktreeSummary,
@@ -255,6 +258,442 @@ function verificationOutcomeTone(
   return latestOutcome.category === 'REQUEST_VALIDATION'
     ? 'bg-amber-500/14 text-amber-700'
     : 'bg-rose-500/12 text-rose-700'
+}
+
+function formatUpgradeSupportOutcomeLabel(
+  context: ProjectDerivedAppUpgradeSupportContext | null,
+) {
+  const latestOutcome = context?.latestOutcome
+  if (!latestOutcome) {
+    return 'No upgrade check yet'
+  }
+
+  if (latestOutcome.status === 'SUCCESS') {
+    return 'Latest upgrade check succeeded'
+  }
+
+  return latestOutcome.category === 'REQUEST_VALIDATION'
+    ? 'Latest upgrade check was rejected'
+    : 'Latest upgrade check failed'
+}
+
+function upgradeSupportOutcomeTone(
+  context: ProjectDerivedAppUpgradeSupportContext | null,
+) {
+  const latestOutcome = context?.latestOutcome
+  if (!latestOutcome) {
+    return 'bg-muted text-muted-foreground'
+  }
+
+  if (latestOutcome.status === 'SUCCESS') {
+    return 'bg-emerald-500/12 text-emerald-700'
+  }
+
+  return latestOutcome.category === 'REQUEST_VALIDATION'
+    ? 'bg-amber-500/14 text-amber-700'
+    : 'bg-rose-500/12 text-rose-700'
+}
+
+function formatUpgradeSupportRequestLabel(requestType: string) {
+  if (requestType === 'SUPPORTED_TARGETS') {
+    return 'Supported targets'
+  }
+  if (requestType === 'ADVISORY') {
+    return 'Release advisory'
+  }
+  if (requestType === 'EVALUATE') {
+    return 'Compatibility evaluation'
+  }
+  if (requestType === 'DRY_RUN_EXECUTE') {
+    return 'Dry-run plan'
+  }
+  return requestType
+}
+
+function ProjectDerivedAppUpgradeSupportCard({
+  project,
+  refreshNonce,
+}: {
+  project: SoftwareProject
+  refreshNonce: number
+}) {
+  const upgradeSupport = useProjectDerivedAppUpgradeSupportResource(
+    project.id,
+    project.repository?.rootPath ?? null,
+    refreshNonce,
+  )
+  const requestUpgradeSupport = useRequestProjectDerivedAppUpgradeSupportAction()
+  const [selectedTargetReleaseId, setSelectedTargetReleaseId] = useState('')
+  const [loadedTargetReleases, setLoadedTargetReleases] = useState<
+    Array<{ releaseId: string; supportStatus?: string }>
+  >([])
+  const [loadedDefaultTargetReleaseId, setLoadedDefaultTargetReleaseId] =
+    useState('')
+
+  const context = upgradeSupport.data
+  const latestOutcome = context?.latestOutcome ?? null
+  const latestResult = latestOutcome?.result
+
+  function readSupportedTargets(contextValue: ProjectDerivedAppUpgradeSupportContext | null) {
+    const latest = contextValue?.latestOutcome
+    const result = latest?.result
+    if (
+      latest?.requestType !== 'SUPPORTED_TARGETS' ||
+      !result ||
+      !('availableTargetReleases' in result) ||
+      !Array.isArray(result.availableTargetReleases)
+    ) {
+      return {
+        targets: [] as Array<{ releaseId: string; supportStatus?: string }>,
+        defaultTargetReleaseId: '',
+      }
+    }
+
+    return {
+      targets: result.availableTargetReleases
+        .filter(
+          (entry): entry is { releaseId: string; supportStatus?: string } =>
+            typeof entry === 'object' &&
+            entry !== null &&
+            'releaseId' in entry &&
+            typeof entry.releaseId === 'string',
+        )
+        .map((entry) => ({
+          releaseId: entry.releaseId,
+          supportStatus:
+            'supportStatus' in entry && typeof entry.supportStatus === 'string'
+              ? entry.supportStatus
+              : undefined,
+        })),
+      defaultTargetReleaseId:
+        'defaultTargetReleaseId' in result &&
+        typeof result.defaultTargetReleaseId === 'string'
+          ? result.defaultTargetReleaseId
+          : '',
+    }
+  }
+
+  async function handleRequest(requestType: string) {
+    const targetReleaseId =
+      requestType === 'DRY_RUN_EXECUTE' ? targetReleaseValue || null : null
+
+    try {
+      const nextContext = await requestUpgradeSupport.submit({
+        projectId: project.id,
+        requestType,
+        targetReleaseId,
+      })
+      if (requestType === 'SUPPORTED_TARGETS') {
+        const supportedTargets = readSupportedTargets(nextContext)
+        setLoadedTargetReleases(supportedTargets.targets)
+        setLoadedDefaultTargetReleaseId(supportedTargets.defaultTargetReleaseId)
+        if (
+          selectedTargetReleaseId === '' &&
+          supportedTargets.defaultTargetReleaseId !== ''
+        ) {
+          setSelectedTargetReleaseId(supportedTargets.defaultTargetReleaseId)
+        }
+      }
+      upgradeSupport.reload()
+    } catch {
+      upgradeSupport.reload()
+    }
+  }
+
+  const latestSupportedTargets = readSupportedTargets(context)
+  const availableTargets =
+    latestSupportedTargets.targets.length > 0
+      ? latestSupportedTargets.targets
+      : loadedTargetReleases
+  const defaultTargetReleaseId =
+    latestSupportedTargets.defaultTargetReleaseId || loadedDefaultTargetReleaseId
+  const targetReleaseValue = availableTargets.some(
+    (entry) => entry.releaseId === selectedTargetReleaseId,
+  )
+    ? selectedTargetReleaseId
+    : defaultTargetReleaseId
+
+  return (
+    <div className="space-y-4 rounded-[20px] border border-border/60 bg-background/80 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            Derived-app upgrade support
+          </div>
+          <div className="mt-2 text-sm text-muted-foreground">
+            Inspect supported target releases, advisory guidance, compatibility,
+            and repository-owned dry-run upgrade planning for this project&apos;s
+            latest successful derived-app assembly output.
+          </div>
+        </div>
+        <Badge className={upgradeSupportOutcomeTone(context)}>
+          {formatUpgradeSupportOutcomeLabel(context)}
+        </Badge>
+      </div>
+
+      <ResourceState
+        status={upgradeSupport.status}
+        error={upgradeSupport.error}
+        empty={false}
+        emptyTitle="Upgrade support context unavailable"
+        emptyMessage="Refresh the project upgrade-support state to inspect derived-app upgrade readiness."
+        onRetry={upgradeSupport.reload}
+        skeletonCount={2}
+      >
+        <div className="space-y-4">
+          {context?.restricted ? (
+            <div className="rounded-[18px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+              {context.restriction}
+            </div>
+          ) : context ? (
+            <>
+              <div className="rounded-[18px] border border-border/60 bg-muted/24 p-3 text-sm text-muted-foreground">
+                Source context{' '}
+                <span className="font-medium text-foreground">
+                  {context.sourceContext.type}
+                </span>
+                <br />
+                Upgrade target{' '}
+                <span className="font-medium text-foreground">
+                  {context.targetContext.type}
+                </span>
+                <br />
+                Latest successful assembly output{' '}
+                <span className="font-medium text-foreground break-all">
+                  {context.targetContext.outputDirectory}
+                </span>
+              </div>
+
+              <MutationStatus
+                status={requestUpgradeSupport.status}
+                error={requestUpgradeSupport.error}
+                submittingMessage="Running repository-owned derived-app upgrade support for this project..."
+                successMessage="Derived-app upgrade support completed and the latest project outcome has been refreshed."
+              />
+
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleRequest('SUPPORTED_TARGETS')}
+                  disabled={requestUpgradeSupport.status === 'submitting'}
+                >
+                  Load supported targets
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleRequest('ADVISORY')}
+                  disabled={requestUpgradeSupport.status === 'submitting'}
+                >
+                  Review advisory
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleRequest('EVALUATE')}
+                  disabled={requestUpgradeSupport.status === 'submitting'}
+                >
+                  Evaluate upgrade
+                </Button>
+              </div>
+
+              <div className="space-y-3 rounded-[18px] border border-border/60 bg-muted/24 p-4 text-sm text-muted-foreground">
+                <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  Dry-run upgrade plan
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`project-upgrade-target-${project.id}`}>
+                    Supported target release
+                  </Label>
+                  <select
+                    id={`project-upgrade-target-${project.id}`}
+                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none ring-0 transition-colors focus-visible:border-ring"
+                    value={targetReleaseValue}
+                    onChange={(event) => setSelectedTargetReleaseId(event.target.value)}
+                    disabled={availableTargets.length === 0}
+                  >
+                    {availableTargets.length === 0 ? (
+                      <option value="">Load supported targets first</option>
+                    ) : (
+                      availableTargets.map((entry) => {
+                        return (
+                          <option key={entry.releaseId} value={entry.releaseId}>
+                            {entry.releaseId}
+                          </option>
+                        )
+                      })
+                    )}
+                  </select>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => handleRequest('DRY_RUN_EXECUTE')}
+                  disabled={
+                    requestUpgradeSupport.status === 'submitting' ||
+                    availableTargets.length === 0 ||
+                    targetReleaseValue.trim() === ''
+                  }
+                >
+                  Generate dry-run plan
+                </Button>
+              </div>
+            </>
+          ) : null}
+
+          {latestOutcome ? (
+            <div className="space-y-3 rounded-[18px] border border-border/60 bg-muted/24 p-4 text-sm text-muted-foreground">
+              <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                Latest visible upgrade outcome
+              </div>
+              <div>
+                Request{' '}
+                <span className="font-medium text-foreground">
+                  {formatUpgradeSupportRequestLabel(latestOutcome.requestType)}
+                </span>
+              </div>
+              <div>
+                Outcome{' '}
+                <span className="font-medium text-foreground">
+                  {latestOutcome.status}
+                </span>
+                {' · '}
+                <span className="font-medium text-foreground">
+                  {latestOutcome.category}
+                </span>
+              </div>
+              <div>{latestOutcome.message}</div>
+              {latestOutcome.targetReleaseId ? (
+                <div>
+                  Target release{' '}
+                  <span className="font-medium text-foreground break-all">
+                    {latestOutcome.targetReleaseId}
+                  </span>
+                </div>
+              ) : null}
+              {latestOutcome.targetOutputDirectory ? (
+                <div>
+                  Derived-app output{' '}
+                  <span className="font-medium text-foreground break-all">
+                    {latestOutcome.targetOutputDirectory}
+                  </span>
+                </div>
+              ) : null}
+
+              {latestOutcome.requestType === 'SUPPORTED_TARGETS' &&
+              latestResult &&
+              'availableTargetReleases' in latestResult &&
+              Array.isArray(latestResult.availableTargetReleases) ? (
+                <div className="space-y-2">
+                  <div className="font-medium text-foreground">Available target releases</div>
+                  {latestResult.availableTargetReleases.map((entry, index) => {
+                    if (typeof entry !== 'object' || entry === null) {
+                      return null
+                    }
+                    return (
+                      <div
+                        key={
+                          'releaseId' in entry && typeof entry.releaseId === 'string'
+                            ? entry.releaseId
+                            : `target-${index}`
+                        }
+                      >
+                        <span className="font-medium text-foreground">
+                          {'releaseId' in entry ? String(entry.releaseId) : 'Unknown target'}
+                        </span>
+                        {' · '}
+                        {'supportStatus' in entry
+                          ? String(entry.supportStatus ?? 'unknown')
+                          : 'unknown'}
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : null}
+
+              {latestOutcome.requestType === 'ADVISORY' &&
+              latestResult &&
+              'summary' in latestResult ? (
+                <>
+                  <div>
+                    Advisory summary{' '}
+                    <span className="font-medium text-foreground">
+                      {String(latestResult.summary)}
+                    </span>
+                  </div>
+                  {'recommendedChecks' in latestResult &&
+                  Array.isArray(latestResult.recommendedChecks) ? (
+                    <div>
+                      Recommended checks{' '}
+                      <span className="font-medium text-foreground">
+                        {latestResult.recommendedChecks.join(', ')}
+                      </span>
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+
+              {latestOutcome.requestType === 'EVALUATE' &&
+              latestResult &&
+              'compatible' in latestResult ? (
+                <>
+                  <div>
+                    Compatibility{' '}
+                    <span className="font-medium text-foreground">
+                      {String(latestResult.compatible)}
+                    </span>
+                  </div>
+                  {'recommendedAction' in latestResult ? (
+                    <div>
+                      Recommended action{' '}
+                      <span className="font-medium text-foreground">
+                        {String(latestResult.recommendedAction)}
+                      </span>
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+
+              {latestOutcome.requestType === 'DRY_RUN_EXECUTE' &&
+              latestResult &&
+              'planVersion' in latestResult ? (
+                <>
+                  <div>
+                    Dry run{' '}
+                    <span className="font-medium text-foreground">
+                      {String(latestResult.dryRun)}
+                    </span>
+                    {' · '}Compatible{' '}
+                    <span className="font-medium text-foreground">
+                      {String(latestResult.compatible)}
+                    </span>
+                  </div>
+                  {'autoApplyItems' in latestResult &&
+                  Array.isArray(latestResult.autoApplyItems) ? (
+                    <div>
+                      Auto-apply items{' '}
+                      <span className="font-medium text-foreground">
+                        {latestResult.autoApplyItems.length}
+                      </span>
+                    </div>
+                  ) : null}
+                  {'manualInterventionItems' in latestResult &&
+                  Array.isArray(latestResult.manualInterventionItems) ? (
+                    <div>
+                      Manual intervention items{' '}
+                      <span className="font-medium text-foreground">
+                        {latestResult.manualInterventionItems.length}
+                      </span>
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </ResourceState>
+    </div>
+  )
 }
 
 function ProjectDerivedAppAssemblyCard({
@@ -1412,6 +1851,10 @@ function ProjectRepositoryCard({
           }
         />
         <ProjectDerivedAppVerificationCard
+          project={project}
+          refreshNonce={derivedAppLifecycleRefreshVersion}
+        />
+        <ProjectDerivedAppUpgradeSupportCard
           project={project}
           refreshNonce={derivedAppLifecycleRefreshVersion}
         />

@@ -96,6 +96,22 @@ create table if not exists project_derived_app_verification (
   updated_at varchar
 ) package @packageName generate code @modelSrcDir;
 
+create table if not exists project_derived_app_upgrade_support (
+  project_id long primary key,
+  status varchar,
+  restricted boolean,
+  restriction varchar,
+  source_repository_path varchar,
+  latest_target_output_directory varchar,
+  latest_outcome_status varchar,
+  latest_outcome_category varchar,
+  latest_request_type varchar,
+  latest_outcome_message varchar,
+  latest_target_release_id varchar,
+  latest_result_json varchar,
+  updated_at varchar
+) package @packageName generate code @modelSrcDir;
+
 -- MODULE: kanban-management
 create table if not exists kanban_board (
   id long auto_increment primary key,
