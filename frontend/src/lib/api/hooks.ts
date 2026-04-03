@@ -10,6 +10,8 @@ import type {
   KanbanBoard,
   SoftwareProject,
   Ticket,
+  TicketWorkflow,
+  TicketWorkflowAction,
 } from '@/lib/api/types'
 
 type ResourceOptions<T> = {
@@ -295,6 +297,18 @@ export function useTicketsResource(projectId: number | null) {
   })
 }
 
+export function useTicketWorkflowResource(ticketId: number | null) {
+  return useBackendResource({
+    key: `ticket-workflow:${ticketId ?? 'none'}`,
+    enabled: ticketId !== null,
+    initialData: null as TicketWorkflow | null,
+    load: () =>
+      getJson<TicketWorkflow>('ticket_service/getWorkflow', {
+        ticketId: ticketId ?? undefined,
+      }),
+  })
+}
+
 export function useCreateUserAction() {
   return useBackendMutation({
     run: (args: {
@@ -470,5 +484,17 @@ export function useMoveTicketAction() {
       ticketId: number
       targetState: Ticket['state']
     }) => invokeService<string>('ticket_service/moveTicket', args),
+  })
+}
+
+export function useExecuteTicketWorkflowAction() {
+  return useBackendMutation({
+    run: (args: {
+      ticketId: number
+      actionName: TicketWorkflowAction
+      actorUserId: number
+      comment: string
+      assigneeUserId?: number
+    }) => invokeService<string>('ticket_service/executeWorkflowAction', args),
   })
 }

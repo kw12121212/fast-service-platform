@@ -1,7 +1,8 @@
 import { Activity, FolderKanban, ShieldCheck, Ticket, Users } from 'lucide-react'
+import { useState } from 'react'
 
-import { DynamicReport } from '@/components/admin'
-import type { ReportDescriptor, ReportResults } from '@/components/admin'
+import { DynamicReport, WorkflowPanel } from '@/components/admin'
+import type { ReportDescriptor, ReportResults, WorkflowDescriptor } from '@/components/admin'
 import { PageHeader } from '@/components/admin/page-header'
 import { ResourceState } from '@/components/admin/resource-state'
 import { StatCard } from '@/components/admin/stat-card'
@@ -10,7 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   useKanbansResource,
   useProjectsResource,
+  useExecuteTicketWorkflowAction,
   useRolePermissionsResource,
+  useTicketWorkflowResource,
   useTicketsResource,
   useUsersResource,
 } from '@/lib/api/hooks'
@@ -22,6 +25,25 @@ export function DashboardPage() {
   const permissions = useRolePermissionsResource(200)
   const kanbans = useKanbansResource(selectedProject?.id ?? null)
   const tickets = useTicketsResource(selectedProject?.id ?? null)
+  const [selectedWorkflowTicketId, setSelectedWorkflowTicketId] = useState<number | null>(null)
+  const activeWorkflowTicketId = selectedWorkflowTicketId ?? tickets.data[0]?.id ?? null
+  const ticketWorkflow = useTicketWorkflowResource(activeWorkflowTicketId)
+  const executeWorkflowAction = useExecuteTicketWorkflowAction()
+
+  const workflowDescriptor: WorkflowDescriptor = {
+    entityName: 'Ticket workflow',
+    stateLabel: 'Current state',
+    assigneeLabel: 'Current assignee',
+    commentLabel: 'Comment',
+    commentPlaceholder: 'Explain why this workflow action is being taken.',
+    historyTitle: 'Workflow history',
+    actions: [
+      { action: 'submit', label: 'Submit' },
+      { action: 'approve', label: 'Approve' },
+      { action: 'reject', label: 'Reject' },
+      { action: 'reassign', label: 'Reassign', requiresAssignee: true },
+    ],
+  }
 
   const ticketStateReport: ReportDescriptor = {
     sections: [
@@ -204,6 +226,77 @@ export function DashboardPage() {
       </div>
 
       <DynamicReport descriptor={ticketStateReport} results={ticketStateResults} />
+
+      <Card className="bg-card/95">
+        <CardHeader>
+          <CardTitle className="text-lg">Workflow example</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+            This dashboard example uses the reusable workflow component against the current backend ticket service, including workflow detail, bounded actions, reassignment, required comments, and visible history.
+          </p>
+
+          {tickets.data.length > 0 ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="workflow-ticket-select">
+                Workflow ticket
+              </label>
+              <select
+                id="workflow-ticket-select"
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring"
+                value={String(activeWorkflowTicketId ?? '')}
+                onChange={(event) => setSelectedWorkflowTicketId(Number(event.target.value))}
+              >
+                {tickets.data.map((ticket) => (
+                  <option key={ticket.id} value={ticket.id}>
+                    {ticket.key} · {ticket.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+
+          <ResourceState
+            status={ticketWorkflow.status}
+            error={ticketWorkflow.error}
+            empty={ticketWorkflow.data === null}
+            emptyTitle="No workflow example ticket available"
+            emptyMessage="Create or load at least one ticket to view the reusable workflow panel against the backend ticket workflow path."
+            onRetry={ticketWorkflow.reload}
+          >
+            {ticketWorkflow.data ? (
+              <WorkflowPanel
+                descriptor={workflowDescriptor}
+                instance={ticketWorkflow.data}
+                availableAssignees={users.data.map((user) => ({
+                  userId: user.id,
+                  displayName: user.displayName,
+                  username: user.username,
+                }))}
+                mutationStatus={executeWorkflowAction.status}
+                mutationError={executeWorkflowAction.error}
+                submittingMessage="Executing backend ticket workflow action..."
+                successMessage={`Workflow action completed with result ${executeWorkflowAction.data ?? 'success'}.`}
+                onAction={async ({ action, comment, assigneeUserId }) => {
+                  if (!ticketWorkflow.data) {
+                    return
+                  }
+
+                  await executeWorkflowAction.submit({
+                    ticketId: ticketWorkflow.data.ticketId,
+                    actionName: action,
+                    actorUserId: users.data[0]?.id ?? ticketWorkflow.data.assignee.userId,
+                    comment,
+                    assigneeUserId,
+                  })
+                  ticketWorkflow.reload()
+                  tickets.reload()
+                }}
+              />
+            ) : null}
+          </ResourceState>
+        </CardContent>
+      </Card>
     </div>
   )
 }

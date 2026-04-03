@@ -123,3 +123,35 @@ export type Ticket = {
   state: TicketState
   kanbanId: number
 }
+
+export type TicketWorkflowAction = 'submit' | 'approve' | 'reject' | 'reassign'
+
+export type TicketWorkflowAssignee = {
+  userId: number
+  username: string
+  displayName: string
+}
+
+export type TicketWorkflowHistoryEntry = {
+  id: number
+  action: string
+  fromState: string
+  toState: string
+  actorUserId: number
+  actorDisplayName: string
+  previousAssigneeUserId: number | null
+  previousAssigneeDisplayName: string | null
+  nextAssigneeUserId: number | null
+  nextAssigneeDisplayName: string | null
+  comment: string
+}
+
+export type TicketWorkflow = {
+  ticketId: number
+  ticketKey: string
+  title: string
+  state: TicketState
+  assignee: TicketWorkflowAssignee
+  availableActions: TicketWorkflowAction[]
+  history: TicketWorkflowHistoryEntry[]
+}

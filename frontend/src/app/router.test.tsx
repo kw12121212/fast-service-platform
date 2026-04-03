@@ -11,6 +11,7 @@ const defaultResponses = new Map<string, unknown>([
   ['/service/access_control_service/listPermissions', []],
   ['/service/kanban_service/listKanbansByProject?projectId=1', []],
   ['/service/ticket_service/listTicketsByProject?projectId=1', []],
+  ['/service/ticket_service/getWorkflow?ticketId=1', null],
 ])
 
 function mockFetch() {

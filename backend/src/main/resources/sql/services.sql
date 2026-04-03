@@ -57,7 +57,9 @@ generate code @serviceSrcDir;
 create service if not exists ticket_service (
   createTicket(projectId long, kanbanId long, ticketKey varchar, title varchar, description varchar, assigneeUserId long) long,
   moveTicket(ticketId long, targetState varchar) varchar,
-  listTicketsByProject(projectId long) varchar
+  listTicketsByProject(projectId long) varchar,
+  getWorkflow(ticketId long) varchar,
+  executeWorkflowAction(ticketId long, actionName varchar, actorUserId long, comment varchar, assigneeUserId long) varchar
 )
 package @packageName
 implement by 'com.fastservice.platform.backend.ticket.TicketServiceImpl'

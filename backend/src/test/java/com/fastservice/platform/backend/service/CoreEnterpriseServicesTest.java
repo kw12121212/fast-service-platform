@@ -53,6 +53,66 @@ class CoreEnterpriseServicesTest {
     }
 
     @Test
+    void exposesTicketWorkflowDetailAndSupportsBoundedActions() {
+        UserServiceImpl users = new UserServiceImpl();
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        KanbanServiceImpl kanbans = new KanbanServiceImpl();
+        TicketServiceImpl tickets = new TicketServiceImpl();
+
+        long actorUserId = users.createUser("workflow-admin", "Workflow Admin", "workflow-admin@example.com");
+        long reassignedUserId = users.createUser("workflow-reviewer", "Workflow Reviewer", "workflow-reviewer@example.com");
+        long projectId = projects.createProject("WF", "Workflow Test", "Workflow test project");
+        long kanbanId = kanbans.createKanban(projectId, "Workflow Board");
+        long ticketId = tickets.createTicket(projectId, kanbanId, "WF-1", "Review workflow", "Validate workflow APIs", actorUserId);
+
+        String submitResult = tickets.executeWorkflowAction(ticketId, "submit", actorUserId, "Submitting for review", null);
+        String reassignResult = tickets.executeWorkflowAction(ticketId, "reassign", actorUserId, "Reassigning to reviewer", reassignedUserId);
+        String approveResult = tickets.executeWorkflowAction(ticketId, "approve", actorUserId, "Approved for release", null);
+        String workflow = tickets.getWorkflow(ticketId);
+
+        assertTrue("IN_PROGRESS".equals(submitResult));
+        assertTrue("REASSIGNED".equals(reassignResult));
+        assertTrue("DONE".equals(approveResult));
+        assertTrue(workflow.contains("\"state\":\"DONE\""));
+        assertTrue(workflow.contains("\"availableActions\":[\"reassign\"]"));
+        assertTrue(workflow.contains("\"action\":\"REASSIGN\""));
+        assertTrue(workflow.contains("Workflow Reviewer"));
+        assertTrue(workflow.contains("Approved for release"));
+    }
+
+    @Test
+    void rejectsWorkflowActionWithoutRequiredComment() {
+        UserServiceImpl users = new UserServiceImpl();
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        KanbanServiceImpl kanbans = new KanbanServiceImpl();
+        TicketServiceImpl tickets = new TicketServiceImpl();
+
+        long actorUserId = users.createUser("workflow-comment", "Workflow Comment", "workflow-comment@example.com");
+        long projectId = projects.createProject("WFC", "Workflow Comment Test", "Workflow comment validation");
+        long kanbanId = kanbans.createKanban(projectId, "Workflow Comment Board");
+        long ticketId = tickets.createTicket(projectId, kanbanId, "WFC-1", "Require comment", "Comments are required", actorUserId);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> tickets.executeWorkflowAction(ticketId, "submit", actorUserId, "   ", null));
+    }
+
+    @Test
+    void rejectsWorkflowActionsOutsideTheirBoundedStateWindow() {
+        UserServiceImpl users = new UserServiceImpl();
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        KanbanServiceImpl kanbans = new KanbanServiceImpl();
+        TicketServiceImpl tickets = new TicketServiceImpl();
+
+        long actorUserId = users.createUser("workflow-bounds", "Workflow Bounds", "workflow-bounds@example.com");
+        long projectId = projects.createProject("WFB", "Workflow Bounds Test", "Workflow bounds validation");
+        long kanbanId = kanbans.createKanban(projectId, "Workflow Bounds Board");
+        long ticketId = tickets.createTicket(projectId, kanbanId, "WFB-1", "Bounded workflow", "Reject should not run from TODO", actorUserId);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> tickets.executeWorkflowAction(ticketId, "reject", actorUserId, "Reject before review", null));
+    }
+
+    @Test
     void escapesJsonOutputValues() {
         UserServiceImpl users = new UserServiceImpl();
 

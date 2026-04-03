@@ -96,6 +96,18 @@ type MockTicket = {
   state: 'TODO' | 'IN_PROGRESS' | 'DONE'
 }
 
+type MockTicketWorkflowHistoryEntry = {
+  id: number
+  ticketId: number
+  action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'REASSIGN'
+  fromState: MockTicket['state']
+  toState: MockTicket['state']
+  actorUserId: number
+  previousAssigneeUserId: number | null
+  nextAssigneeUserId: number | null
+  comment: string
+}
+
 function createBackendState() {
   const users: MockUser[] = [
     {
@@ -158,6 +170,8 @@ function createBackendState() {
     },
   ]
 
+  const ticketWorkflowHistory: MockTicketWorkflowHistoryEntry[] = []
+
   return {
     users,
     roles,
@@ -167,7 +181,28 @@ function createBackendState() {
     projects,
     kanbans,
     tickets,
+    ticketWorkflowHistory,
   }
+}
+
+function lookupUserDisplayName(users: MockUser[], userId: number | null) {
+  if (userId === null) {
+    return null
+  }
+
+  return users.find((entry) => entry.id === userId)?.displayName ?? null
+}
+
+function availableWorkflowActions(state: MockTicket['state']) {
+  if (state === 'TODO') {
+    return ['submit', 'reassign']
+  }
+
+  if (state === 'IN_PROGRESS') {
+    return ['approve', 'reject', 'reassign']
+  }
+
+  return ['reassign']
 }
 
 function jsonResponse(body: unknown) {
@@ -743,6 +778,100 @@ function installBackendMock() {
       return textResponse(targetState)
     }
 
+    if (path === '/service/ticket_service/getWorkflow') {
+      const ticketId = Number(url.searchParams.get('ticketId'))
+      const ticket = state.tickets.find((entry) => entry.id === ticketId)
+      if (!ticket) {
+        return errorResponse(404, 'Ticket not found')
+      }
+
+      return jsonResponse({
+        ticketId: ticket.id,
+        ticketKey: ticket.key,
+        title: ticket.title,
+        state: ticket.state,
+        assignee: {
+          userId: ticket.assigneeUserId,
+          username:
+            state.users.find((entry) => entry.id === ticket.assigneeUserId)?.username ?? '',
+          displayName: lookupUserDisplayName(state.users, ticket.assigneeUserId) ?? '',
+        },
+        availableActions: availableWorkflowActions(ticket.state),
+        history: state.ticketWorkflowHistory
+          .filter((entry) => entry.ticketId === ticket.id)
+          .map((entry) => ({
+            id: entry.id,
+            action: entry.action,
+            fromState: entry.fromState,
+            toState: entry.toState,
+            actorUserId: entry.actorUserId,
+            actorDisplayName: lookupUserDisplayName(state.users, entry.actorUserId) ?? '',
+            previousAssigneeUserId: entry.previousAssigneeUserId,
+            previousAssigneeDisplayName: lookupUserDisplayName(
+              state.users,
+              entry.previousAssigneeUserId,
+            ),
+            nextAssigneeUserId: entry.nextAssigneeUserId,
+            nextAssigneeDisplayName: lookupUserDisplayName(
+              state.users,
+              entry.nextAssigneeUserId,
+            ),
+            comment: entry.comment,
+          })),
+      })
+    }
+
+    if (path === '/service/ticket_service/executeWorkflowAction') {
+      const ticketId = Number(url.searchParams.get('ticketId'))
+      const actionName = url.searchParams.get('actionName') ?? ''
+      const actorUserId = Number(url.searchParams.get('actorUserId'))
+      const comment = url.searchParams.get('comment') ?? ''
+      const nextAssigneeUserIdParam = url.searchParams.get('assigneeUserId')
+      const nextAssigneeUserId = nextAssigneeUserIdParam ? Number(nextAssigneeUserIdParam) : null
+      const ticket = state.tickets.find((entry) => entry.id === ticketId)
+
+      if (!ticket) {
+        return errorResponse(404, 'Ticket not found')
+      }
+      if (comment.trim() === '') {
+        return errorResponse(409, 'Workflow comment is required')
+      }
+
+      let result = 'DONE'
+      const previousState = ticket.state
+      const previousAssigneeUserId = ticket.assigneeUserId
+
+      if (actionName === 'submit') {
+        ticket.state = 'IN_PROGRESS'
+        result = 'IN_PROGRESS'
+      } else if (actionName === 'approve') {
+        ticket.state = 'DONE'
+        result = 'DONE'
+      } else if (actionName === 'reject') {
+        ticket.state = 'TODO'
+        result = 'TODO'
+      } else if (actionName === 'reassign') {
+        if (nextAssigneeUserId === null) {
+          return errorResponse(409, 'Workflow reassign action requires a target assignee')
+        }
+        ticket.assigneeUserId = nextAssigneeUserId
+        result = 'REASSIGNED'
+      }
+
+      state.ticketWorkflowHistory.push({
+        id: state.ticketWorkflowHistory.length + 1,
+        ticketId,
+        action: actionName.toUpperCase() as MockTicketWorkflowHistoryEntry['action'],
+        fromState: previousState,
+        toState: ticket.state,
+        actorUserId,
+        previousAssigneeUserId,
+        nextAssigneeUserId: actionName === 'reassign' ? ticket.assigneeUserId : previousAssigneeUserId,
+        comment,
+      })
+      return textResponse(result)
+    }
+
     if (path === '/service/access_control_service/listRoles') {
       return jsonResponse(state.roles)
     }
@@ -1302,6 +1431,43 @@ describe('admin write workflows', () => {
     expect(
       within(refreshedTicketRow as HTMLElement).getByText('IN_PROGRESS'),
     ).toBeInTheDocument()
+  })
+
+  it('shows a real workflow example on the dashboard and executes backend-backed workflow actions', async () => {
+    renderRoute('/dashboard')
+
+    await screen.findByText('Current V1 enterprise baseline')
+    expect(await screen.findByText('Workflow example')).toBeInTheDocument()
+    expect(await screen.findByText('FSP-1 workflow')).toBeInTheDocument()
+    expect(
+      await screen.findByRole('button', { name: 'Submit' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+    fireEvent.change(screen.getByLabelText('Comment'), {
+      target: { value: 'Submitting this ticket into active review' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Run selected action' }))
+
+    expect(
+      await screen.findByText('Workflow action completed with result IN_PROGRESS.'),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('IN_PROGRESS')).toBeInTheDocument()
+    expect(await screen.findByText('Submitting this ticket into active review')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reassign' }))
+    fireEvent.change(screen.getByLabelText('Reassign to'), {
+      target: { value: '100' },
+    })
+    fireEvent.change(screen.getByLabelText('Comment'), {
+      target: { value: 'Reassigning to the baseline operator' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Run selected action' }))
+
+    expect(
+      await screen.findByText('Workflow action completed with result REASSIGNED.'),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Reassigning to the baseline operator')).toBeInTheDocument()
   })
 
   it('manages the minimum RBAC workflows from the roles page', async () => {

@@ -1,6 +1,7 @@
 export { DynamicForm } from './dynamic-form'
 export type { FieldDescriptor, FieldWidget, FormDescriptor, SelectOption, ValidationRules } from './dynamic-form'
 export { DynamicReport } from './dynamic-report'
+export { WorkflowPanel } from './workflow-panel'
 export type {
   ReportChartDataPoint,
   ReportChartDescriptor,
@@ -15,3 +16,11 @@ export type {
   SummaryCardItem,
   SummaryCardsDescriptor,
 } from './dynamic-report'
+export type {
+  WorkflowActionDescriptor,
+  WorkflowActionType,
+  WorkflowDescriptor,
+  WorkflowHistoryEntry,
+  WorkflowInstance,
+  WorkflowPerson,
+} from './workflow-panel'

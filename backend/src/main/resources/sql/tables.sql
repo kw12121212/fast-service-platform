@@ -80,3 +80,15 @@ create table if not exists ticket (
   state varchar,
   assignee_user_id long
 ) package @packageName generate code @modelSrcDir;
+
+create table if not exists ticket_workflow_history (
+  id long auto_increment primary key,
+  ticket_id long,
+  action varchar,
+  from_state varchar,
+  to_state varchar,
+  actor_user_id long,
+  previous_assignee_user_id long,
+  next_assignee_user_id long,
+  comment varchar
+) package @packageName generate code @modelSrcDir;
