@@ -21,14 +21,17 @@ import {
   useDeleteProjectWorktreeAction,
   useMergeProjectWorktreeAction,
   useProjectDerivedAppAssemblyResource,
+  useProjectDerivedAppVerificationResource,
   useProjectsResource,
   usePruneProjectWorktreesAction,
   useRepairProjectWorktreesAction,
   useRequestProjectDerivedAppAssemblyAction,
+  useRequestProjectDerivedAppVerificationAction,
   useSwitchProjectBranchAction,
 } from '@/lib/api/hooks'
 import type {
   ProjectDerivedAppAssemblyContext,
+  ProjectDerivedAppVerificationContext,
   ProjectRepositorySummary,
   ProjectWorktreeSummary,
   SoftwareProject,
@@ -220,10 +223,46 @@ function assemblyOutcomeTone(context: ProjectDerivedAppAssemblyContext | null) {
     : 'bg-rose-500/12 text-rose-700'
 }
 
+function formatVerificationOutcomeLabel(
+  context: ProjectDerivedAppVerificationContext | null,
+) {
+  const latestOutcome = context?.latestOutcome
+  if (!latestOutcome) {
+    return 'No verification run yet'
+  }
+
+  if (latestOutcome.status === 'SUCCESS') {
+    return 'Latest validation succeeded'
+  }
+
+  return latestOutcome.category === 'REQUEST_VALIDATION'
+    ? 'Latest validation was rejected'
+    : 'Latest validation failed'
+}
+
+function verificationOutcomeTone(
+  context: ProjectDerivedAppVerificationContext | null,
+) {
+  const latestOutcome = context?.latestOutcome
+  if (!latestOutcome) {
+    return 'bg-muted text-muted-foreground'
+  }
+
+  if (latestOutcome.status === 'SUCCESS') {
+    return 'bg-emerald-500/12 text-emerald-700'
+  }
+
+  return latestOutcome.category === 'REQUEST_VALIDATION'
+    ? 'bg-amber-500/14 text-amber-700'
+    : 'bg-rose-500/12 text-rose-700'
+}
+
 function ProjectDerivedAppAssemblyCard({
   project,
+  onAssemblyChanged,
 }: {
   project: SoftwareProject
+  onAssemblyChanged: () => void
 }) {
   const assembly = useProjectDerivedAppAssemblyResource(
     project.id,
@@ -256,8 +295,10 @@ function ProjectDerivedAppAssemblyCard({
         outputDirectory,
       })
       assembly.reload()
+      onAssemblyChanged()
     } catch {
       assembly.reload()
+      onAssemblyChanged()
     }
   }
 
@@ -393,6 +434,148 @@ function ProjectDerivedAppAssemblyCard({
   )
 }
 
+function ProjectDerivedAppVerificationCard({
+  project,
+  refreshNonce,
+}: {
+  project: SoftwareProject
+  refreshNonce: number
+}) {
+  const verification = useProjectDerivedAppVerificationResource(
+    project.id,
+    project.repository?.rootPath ?? null,
+    refreshNonce,
+  )
+  const requestVerification = useRequestProjectDerivedAppVerificationAction()
+
+  async function handleVerificationRequest() {
+    try {
+      await requestVerification.submit({
+        projectId: project.id,
+      })
+      verification.reload()
+    } catch {
+      verification.reload()
+    }
+  }
+
+  const context = verification.data
+  const latestOutcome = context?.latestOutcome ?? null
+
+  return (
+    <div className="space-y-4 rounded-[20px] border border-border/60 bg-background/80 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            Derived-app verification
+          </div>
+          <div className="mt-2 text-sm text-muted-foreground">
+            Run repository-owned generated-app verification and runtime smoke against this project&apos;s latest successful derived-app assembly output.
+          </div>
+        </div>
+        <Badge className={verificationOutcomeTone(context)}>
+          {formatVerificationOutcomeLabel(context)}
+        </Badge>
+      </div>
+
+      <ResourceState
+        status={verification.status}
+        error={verification.error}
+        empty={false}
+        emptyTitle="Verification context unavailable"
+        emptyMessage="Refresh the project verification state to inspect derived-app validation availability."
+        onRetry={verification.reload}
+        skeletonCount={2}
+      >
+        <div className="space-y-4">
+          {context?.restricted ? (
+            <div className="rounded-[18px] border border-dashed border-border/70 bg-muted/24 px-3 py-2 text-sm text-muted-foreground">
+              {context.restriction}
+            </div>
+          ) : context ? (
+            <>
+              <div className="rounded-[18px] border border-border/60 bg-muted/24 p-3 text-sm text-muted-foreground">
+                Source context{' '}
+                <span className="font-medium text-foreground">
+                  {context.sourceContext.type}
+                </span>
+                <br />
+                Verification target{' '}
+                <span className="font-medium text-foreground">
+                  {context.targetContext.type}
+                </span>
+                <br />
+                Latest successful assembly output{' '}
+                <span className="font-medium text-foreground break-all">
+                  {context.targetContext.outputDirectory}
+                </span>
+              </div>
+
+              <MutationStatus
+                status={requestVerification.status}
+                error={requestVerification.error}
+                submittingMessage="Running repository-owned generated-app verification and runtime smoke for this project..."
+                successMessage="Derived-app verification completed and the latest project validation outcome has been refreshed."
+              />
+
+              <Button
+                type="button"
+                onClick={handleVerificationRequest}
+                disabled={requestVerification.status === 'submitting'}
+              >
+                Run derived-app verification
+              </Button>
+            </>
+          ) : null}
+
+          {latestOutcome ? (
+            <div className="space-y-3 rounded-[18px] border border-border/60 bg-muted/24 p-4 text-sm text-muted-foreground">
+              <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                Latest visible validation outcome
+              </div>
+              <div>
+                Outcome{' '}
+                <span className="font-medium text-foreground">
+                  {latestOutcome.status}
+                </span>
+                {' · '}
+                <span className="font-medium text-foreground">
+                  {latestOutcome.category}
+                </span>
+              </div>
+              <div>{latestOutcome.message}</div>
+              {latestOutcome.targetOutputDirectory ? (
+                <div>
+                  Verified output{' '}
+                  <span className="font-medium text-foreground break-all">
+                    {latestOutcome.targetOutputDirectory}
+                  </span>
+                </div>
+              ) : null}
+              <div>
+                Generated-app verification{' '}
+                <span className="font-medium text-foreground">
+                  {latestOutcome.generatedAppVerification.status}
+                </span>
+                {' · '}
+                {latestOutcome.generatedAppVerification.message}
+              </div>
+              <div>
+                Runtime smoke{' '}
+                <span className="font-medium text-foreground">
+                  {latestOutcome.runtimeSmoke.status}
+                </span>
+                {' · '}
+                {latestOutcome.runtimeSmoke.message}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </ResourceState>
+    </div>
+  )
+}
+
 function ProjectRepositoryCard({
   project,
   onRepositoryBound,
@@ -428,6 +611,8 @@ function ProjectRepositoryCard({
   const [activeSandboxDeleteWorktreePath, setActiveSandboxDeleteWorktreePath] = useState<
     string | null
   >(null)
+  const [derivedAppLifecycleRefreshVersion, setDerivedAppLifecycleRefreshVersion] =
+    useState(0)
   const repositoryPathValue = repositoryPath || project.repository?.rootPath || ''
   const targetBranchValue =
     project.repository && project.repository.availableBranches.includes(targetBranch)
@@ -1220,7 +1405,16 @@ function ProjectRepositoryCard({
           </Button>
         </form>
 
-        <ProjectDerivedAppAssemblyCard project={project} />
+        <ProjectDerivedAppAssemblyCard
+          project={project}
+          onAssemblyChanged={() =>
+            setDerivedAppLifecycleRefreshVersion((current) => current + 1)
+          }
+        />
+        <ProjectDerivedAppVerificationCard
+          project={project}
+          refreshNonce={derivedAppLifecycleRefreshVersion}
+        />
       </CardContent>
     </Card>
   )

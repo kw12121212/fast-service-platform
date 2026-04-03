@@ -3,6 +3,7 @@
 ## backend
 - [minimum-enterprise-components.md](backend/minimum-enterprise-components.md) - Minimum Enterprise Components
 - [project-derived-app-assembly.md](backend/project-derived-app-assembly.md) - Project Derived App Assembly
+- [project-derived-app-verification.md](backend/project-derived-app-verification.md) - Project Derived App Verification
 - [project-git-management.md](backend/project-git-management.md) - Project Git Management
 - [project-merge-support.md](backend/project-merge-support.md) - Project Merge Support
 - [project-repository-binding.md](backend/project-repository-binding.md) - Project Repository Binding
@@ -39,6 +40,7 @@
 - [minimum-admin-pages.md](frontend/minimum-admin-pages.md) - Minimum Admin Pages
 - [module-selection.md](frontend/module-selection.md) - Frontend Module Selection
 - [project-derived-app-assembly.md](frontend/project-derived-app-assembly.md) - Project Derived App Assembly
+- [project-derived-app-verification.md](frontend/project-derived-app-verification.md) - Project Derived App Verification
 - [project-git-management.md](frontend/project-git-management.md) - Project Git Management
 - [project-merge-support.md](frontend/project-merge-support.md) - Project Merge Support
 - [project-repository-management.md](frontend/project-repository-management.md) - Project Repository Management

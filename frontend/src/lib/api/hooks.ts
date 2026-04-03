@@ -9,6 +9,7 @@ import type {
   BackendResource,
   KanbanBoard,
   ProjectDerivedAppAssemblyContext,
+  ProjectDerivedAppVerificationContext,
   SoftwareProject,
   Ticket,
   TicketWorkflow,
@@ -248,6 +249,22 @@ export function useProjectDerivedAppAssemblyResource(
   })
 }
 
+export function useProjectDerivedAppVerificationResource(
+  projectId: number,
+  repositoryRootPath: string | null,
+  refreshNonce: number,
+) {
+  return useBackendResource({
+    key: `project-derived-app-verification:${projectId}:${repositoryRootPath ?? 'unbound'}:${refreshNonce}`,
+    initialData: null as ProjectDerivedAppVerificationContext | null,
+    load: () =>
+      getJson<ProjectDerivedAppVerificationContext>(
+        'project_service/getProjectDerivedAppVerification',
+        { projectId },
+      ),
+  })
+}
+
 export function useRolesResource() {
   return useBackendResource({
     key: 'roles',
@@ -443,6 +460,16 @@ export function useRequestProjectDerivedAppAssemblyAction() {
     }) =>
       invokeService<ProjectDerivedAppAssemblyContext>(
         'project_service/requestProjectDerivedAppAssembly',
+        args,
+      ),
+  })
+}
+
+export function useRequestProjectDerivedAppVerificationAction() {
+  return useBackendMutation({
+    run: (args: { projectId: number }) =>
+      invokeService<ProjectDerivedAppVerificationContext>(
+        'project_service/requestProjectDerivedAppVerification',
         args,
       ),
   })

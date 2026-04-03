@@ -38,6 +38,39 @@ type MockProject = {
       updatedAt: string | null
     } | null
   }
+  derivedAppVerification?: {
+    available: boolean
+    status: 'AVAILABLE' | 'RESTRICTED'
+    restricted: boolean
+    restriction: string | null
+    sourceRepositoryPath: string | null
+    sourceContext: {
+      type: 'BOUND_MAIN_REPOSITORY'
+    }
+    targetContext: {
+      type: 'LATEST_SUCCESSFUL_ASSEMBLY_OUTPUT'
+      outputDirectory: string | null
+    }
+    latestOutcome: {
+      status: 'SUCCESS' | 'FAILED'
+      category:
+        | 'REQUEST_VALIDATION'
+        | 'COMBINED_VALIDATION'
+        | 'GENERATED_APP_VERIFICATION'
+        | 'RUNTIME_SMOKE'
+      message: string
+      targetOutputDirectory: string | null
+      generatedAppVerification: {
+        status: 'SUCCESS' | 'FAILED' | 'NOT_RUN'
+        message: string
+      }
+      runtimeSmoke: {
+        status: 'SUCCESS' | 'FAILED' | 'NOT_RUN'
+        message: string
+      }
+      updatedAt: string | null
+    } | null
+  }
   repository: {
     rootPath: string
     headState: 'BRANCH' | 'DETACHED'
@@ -422,6 +455,67 @@ function installBackendMock() {
     }
   }
 
+  function buildVerificationContext(project: MockProject) {
+    if (!project.repository) {
+      return {
+        available: false,
+        status: 'RESTRICTED' as const,
+        restricted: true,
+        restriction:
+          'Bind a repository first to run project-scoped derived-app verification.',
+        sourceRepositoryPath: null,
+        sourceContext: {
+          type: 'BOUND_MAIN_REPOSITORY' as const,
+        },
+        targetContext: {
+          type: 'LATEST_SUCCESSFUL_ASSEMBLY_OUTPUT' as const,
+          outputDirectory: null,
+        },
+        latestOutcome: project.derivedAppVerification?.latestOutcome ?? null,
+      }
+    }
+
+    const latestAssemblyOutput =
+      project.derivedAppAssembly?.latestOutcome?.status === 'SUCCESS'
+        ? (project.derivedAppAssembly.latestOutcome.outputDirectory ?? null)
+        : null
+
+    if (!latestAssemblyOutput) {
+      return {
+        available: false,
+        status: 'RESTRICTED' as const,
+        restricted: true,
+        restriction:
+          'Run project-scoped derived-app assembly successfully before requesting verification.',
+        sourceRepositoryPath: project.repository.rootPath,
+        sourceContext: {
+          type: 'BOUND_MAIN_REPOSITORY' as const,
+        },
+        targetContext: {
+          type: 'LATEST_SUCCESSFUL_ASSEMBLY_OUTPUT' as const,
+          outputDirectory: null,
+        },
+        latestOutcome: project.derivedAppVerification?.latestOutcome ?? null,
+      }
+    }
+
+    return {
+      available: true,
+      status: 'AVAILABLE' as const,
+      restricted: false,
+      restriction: null,
+      sourceRepositoryPath: project.repository.rootPath,
+      sourceContext: {
+        type: 'BOUND_MAIN_REPOSITORY' as const,
+      },
+      targetContext: {
+        type: 'LATEST_SUCCESSFUL_ASSEMBLY_OUTPUT' as const,
+        outputDirectory: latestAssemblyOutput,
+      },
+      latestOutcome: project.derivedAppVerification?.latestOutcome ?? null,
+    }
+  }
+
   const fetchMock = vi.fn(async (input: string | URL | Request) => {
     const url = typeof input === 'string'
       ? new URL(input, 'http://localhost')
@@ -461,6 +555,15 @@ function installBackendMock() {
         return errorResponse(404, 'Project not found')
       }
       return jsonResponse(buildAssemblyContext(project))
+    }
+
+    if (path === '/service/project_service/getProjectDerivedAppVerification') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (!project) {
+        return errorResponse(404, 'Project not found')
+      }
+      return jsonResponse(buildVerificationContext(project))
     }
 
     if (path === '/service/project_service/createProject') {
@@ -864,6 +967,95 @@ function installBackendMock() {
       }
 
       return jsonResponse(buildAssemblyContext(project))
+    }
+
+    if (path === '/service/project_service/requestProjectDerivedAppVerification') {
+      const projectId = Number(url.searchParams.get('projectId'))
+      const project = state.projects.find((entry) => entry.id === projectId)
+      if (!project) {
+        return errorResponse(404, 'Project not found')
+      }
+      if (!project.repository) {
+        return errorResponse(409, 'Project repository is not bound')
+      }
+
+      const verificationContext = buildVerificationContext(project)
+      const outputDirectory = verificationContext.targetContext.outputDirectory
+      if (!outputDirectory) {
+        project.derivedAppVerification = {
+          ...verificationContext,
+          latestOutcome: {
+            status: 'FAILED',
+            category: 'REQUEST_VALIDATION',
+            message:
+              'Run project-scoped derived-app assembly successfully before requesting verification.',
+            targetOutputDirectory: null,
+            generatedAppVerification: {
+              status: 'NOT_RUN',
+              message: 'Generated-app verification was not started.',
+            },
+            runtimeSmoke: {
+              status: 'NOT_RUN',
+              message: 'Runtime smoke was not started.',
+            },
+            updatedAt: '2026-04-03T00:00:00Z',
+          },
+        }
+        return errorResponse(
+          409,
+          'Run project-scoped derived-app assembly successfully before requesting verification.',
+        )
+      }
+
+      if (outputDirectory.includes('runtime-smoke-fail')) {
+        project.derivedAppVerification = {
+          ...verificationContext,
+          latestOutcome: {
+            status: 'FAILED',
+            category: 'RUNTIME_SMOKE',
+            message: `Derived-app runtime smoke failed during proxy reachability for ${outputDirectory}`,
+            targetOutputDirectory: outputDirectory,
+            generatedAppVerification: {
+              status: 'SUCCESS',
+              message:
+                'Generated-app verification completed through repository-owned tooling.',
+            },
+            runtimeSmoke: {
+              status: 'FAILED',
+              message: `Derived-app runtime smoke failed during proxy reachability for ${outputDirectory}`,
+            },
+            updatedAt: '2026-04-03T00:00:00Z',
+          },
+        }
+        return errorResponse(
+          409,
+          `Derived-app runtime smoke failed during proxy reachability for ${outputDirectory}`,
+        )
+      }
+
+      project.derivedAppVerification = {
+        ...verificationContext,
+        latestOutcome: {
+          status: 'SUCCESS',
+          category: 'COMBINED_VALIDATION',
+          message:
+            'Generated-app verification and runtime smoke completed through repository-owned tooling.',
+          targetOutputDirectory: outputDirectory,
+          generatedAppVerification: {
+            status: 'SUCCESS',
+            message:
+              'Generated-app verification completed through repository-owned tooling.',
+          },
+          runtimeSmoke: {
+            status: 'SUCCESS',
+            message:
+              'Derived-app runtime smoke completed through repository-owned tooling.',
+          },
+          updatedAt: '2026-04-03T00:00:00Z',
+        },
+      }
+
+      return jsonResponse(buildVerificationContext(project))
     }
 
     if (path === '/service/kanban_service/listKanbansByProject') {
@@ -1563,7 +1755,9 @@ describe('admin write workflows', () => {
       ),
     ).toBeInTheDocument()
     expect(await screen.findByText('Latest run succeeded')).toBeInTheDocument()
-    expect(await screen.findByText('/tmp/generated-fsp-app')).toBeInTheDocument()
+    expect(
+      await screen.findAllByText('/tmp/generated-fsp-app'),
+    ).not.toHaveLength(0)
   })
 
   it('shows validation feedback for rejected project-scoped derived-app assembly requests', async () => {
@@ -1591,6 +1785,116 @@ describe('admin write workflows', () => {
       ),
     ).toBeInTheDocument()
     expect(await screen.findByText('Latest request was rejected')).toBeInTheDocument()
+  })
+
+  it('shows restricted derived-app verification state until a project has a successful assembly output', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    expect(
+      await screen.findByText(
+        'Bind a repository first to run project-scoped derived-app verification.',
+      ),
+    ).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    expect(
+      await screen.findByText(
+        'Run project-scoped derived-app assembly successfully before requesting verification.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('runs project-scoped derived-app verification from the projects page', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    await screen.findAllByText('/workspace/fast-service-platform')
+
+    fireEvent.change(await screen.findByLabelText('Output directory'), {
+      target: { value: '/tmp/generated-fsp-app' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Run derived-app assembly' }),
+    )
+
+    await screen.findByText(
+      'Derived-app assembly completed and the latest project outcome has been refreshed.',
+    )
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Run derived-app verification' }),
+    )
+
+    expect(
+      await screen.findByText(
+        'Derived-app verification completed and the latest project validation outcome has been refreshed.',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Latest validation succeeded')).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        'Generated-app verification and runtime smoke completed through repository-owned tooling.',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText((_, element) =>
+        element?.textContent ===
+        'Runtime smoke SUCCESS · Derived-app runtime smoke completed through repository-owned tooling.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('shows runtime smoke failure feedback for project-scoped derived-app verification', async () => {
+    renderRoute('/projects')
+
+    await screen.findByText('Software project management')
+
+    fireEvent.change(screen.getByLabelText('Repository path'), {
+      target: { value: '/workspace/fast-service-platform' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Bind repository' }))
+
+    await screen.findAllByText('/workspace/fast-service-platform')
+
+    fireEvent.change(await screen.findByLabelText('Output directory'), {
+      target: { value: '/tmp/runtime-smoke-fail-app' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Run derived-app assembly' }),
+    )
+
+    await screen.findByText(
+      'Derived-app assembly completed and the latest project outcome has been refreshed.',
+    )
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Run derived-app verification' }),
+    )
+
+    expect(
+      await screen.findByText(
+        'Backend request failed with 409: Derived-app runtime smoke failed during proxy reachability for /tmp/runtime-smoke-fail-app',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Latest validation failed')).toBeInTheDocument()
+    expect(
+      await screen.findByText((_, element) =>
+        element?.textContent ===
+        'Generated-app verification SUCCESS · Generated-app verification completed through repository-owned tooling.',
+      ),
+    ).toBeInTheDocument()
   })
 
   it('creates a kanban board from the kanban page', async () => {

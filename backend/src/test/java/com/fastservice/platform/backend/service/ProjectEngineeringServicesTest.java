@@ -500,4 +500,145 @@ class ProjectEngineeringServicesTest extends ProjectServiceTestSupport {
             deleteRecursively(outputDir);
         }
     }
+
+    @Test
+    void exposesRestrictedDerivedAppVerificationStateForUnboundProjects() {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("VER0", "Verification Restricted", "Verification restriction validation");
+
+        String payload = projects.getProjectDerivedAppVerification(projectId);
+
+        assertTrue(payload.contains("\"available\":false"));
+        assertTrue(payload.contains("\"status\":\"RESTRICTED\""));
+        assertTrue(payload.contains("Bind a repository first to run project-scoped derived-app verification."));
+    }
+
+    @Test
+    void rejectsDerivedAppVerificationWhenNoSuccessfulAssemblyOutputIsAvailable() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("VER1", "Verification Missing Target", "Verification target validation");
+        Path repositoryDir = createGitRepository();
+        projects.bindProjectRepository(projectId, repositoryDir.toString());
+
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> projects.requestProjectDerivedAppVerification(projectId));
+
+        assertEquals(
+                "Run project-scoped derived-app assembly successfully before requesting verification.",
+                error.getMessage());
+        String payload = projects.getProjectDerivedAppVerification(projectId);
+        assertTrue(payload.contains("\"category\":\"REQUEST_VALIDATION\""));
+        assertTrue(payload.contains("\"status\":\"FAILED\""));
+        assertTrue(payload.contains("Generated-app verification was not started."));
+        assertTrue(payload.contains("Runtime smoke was not started."));
+    }
+
+    @Test
+    void runsDerivedAppVerificationAgainstLatestSuccessfulAssemblyOutput() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("VER2", "Verification Success", "Verification success test");
+        Path repositoryDir = createGitRepository();
+        Path repoRoot = createFakePlatformToolRepoRoot();
+        Path outputDir = Files.createTempDirectory("fsp-project-derived-app-verify-");
+        String previousRepoRoot = System.getProperty("fsp.repo-root");
+
+        try {
+            projects.bindProjectRepository(projectId, repositoryDir.toString());
+            projects.requestProjectDerivedAppAssembly(
+                    projectId,
+                    """
+                            {
+                              "schemaVersion": "fsp-app-manifest/v1",
+                              "application": {
+                                "id": "project-derived-verify-app",
+                                "name": "Project Derived Verify App",
+                                "packagePrefix": "com.fastservice.platform.derived"
+                              },
+                              "modules": [
+                                "admin-shell",
+                                "user-management",
+                                "role-permission-management",
+                                "project-management"
+                              ]
+                            }
+                            """,
+                    outputDir.toString());
+
+            System.setProperty("fsp.repo-root", repoRoot.toString());
+
+            String payload = projects.requestProjectDerivedAppVerification(projectId);
+
+            assertTrue(payload.contains("\"status\":\"AVAILABLE\""));
+            assertTrue(payload.contains("\"category\":\"COMBINED_VALIDATION\""));
+            assertTrue(payload.contains("Generated-app verification and runtime smoke completed through repository-owned tooling."));
+            assertTrue(payload.contains("\"targetOutputDirectory\":\"" + escapeJson(outputDir.toString()) + "\""));
+            assertTrue(payload.contains("\"generatedAppVerification\":{\"status\":\"SUCCESS\""));
+            assertTrue(payload.contains("\"runtimeSmoke\":{\"status\":\"SUCCESS\""));
+        } finally {
+            if (previousRepoRoot == null) {
+                System.clearProperty("fsp.repo-root");
+            } else {
+                System.setProperty("fsp.repo-root", previousRepoRoot);
+            }
+            deleteRecursively(outputDir);
+            deleteRecursively(repoRoot);
+        }
+    }
+
+    @Test
+    void surfacesRuntimeSmokeFailureAfterGeneratedAppVerificationSucceeds() throws Exception {
+        ProjectServiceImpl projects = new ProjectServiceImpl();
+        long projectId = projects.createProject("VER3", "Verification Smoke Failure", "Verification smoke failure test");
+        Path repositoryDir = createGitRepository();
+        Path repoRoot = createFakePlatformToolRepoRoot();
+        Path outputDir = Files.createTempDirectory("fsp-project-derived-app-verify-smoke-fail-");
+        String previousRepoRoot = System.getProperty("fsp.repo-root");
+
+        try {
+            projects.bindProjectRepository(projectId, repositoryDir.toString());
+            projects.requestProjectDerivedAppAssembly(
+                    projectId,
+                    """
+                            {
+                              "schemaVersion": "fsp-app-manifest/v1",
+                              "application": {
+                                "id": "project-derived-verify-smoke-fail-app",
+                                "name": "Project Derived Verify Smoke Fail App",
+                                "packagePrefix": "com.fastservice.platform.derived"
+                              },
+                              "modules": [
+                                "admin-shell",
+                                "user-management",
+                                "role-permission-management",
+                                "project-management"
+                              ]
+                            }
+                            """,
+                    outputDir.toString());
+            Files.writeString(outputDir.resolve(".fail-runtime-smoke"), "fail\n", StandardCharsets.UTF_8);
+
+            System.setProperty("fsp.repo-root", repoRoot.toString());
+
+            IllegalStateException error = assertThrows(
+                    IllegalStateException.class,
+                    () -> projects.requestProjectDerivedAppVerification(projectId));
+
+            assertEquals(
+                    "Derived-app runtime smoke failed during proxy reachability for " + outputDir,
+                    error.getMessage());
+            String payload = projects.getProjectDerivedAppVerification(projectId);
+            assertTrue(payload.contains("\"category\":\"RUNTIME_SMOKE\""));
+            assertTrue(payload.contains("\"generatedAppVerification\":{\"status\":\"SUCCESS\""));
+            assertTrue(payload.contains("\"runtimeSmoke\":{\"status\":\"FAILED\""));
+        } finally {
+            if (previousRepoRoot == null) {
+                System.clearProperty("fsp.repo-root");
+            } else {
+                System.setProperty("fsp.repo-root", previousRepoRoot);
+            }
+            deleteRecursively(outputDir);
+            deleteRecursively(repoRoot);
+        }
+    }
 }

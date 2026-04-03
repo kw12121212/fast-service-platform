@@ -40,6 +40,8 @@ create service if not exists project_service (
   pruneProjectWorktrees(projectId long) varchar,
   getProjectDerivedAppAssembly(projectId long) varchar,
   requestProjectDerivedAppAssembly(projectId long, manifestJson varchar, outputDirectory varchar) varchar,
+  getProjectDerivedAppVerification(projectId long) varchar,
+  requestProjectDerivedAppVerification(projectId long) varchar,
   listProjects() varchar
 )
 package @packageName

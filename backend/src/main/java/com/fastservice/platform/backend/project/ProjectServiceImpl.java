@@ -17,6 +17,7 @@ public class ProjectServiceImpl {
     private final GitRepositoryInspector gitRepositoryInspector = new GitRepositoryInspector();
     private final ProjectSandboxManager projectSandboxManager = new ProjectSandboxManager();
     private final ProjectDerivedAppAssemblyManager projectDerivedAppAssemblyManager = new ProjectDerivedAppAssemblyManager();
+    private final ProjectDerivedAppVerificationManager projectDerivedAppVerificationManager = new ProjectDerivedAppVerificationManager();
 
     // Lealone-generated service executors dispatch to lowercase method names.
     public long createproject(String projectKey, String projectName, String description) {
@@ -69,6 +70,14 @@ public class ProjectServiceImpl {
 
     public String requestprojectderivedappassembly(long projectId, String manifestJson, String outputDirectory) {
         return requestProjectDerivedAppAssembly(projectId, manifestJson, outputDirectory);
+    }
+
+    public String getprojectderivedappverification(long projectId) {
+        return getProjectDerivedAppVerification(projectId);
+    }
+
+    public String requestprojectderivedappverification(long projectId) {
+        return requestProjectDerivedAppVerification(projectId);
     }
 
     public String listprojects() {
@@ -190,6 +199,17 @@ public class ProjectServiceImpl {
         EntityExistence.requireExists("software_project", projectId, "Project");
         String repositoryRootPath = requireBoundRepositoryPath(projectId);
         return projectDerivedAppAssemblyManager.requestAssembly(projectId, repositoryRootPath, manifestJson, outputDirectory);
+    }
+
+    public String getProjectDerivedAppVerification(long projectId) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        return projectDerivedAppVerificationManager.readVerificationContext(projectId, readBoundRepositoryPath(projectId));
+    }
+
+    public String requestProjectDerivedAppVerification(long projectId) {
+        EntityExistence.requireExists("software_project", projectId, "Project");
+        String repositoryRootPath = requireBoundRepositoryPath(projectId);
+        return projectDerivedAppVerificationManager.requestVerification(projectId, repositoryRootPath);
     }
 
     public String listProjects() {

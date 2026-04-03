@@ -125,6 +125,42 @@ export type ProjectDerivedAppAssemblyContext = {
   latestOutcome: ProjectDerivedAppAssemblyOutcome | null
 }
 
+export type ProjectDerivedAppVerificationStepOutcome = {
+  status: 'SUCCESS' | 'FAILED' | 'NOT_RUN' | string
+  message: string
+}
+
+export type ProjectDerivedAppVerificationOutcome = {
+  status: 'SUCCESS' | 'FAILED' | string
+  category:
+    | 'REQUEST_VALIDATION'
+    | 'COMBINED_VALIDATION'
+    | 'GENERATED_APP_VERIFICATION'
+    | 'RUNTIME_SMOKE'
+    | string
+  message: string
+  targetOutputDirectory: string | null
+  generatedAppVerification: ProjectDerivedAppVerificationStepOutcome
+  runtimeSmoke: ProjectDerivedAppVerificationStepOutcome
+  updatedAt: string | null
+}
+
+export type ProjectDerivedAppVerificationContext = {
+  available: boolean
+  status: 'AVAILABLE' | 'RESTRICTED' | string
+  restricted: boolean
+  restriction: string | null
+  sourceRepositoryPath: string | null
+  sourceContext: {
+    type: 'BOUND_MAIN_REPOSITORY' | string
+  }
+  targetContext: {
+    type: 'LATEST_SUCCESSFUL_ASSEMBLY_OUTPUT' | string
+    outputDirectory: string | null
+  }
+  latestOutcome: ProjectDerivedAppVerificationOutcome | null
+}
+
 export type SoftwareProject = {
   id: number
   key: string

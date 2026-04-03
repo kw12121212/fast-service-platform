@@ -13,6 +13,45 @@ import com.fastservice.platform.backend.common.db.JdbcSupport;
 
 abstract class ProjectServiceTestSupport {
 
+    protected Path createFakePlatformToolRepoRoot() throws IOException {
+        Path repoRoot = Files.createTempDirectory("fsp-platform-tool-repo-");
+        Path scriptsDir = Files.createDirectories(repoRoot.resolve("scripts"));
+        Path docsAiDir = Files.createDirectories(repoRoot.resolve("docs/ai"));
+        Path sourceDocsAiDir = Path.of("../docs/ai").toAbsolutePath().normalize();
+        Files.copy(sourceDocsAiDir.resolve("module-registry.json"), docsAiDir.resolve("module-registry.json"));
+        Files.copy(sourceDocsAiDir.resolve("app-assembly-contract.json"), docsAiDir.resolve("app-assembly-contract.json"));
+        Files.writeString(
+                scriptsDir.resolve("platform-tool.sh"),
+                "#!/usr/bin/env bash\n"
+                        + "set -euo pipefail\n"
+                        + "group=\"${1:-}\"\n"
+                        + "command=\"${2:-}\"\n"
+                        + "target=\"${3:-}\"\n"
+                        + "case \"${group}/${command}\" in\n"
+                        + "  generated-app/verify)\n"
+                        + "    if [[ -f \"$target/.fail-generated-app-verify\" ]]; then\n"
+                        + "      printf 'Repository-owned generated-app verification failed for %s\\n' \"$target\"\n"
+                        + "      exit 1\n"
+                        + "    fi\n"
+                        + "    printf 'Repository-owned generated-app verification passed for %s\\n' \"$target\"\n"
+                        + "    ;;\n"
+                        + "  generated-app/smoke)\n"
+                        + "    if [[ -f \"$target/.fail-runtime-smoke\" ]]; then\n"
+                        + "      printf 'Derived-app runtime smoke failed during proxy reachability for %s\\n' \"$target\"\n"
+                        + "      exit 1\n"
+                        + "    fi\n"
+                        + "    printf 'Derived-app runtime smoke verification passed for %s through frontend /service proxy.\\n' \"$target\"\n"
+                        + "    ;;\n"
+                        + "  *)\n"
+                        + "    printf 'Unexpected command: %s %s\\n' \"$group\" \"$command\" >&2\n"
+                        + "    exit 1\n"
+                        + "    ;;\n"
+                        + "esac\n",
+                StandardCharsets.UTF_8);
+        scriptsDir.resolve("platform-tool.sh").toFile().setExecutable(true, false);
+        return repoRoot;
+    }
+
     protected Path createGitRepository() throws Exception {
         Path remoteRepositoryDir = Files.createTempDirectory("fsp-project-remote-");
         runGit(remoteRepositoryDir, "init", "--bare");
