@@ -14,8 +14,10 @@
 
 - [solution-input-to-assembly-planning.md](milestones/solution-input-to-assembly-planning.md) - Solution Input To Assembly Planning - proposed
 - [descriptor-driven-business-module-generation.md](milestones/descriptor-driven-business-module-generation.md) - Descriptor-Driven Business Module Generation - proposed *(depends on: solution-input-to-assembly-planning)*
+- [platform-v1-integration-and-closure.md](milestones/platform-v1-integration-and-closure.md) - Platform V1 Integration And Closure - proposed *(depends on: descriptor-driven-business-module-generation)*
 
 ## Notes
 
 - Proposed milestones are listed in the order they should be started. Each depends on the one above it completing first.
 - Operational and maintenance changes (e.g. vendor syncs, schema migrations) are archived outside milestone scope and do not affect milestone status.
+- V1 hard scope boundaries (what the platform never does in V1) are documented in `specs/product/v1-scope-boundaries.md`. These apply to all current roadmap work.

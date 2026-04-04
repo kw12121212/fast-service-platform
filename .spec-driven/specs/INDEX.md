@@ -53,3 +53,4 @@
 
 ## product
 - [enterprise-platform-positioning.md](product/enterprise-platform-positioning.md) - Enterprise Platform Positioning
+- [v1-scope-boundaries.md](product/v1-scope-boundaries.md) - V1 Scope Boundaries
