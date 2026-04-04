@@ -25,4 +25,4 @@ Turn the repository's existing derived-app assembly, verification, smoke, and up
 
 ## Status
 
-- Declared: proposed
+- Declared: complete

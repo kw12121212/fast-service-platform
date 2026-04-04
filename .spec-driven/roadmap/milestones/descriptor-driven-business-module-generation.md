@@ -19,8 +19,9 @@ Lift the platform from reusable interaction components plus assembly contracts t
 
 ## Dependencies / Risks
 
-- This milestone should follow stronger solution-input and project-scoped lifecycle guidance so generated modules have a clear upstream planning path and downstream validation path.
-- Scope can expand too quickly into arbitrary CRUD or full low-code generation unless the first descriptor surface stays narrow around current platform-owned interaction patterns.
+- Depends on: project-scoped-derived-app-lifecycle (complete) and solution-input-to-assembly-planning (proposed — must complete first).
+- This milestone must consume the concrete intermediate artifact defined by solution-input-to-assembly-planning rather than re-deriving mapping logic from prose.
+- Scope can expand too quickly into arbitrary CRUD or full low-code generation unless the first descriptor surface stays narrow around current platform-owned interaction patterns. V1 scope is explicitly limited to enterprise internal management monolith applications — this milestone does not expand that boundary.
 - Generated output must continue to respect template ownership boundaries and module-selection constraints rather than bypassing the existing assembly model.
 
 ## Status

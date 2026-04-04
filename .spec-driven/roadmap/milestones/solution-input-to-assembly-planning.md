@@ -19,8 +19,9 @@ Make the path from structured business intent to repository-owned assembly decis
 
 ## Dependencies / Risks
 
-- This milestone should follow project-scoped derived-app lifecycle work so planning guidance lands against a clearer execution path.
+- Depends on: project-scoped-derived-app-lifecycle (complete — unblocked).
 - Scope can drift into building an in-repo AI chat or unconstrained requirement-analysis feature unless it remains inside the current machine-readable planning boundary.
+- The intermediate artifact between solution input and manifest (schema, DSL, or structured prompt guidance) must be defined explicitly at the start of this milestone so that descriptor-driven-business-module-generation can build on a concrete interface rather than prose assumptions.
 - Recommendation logic must preserve explicit module-registry and manifest ownership facts instead of hiding them behind opaque heuristics.
 
 ## Status
