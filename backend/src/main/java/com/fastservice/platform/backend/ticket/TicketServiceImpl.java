@@ -12,8 +12,6 @@ import com.fastservice.platform.backend.common.kanban.KanbanStateMachine;
 
 public class TicketServiceImpl {
 
-    private final TicketWorkflowService workflowService = new TicketWorkflowService();
-
     // Lealone-generated service executors dispatch to lowercase method names.
     public long createticket(long projectId, long kanbanId, String ticketKey, String title, String description, long assigneeUserId) {
         return createTicket(projectId, kanbanId, ticketKey, title, description, assigneeUserId);
@@ -25,14 +23,6 @@ public class TicketServiceImpl {
 
     public String listticketsbyproject(long projectId) {
         return listTicketsByProject(projectId);
-    }
-
-    public String getworkflow(long ticketId) {
-        return getWorkflow(ticketId);
-    }
-
-    public String executeworkflowaction(long ticketId, String actionName, long actorUserId, String comment, Long assigneeUserId) {
-        return executeWorkflowAction(ticketId, actionName, actorUserId, comment, assigneeUserId);
     }
 
     public long createTicket(long projectId, long kanbanId, String ticketKey, String title, String description, long assigneeUserId) {
@@ -108,14 +98,6 @@ public class TicketServiceImpl {
         } catch (SQLException e) {
             throw new IllegalStateException("Unable to list tickets", e);
         }
-    }
-
-    public String getWorkflow(long ticketId) {
-        return workflowService.getWorkflow(ticketId);
-    }
-
-    public String executeWorkflowAction(long ticketId, String actionName, long actorUserId, String comment, Long assigneeUserId) {
-        return workflowService.executeAction(ticketId, actionName, actorUserId, comment, assigneeUserId);
     }
 
     private String findCurrentState(long ticketId) {

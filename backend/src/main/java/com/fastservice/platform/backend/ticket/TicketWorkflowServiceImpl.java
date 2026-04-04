@@ -12,15 +12,23 @@ import com.fastservice.platform.backend.common.db.JdbcSupport;
 import com.fastservice.platform.backend.common.json.JsonStrings;
 import com.fastservice.platform.backend.common.kanban.KanbanStateMachine;
 
-final class TicketWorkflowService {
+public class TicketWorkflowServiceImpl {
 
-    String getWorkflow(long ticketId) {
+    public String getworkflow(long ticketId) {
+        return getWorkflow(ticketId);
+    }
+
+    public String executeworkflowaction(long ticketId, String actionName, long actorUserId, String comment, Long assigneeUserId) {
+        return executeWorkflowAction(ticketId, actionName, actorUserId, comment, assigneeUserId);
+    }
+
+    public String getWorkflow(long ticketId) {
         TicketWorkflowRecord ticket = readTicket(ticketId);
         List<TicketWorkflowHistoryEntry> history = readHistory(ticketId);
         return buildWorkflowJson(ticket, history);
     }
 
-    String executeAction(long ticketId, String actionName, long actorUserId, String comment, Long assigneeUserId) {
+    public String executeWorkflowAction(long ticketId, String actionName, long actorUserId, String comment, Long assigneeUserId) {
         TicketWorkflowAction action = TicketWorkflowAction.from(actionName);
         if (comment == null || comment.isBlank()) {
             throw new IllegalArgumentException("Workflow comment is required");

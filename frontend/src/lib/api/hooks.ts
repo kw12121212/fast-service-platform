@@ -353,7 +353,7 @@ export function useTicketWorkflowResource(ticketId: number | null) {
     enabled: ticketId !== null,
     initialData: null as TicketWorkflow | null,
     load: () =>
-      getJson<TicketWorkflow>('ticket_service/getWorkflow', {
+      getJson<TicketWorkflow>('ticket_workflow_service/getWorkflow', {
         ticketId: ticketId ?? undefined,
       }),
   })
@@ -583,6 +583,6 @@ export function useExecuteTicketWorkflowAction() {
       actorUserId: number
       comment: string
       assigneeUserId?: number
-    }) => invokeService<string>('ticket_service/executeWorkflowAction', args),
+    }) => invokeService<string>('ticket_workflow_service/executeWorkflowAction', args),
   })
 }

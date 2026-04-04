@@ -59,13 +59,29 @@ package @packageName
 implement by 'com.fastservice.platform.backend.kanban.KanbanServiceImpl'
 generate code @serviceSrcDir;
 
+-- MODULE: kanban-state-machine
+create service if not exists kanban_state_machine_service (
+  isTransitionAllowed(fromState varchar, toState varchar) boolean,
+  ensureTransition(fromState varchar, toState varchar) void
+)
+package @packageName
+implement by 'com.fastservice.platform.backend.common.kanban.KanbanStateMachineServiceImpl'
+generate code @serviceSrcDir;
+
+-- MODULE: ticket-workflow
+create workflow if not exists ticket_workflow_service (
+  getWorkflow(ticketId long) varchar,
+  executeWorkflowAction(ticketId long, actionName varchar, actorUserId long, comment varchar, assigneeUserId long) varchar
+)
+package @packageName
+implement by 'com.fastservice.platform.backend.ticket.TicketWorkflowServiceImpl'
+generate code @serviceSrcDir;
+
 -- MODULE: ticket-management
 create service if not exists ticket_service (
   createTicket(projectId long, kanbanId long, ticketKey varchar, title varchar, description varchar, assigneeUserId long) long,
   moveTicket(ticketId long, targetState varchar) varchar,
-  listTicketsByProject(projectId long) varchar,
-  getWorkflow(ticketId long) varchar,
-  executeWorkflowAction(ticketId long, actionName varchar, actorUserId long, comment varchar, assigneeUserId long) varchar
+  listTicketsByProject(projectId long) varchar
 )
 package @packageName
 implement by 'com.fastservice.platform.backend.ticket.TicketServiceImpl'

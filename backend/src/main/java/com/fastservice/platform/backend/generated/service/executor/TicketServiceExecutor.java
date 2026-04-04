@@ -35,19 +35,6 @@ public class TicketServiceExecutor implements ServiceExecutor {
             String result = service.listticketsbyproject(methodArgs[0].getLong());
             yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
         }
-        case "GETWORKFLOW" -> {
-            String result = service.getworkflow(methodArgs[0].getLong());
-            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
-        }
-        case "EXECUTEWORKFLOWACTION" -> {
-            String result = service.executeworkflowaction(
-                    methodArgs[0].getLong(),
-                    methodArgs[1].getString(),
-                    methodArgs[2].getLong(),
-                    methodArgs[3].getString(),
-                    methodArgs[4] == ValueNull.INSTANCE ? null : methodArgs[4].getLong());
-            yield result == null ? ValueNull.INSTANCE : ValueString.get(result);
-        }
         default -> throw noMethodException(methodName);
         };
     }
@@ -66,13 +53,6 @@ public class TicketServiceExecutor implements ServiceExecutor {
                 toLong("TICKETID", methodArgs),
                 toString("TARGETSTATE", methodArgs));
         case "LISTTICKETSBYPROJECT" -> service.listticketsbyproject(toLong("PROJECTID", methodArgs));
-        case "GETWORKFLOW" -> service.getworkflow(toLong("TICKETID", methodArgs));
-        case "EXECUTEWORKFLOWACTION" -> service.executeworkflowaction(
-                toLong("TICKETID", methodArgs),
-                toString("ACTIONNAME", methodArgs),
-                toLong("ACTORUSERID", methodArgs),
-                toString("COMMENT", methodArgs),
-                methodArgs.get("ASSIGNEEUSERID") == null ? null : Long.valueOf(methodArgs.get("ASSIGNEEUSERID").toString()));
         default -> throw noMethodException(methodName);
         };
     }
@@ -99,19 +79,6 @@ public class TicketServiceExecutor implements ServiceExecutor {
         case "LISTTICKETSBYPROJECT" -> {
             JsonArray ja = new JsonArray(json);
             yield service.listticketsbyproject(Long.valueOf(ja.getValue(0).toString()));
-        }
-        case "GETWORKFLOW" -> {
-            JsonArray ja = new JsonArray(json);
-            yield service.getworkflow(Long.valueOf(ja.getValue(0).toString()));
-        }
-        case "EXECUTEWORKFLOWACTION" -> {
-            JsonArray ja = new JsonArray(json);
-            yield service.executeworkflowaction(
-                    Long.valueOf(ja.getValue(0).toString()),
-                    ja.getString(1),
-                    Long.valueOf(ja.getValue(2).toString()),
-                    ja.getString(3),
-                    ja.getValue(4) == null ? null : Long.valueOf(ja.getValue(4).toString()));
         }
         default -> throw noMethodException(methodName);
         };
