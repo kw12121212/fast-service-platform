@@ -12,6 +12,10 @@
     "assemblyContract": "docs/ai/app-assembly-contract.json",
     "aiSolutionInputContract": "docs/ai/ai-solution-input-contract.json",
     "aiSolutionInputSchema": "docs/ai/schemas/ai-solution-input.schema.json",
+    "solutionToManifestPlanningContract": "docs/ai/solution-to-manifest-planning-contract.json",
+    "solutionToManifestPlanningSchema": "docs/ai/schemas/solution-to-manifest-planning.schema.json",
+    "solutionToManifestRecommendationContract": "docs/ai/solution-to-manifest-recommendation-contract.json",
+    "solutionToManifestRecommendationSchema": "docs/ai/schemas/solution-to-manifest-recommendation.schema.json",
     "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
     "aiToolOrchestrationContractSchema": "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
     "structuredAppTemplateContract": "docs/ai/structured-app-template-contract.json",
@@ -48,6 +52,8 @@
       "app-manifest.json",
       "docs/ai/context.json",
       "docs/ai/ai-solution-input-contract.json",
+      "docs/ai/solution-to-manifest-planning-contract.json",
+      "docs/ai/solution-to-manifest-recommendation-contract.json",
       "docs/ai/ai-tool-orchestration-contract.json",
       "docs/ai/structured-app-template-contract.json",
       "docs/ai/derived-app-lifecycle.json",
@@ -73,7 +79,11 @@
       "docs/ai/compatibility/fixtures/project-repository.manifest.json",
       "docs/ai/compatibility/fixtures/project-kanban.manifest.json",
       "docs/ai/solution-inputs/core-admin-console.solution-input.json",
+      "docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json",
+      "docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json",
       "docs/ai/schemas/ai-solution-input.schema.json",
+      "docs/ai/schemas/solution-to-manifest-planning.schema.json",
+      "docs/ai/schemas/solution-to-manifest-recommendation.schema.json",
       "docs/ai/schemas/app-manifest.schema.json",
       "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
       "docs/ai/schemas/structured-app-template-contract.schema.json",
@@ -107,6 +117,8 @@
       "docs/ai/context.yaml"
     ],
     "solutionInputContract": "docs/ai/ai-solution-input-contract.json",
+    "solutionToManifestPlanningContract": "docs/ai/solution-to-manifest-planning-contract.json",
+    "solutionToManifestRecommendationContract": "docs/ai/solution-to-manifest-recommendation-contract.json",
     "moduleRegistry": "docs/ai/module-registry.json",
     "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
     "derivedAppLifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
@@ -117,6 +129,8 @@
     "platformReleaseHistory": "docs/ai/platform-release-history.json",
     "platformReleaseAdvisory": "docs/ai/platform-release-advisory.json",
     "schemas": [
+      "docs/ai/schemas/solution-to-manifest-planning.schema.json",
+      "docs/ai/schemas/solution-to-manifest-recommendation.schema.json",
       "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
       "docs/ai/schemas/structured-app-template-contract.schema.json",
       "docs/ai/schemas/derived-app-template-map.schema.json",
@@ -135,6 +149,12 @@
     "solutionInputExamples": [
       "docs/ai/solution-inputs/core-admin-console.solution-input.json"
     ],
+    "solutionPlanningExamples": [
+      "docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json"
+    ],
+    "solutionRecommendationExamples": [
+      "docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json"
+    ],
     "assemblyExamples": [
       "docs/ai/manifests/default-baseline-app.json",
       "docs/ai/manifests/core-admin-app.json"
@@ -144,6 +164,14 @@
     "solutionInput": {
       "contract": "docs/ai/ai-solution-input-contract.json",
       "role": "capture-business-intent-before-assembly"
+    },
+    "solutionPlanning": {
+      "contract": "docs/ai/solution-to-manifest-planning-contract.json",
+      "role": "deterministic-module-and-manifest-preparation-output-before-assembly"
+    },
+    "solutionRecommendation": {
+      "contract": "docs/ai/solution-to-manifest-recommendation-contract.json",
+      "role": "optional-manifest-guidance-after-planning-before-assembly"
     },
     "assemblyManifest": {
       "contract": "docs/ai/schemas/app-manifest.schema.json",
@@ -177,6 +205,8 @@
     "defaultRole": "tool-orchestrator",
     "preferredWorkflow": "use-repository-owned-platform-tooling-before-direct-reimplementation",
     "solutionInputPlaybook": "docs/ai/playbooks/define-ai-solution-input.md",
+    "solutionToManifestPlanningContract": "docs/ai/solution-to-manifest-planning-contract.json",
+    "solutionToManifestRecommendationContract": "docs/ai/solution-to-manifest-recommendation-contract.json",
     "orchestrationContract": "docs/ai/ai-tool-orchestration-contract.json"
   },
   "legacyCommands": {

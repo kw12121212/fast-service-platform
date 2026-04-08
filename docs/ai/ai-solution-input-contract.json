@@ -2,6 +2,10 @@
   "schemaVersion": "fsp-ai-solution-input-contract/v1",
   "normativeAssets": {
     "solutionInputSchema": "docs/ai/schemas/ai-solution-input.schema.json",
+    "solutionToManifestPlanningContract": "docs/ai/solution-to-manifest-planning-contract.json",
+    "solutionToManifestPlanningSchema": "docs/ai/schemas/solution-to-manifest-planning.schema.json",
+    "solutionToManifestRecommendationContract": "docs/ai/solution-to-manifest-recommendation-contract.json",
+    "solutionToManifestRecommendationSchema": "docs/ai/schemas/solution-to-manifest-recommendation.schema.json",
     "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
     "appAssemblyContract": "docs/ai/app-assembly-contract.json",
     "moduleRegistry": "docs/ai/module-registry.json"
@@ -27,6 +31,8 @@
   ],
   "inputLayering": {
     "solutionInputRole": "capture-business-intent-before-assembly",
+    "planningRole": "produce-deterministic-module-and-manifest-preparation-decisions-before-assembly",
+    "recommendationRole": "optionally-produce-manifest-guidance-after-planning-before-assembly",
     "assemblyManifestRole": "direct-input-to-repository-owned-assembly-tooling",
     "mappingBoundary": "solution input MUST be translated into app-manifest before repository-owned assembly tooling is invoked"
   },
@@ -43,13 +49,21 @@
       "domainObjects",
       "workflows"
     ],
+    "planningContract": "docs/ai/solution-to-manifest-planning-contract.json",
+    "recommendationContract": "docs/ai/solution-to-manifest-recommendation-contract.json",
     "uiReferenceBoundary": "uiReferences inform UI direction and interaction expectations but do not bypass manifest-driven module selection"
   },
   "aiToolingGuidance": {
     "defaultRole": "tool-orchestrator",
     "playbook": "docs/ai/playbooks/define-ai-solution-input.md",
-    "nextStep": "produce app-manifest before invoking ./scripts/platform-tool.sh assembly scaffold"
+    "nextStep": "produce a solution-to-manifest plan, optionally review or create a solution-to-manifest recommendation, and then produce a standalone app-manifest before invoking ./scripts/platform-tool.sh assembly scaffold"
   },
+  "examplePlans": [
+    "docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json"
+  ],
+  "exampleRecommendations": [
+    "docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json"
+  ],
   "exampleInputs": [
     "docs/ai/solution-inputs/core-admin-console.solution-input.json"
   ]

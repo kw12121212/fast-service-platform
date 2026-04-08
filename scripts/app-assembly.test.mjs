@@ -149,6 +149,24 @@ test('generated app verification contract is exposed as a normative asset', asyn
   const solutionInputSchema = await readJson(
     path.join(REPO_ROOT, 'docs/ai/schemas/ai-solution-input.schema.json')
   )
+  const planningContract = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/solution-to-manifest-planning-contract.json')
+  )
+  const planningSchema = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/schemas/solution-to-manifest-planning.schema.json')
+  )
+  const planningExample = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json')
+  )
+  const recommendationContract = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/solution-to-manifest-recommendation-contract.json')
+  )
+  const recommendationSchema = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/schemas/solution-to-manifest-recommendation.schema.json')
+  )
+  const recommendationExample = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json')
+  )
   const solutionInputExample = await readJson(
     path.join(REPO_ROOT, 'docs/ai/solution-inputs/core-admin-console.solution-input.json')
   )
@@ -177,6 +195,22 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(
     assemblyContract.normativeAssets.aiSolutionInputSchema,
     'docs/ai/schemas/ai-solution-input.schema.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.solutionToManifestPlanningContract,
+    'docs/ai/solution-to-manifest-planning-contract.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.solutionToManifestPlanningSchema,
+    'docs/ai/schemas/solution-to-manifest-planning.schema.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.solutionToManifestRecommendationContract,
+    'docs/ai/solution-to-manifest-recommendation-contract.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.solutionToManifestRecommendationSchema,
+    'docs/ai/schemas/solution-to-manifest-recommendation.schema.json'
   )
   assert.equal(
     assemblyContract.normativeAssets.aiToolOrchestrationContract,
@@ -247,6 +281,39 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(platformRelease.currentRelease.releaseHistory, 'docs/ai/platform-release-history.json')
   assert.equal(solutionInputContract.schemaVersion, 'fsp-ai-solution-input-contract/v1')
   assert.equal(solutionInputSchema.title, 'Fast Service Platform AI Solution Input')
+  assert.equal(planningContract.schemaVersion, 'fsp-solution-to-manifest-planning-contract/v1')
+  assert.equal(
+    planningContract.planningArtifact.schema,
+    'docs/ai/schemas/solution-to-manifest-planning.schema.json'
+  )
+  assert.equal(planningSchema.title, 'Fast Service Platform Solution To Manifest Plan')
+  assert.equal(planningExample.schemaVersion, 'fsp-solution-to-manifest-plan/v1')
+  assert.equal(planningExample.solutionInput.sourceAsset, 'docs/ai/solution-inputs/core-admin-console.solution-input.json')
+  assert.equal(planningExample.manifestPreparation.standaloneManifestRequired, true)
+  assert.equal(
+    recommendationContract.schemaVersion,
+    'fsp-solution-to-manifest-recommendation-contract/v1'
+  )
+  assert.equal(
+    recommendationContract.recommendationArtifact.schema,
+    'docs/ai/schemas/solution-to-manifest-recommendation.schema.json'
+  )
+  assert.equal(
+    recommendationSchema.title,
+    'Fast Service Platform Solution To Manifest Recommendation'
+  )
+  assert.equal(
+    recommendationExample.schemaVersion,
+    'fsp-solution-to-manifest-recommendation/v1'
+  )
+  assert.equal(
+    recommendationExample.planningInput.sourceAsset,
+    'docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'
+  )
+  assert.equal(
+    recommendationExample.manifestPreparationBoundary.standaloneManifestRequired,
+    true
+  )
   assert.equal(templateContract.schemaVersion, 'fsp-structured-app-template-contract/v1')
   assert.equal(templateContractSchema.title, 'Fast Service Platform Structured App Template Contract')
   assert.equal(templateMap.schemaVersion, 'fsp-derived-app-template-map/v1')
@@ -254,6 +321,112 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(
     templateMap.entries.some(
       (entry) => entry.path === 'frontend/src/app/router.tsx' && entry.slotId === 'frontend-admin-routes'
+    ),
+    true
+  )
+  assert.equal(
+    solutionInputContract.normativeAssets.solutionToManifestPlanningContract,
+    'docs/ai/solution-to-manifest-planning-contract.json'
+  )
+  assert.equal(
+    solutionInputContract.normativeAssets.solutionToManifestPlanningSchema,
+    'docs/ai/schemas/solution-to-manifest-planning.schema.json'
+  )
+  assert.equal(
+    solutionInputContract.normativeAssets.solutionToManifestRecommendationContract,
+    'docs/ai/solution-to-manifest-recommendation-contract.json'
+  )
+  assert.equal(
+    solutionInputContract.normativeAssets.solutionToManifestRecommendationSchema,
+    'docs/ai/schemas/solution-to-manifest-recommendation.schema.json'
+  )
+  assert.equal(
+    solutionInputContract.inputLayering.planningRole,
+    'produce-deterministic-module-and-manifest-preparation-decisions-before-assembly'
+  )
+  assert.equal(
+    solutionInputContract.inputLayering.recommendationRole,
+    'optionally-produce-manifest-guidance-after-planning-before-assembly'
+  )
+  assert.equal(
+    solutionInputContract.mappingGuidance.planningContract,
+    'docs/ai/solution-to-manifest-planning-contract.json'
+  )
+  assert.equal(
+    solutionInputContract.mappingGuidance.recommendationContract,
+    'docs/ai/solution-to-manifest-recommendation-contract.json'
+  )
+  assert.deepEqual(solutionInputContract.examplePlans, [
+    'docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'
+  ])
+  assert.deepEqual(solutionInputContract.exampleRecommendations, [
+    'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json'
+  ])
+  assert.equal(
+    planningContract.boundaries.assemblyRuntimeInput,
+    'planning output MUST be translated into a standalone app-manifest before repository-owned assembly tooling is invoked'
+  )
+  assert.deepEqual(planningContract.examplePlans, [
+    'docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'
+  ])
+  assert.equal(
+    recommendationContract.boundaries.assemblyRuntimeInput,
+    'contributors MUST still produce a standalone app-manifest before repository-owned assembly tooling is invoked'
+  )
+  assert.deepEqual(recommendationContract.exampleRecommendations, [
+    'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json'
+  ])
+  assert.equal(
+    assemblyContract.machineReadableIndexes.solutionToManifestPlanningContract,
+    'docs/ai/solution-to-manifest-planning-contract.json'
+  )
+  assert.equal(
+    assemblyContract.machineReadableIndexes.solutionToManifestRecommendationContract,
+    'docs/ai/solution-to-manifest-recommendation-contract.json'
+  )
+  assert.deepEqual(assemblyContract.machineReadableIndexes.solutionPlanningExamples, [
+    'docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'
+  ])
+  assert.deepEqual(assemblyContract.machineReadableIndexes.solutionRecommendationExamples, [
+    'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json'
+  ])
+  assert.equal(
+    assemblyContract.inputLayers.solutionPlanning.contract,
+    'docs/ai/solution-to-manifest-planning-contract.json'
+  )
+  assert.equal(
+    assemblyContract.inputLayers.solutionRecommendation.contract,
+    'docs/ai/solution-to-manifest-recommendation-contract.json'
+  )
+  assert.equal(
+    assemblyContract.aiToolingGuidance.solutionToManifestPlanningContract,
+    'docs/ai/solution-to-manifest-planning-contract.json'
+  )
+  assert.equal(
+    assemblyContract.aiToolingGuidance.solutionToManifestRecommendationContract,
+    'docs/ai/solution-to-manifest-recommendation-contract.json'
+  )
+  assert.equal(
+    orchestrationContract.supportedWorkflowCategories[0].readBefore.includes(
+      'docs/ai/solution-to-manifest-planning-contract.json'
+    ),
+    true
+  )
+  assert.equal(
+    orchestrationContract.supportedWorkflowCategories[0].readBefore.includes(
+      'docs/ai/solution-to-manifest-recommendation-contract.json'
+    ),
+    true
+  )
+  assert.equal(
+    orchestrationContract.supportedWorkflowCategories[0].successSignals.includes(
+      'solution-input-has-been-mapped-to-solution-plan'
+    ),
+    true
+  )
+  assert.equal(
+    orchestrationContract.supportedWorkflowCategories[0].successSignals.includes(
+      'solution-plan-has-been-reviewed-for-optional-recommendation'
     ),
     true
   )
@@ -325,6 +498,36 @@ test('generated app verification contract is exposed as a normative asset', asyn
   )
   assert.equal(aiContextText.includes('ai_solution_input_contract: docs/ai/ai-solution-input-contract.json'), true)
   assert.equal(
+    aiContextText.includes(
+      'solution_to_manifest_planning_contract: docs/ai/solution-to-manifest-planning-contract.json'
+    ),
+    true
+  )
+  assert.equal(
+    aiContextText.includes(
+      'solution_to_manifest_recommendation_contract: docs/ai/solution-to-manifest-recommendation-contract.json'
+    ),
+    true
+  )
+  assert.equal(
+    aiContextText.includes('- docs/ai/schemas/solution-to-manifest-planning.schema.json'),
+    true
+  )
+  assert.equal(
+    aiContextText.includes('- docs/ai/schemas/solution-to-manifest-recommendation.schema.json'),
+    true
+  )
+  assert.equal(
+    aiContextText.includes('- docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'),
+    true
+  )
+  assert.equal(
+    aiContextText.includes(
+      '- docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json'
+    ),
+    true
+  )
+  assert.equal(
     aiContextText.includes('structured_app_template_contract: docs/ai/structured-app-template-contract.json'),
     true
   )
@@ -342,6 +545,24 @@ test('generated app verification contract is exposed as a normative asset', asyn
   )
   assert.equal(
     quickstartText.includes('docs/ai/ai-solution-input-contract.json'),
+    true
+  )
+  assert.equal(
+    quickstartText.includes('docs/ai/solution-to-manifest-planning-contract.json'),
+    true
+  )
+  assert.equal(
+    quickstartText.includes('docs/ai/solution-to-manifest-recommendation-contract.json'),
+    true
+  )
+  assert.equal(
+    quickstartText.includes('docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'),
+    true
+  )
+  assert.equal(
+    quickstartText.includes(
+      'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json'
+    ),
     true
   )
   assert.equal(quickstartText.includes('docs/ai/structured-app-template-contract.json'), true)
@@ -531,6 +752,14 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
     assert.equal(
       context.contractInputs.aiSolutionInputContract,
       'docs/ai/ai-solution-input-contract.json'
+    )
+    assert.equal(
+      context.contractInputs.solutionToManifestPlanningContract,
+      'docs/ai/solution-to-manifest-planning-contract.json'
+    )
+    assert.equal(
+      context.contractInputs.solutionToManifestRecommendationContract,
+      'docs/ai/solution-to-manifest-recommendation-contract.json'
     )
     assert.equal(
       context.lifecycle.repositoryOwnedUpgradeEvaluation,

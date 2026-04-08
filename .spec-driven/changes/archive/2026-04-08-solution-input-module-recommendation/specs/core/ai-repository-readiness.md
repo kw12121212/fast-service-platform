@@ -1,0 +1,21 @@
+## MODIFIED Requirements
+
+### Requirement: Repository Provides Machine-Readable AI Context
+Previously: The repository MUST provide a machine-readable AI context manifest that exposes the current stack baseline, required guidance files, workspace boundaries, verification commands, hard repository constraints, the required local `Lealone` source dependency checkout and install path, the machine-readable assets used for structured solution definition, solution-to-manifest planning, and later application derivation, the machine-readable assets that classify generated template boundaries and customization zones, the lifecycle / upgrade assets needed to evaluate existing derived applications, the advisory assets needed to explain platform release deltas, the release-history / lineage assets needed to select supported upgrade targets, the execution assets needed to plan or apply derived-app upgrades, the AI tool-orchestration assets needed to teach AI contributors how to choose and sequence repository-owned tooling, and the unified repository-owned tooling façade that serves as the default invocation surface for those workflows, while distinguishing frontend `Node/bun` requirements from Java-owned platform tooling requirements.
+
+The repository MUST provide a machine-readable AI context manifest that exposes the current stack baseline, required guidance files, workspace boundaries, verification commands, hard repository constraints, the required local `Lealone` source dependency checkout and install path, the machine-readable assets used for structured solution definition, solution-to-manifest planning, solution-to-manifest recommendation, and later application derivation, the machine-readable assets that classify generated template boundaries and customization zones, the lifecycle / upgrade assets needed to evaluate existing derived applications, the advisory assets needed to explain platform release deltas, the release-history / lineage assets needed to select supported upgrade targets, the execution assets needed to plan or apply derived-app upgrades, the AI tool-orchestration assets needed to teach AI contributors how to choose and sequence repository-owned tooling, and the unified repository-owned tooling façade that serves as the default invocation surface for those workflows, while distinguishing frontend `Node/bun` requirements from Java-owned platform tooling requirements.
+
+#### Scenario: A tool-driven agent loads solution-to-manifest recommendation context
+- GIVEN an AI agent needs to refine manifest preparation after deterministic planning
+- WHEN it reads the machine-readable AI context asset
+- THEN it can identify the repository-owned recommendation asset, related schemas or examples, and the playbook that explains how recommendation output informs standalone `app-manifest` preparation
+
+### Requirement: Repository Provides High-Frequency Change Playbooks
+Previously: The repository MUST provide repository-owned playbooks for the current high-frequency change scenarios, including structured solution-input definition, template-slot and customization-boundary guidance, derived-application lifecycle, release advisory, release-history / lineage lookup, upgrade evaluation, upgrade execution, and AI tool-orchestration guidance, so contributors can follow repeatable extension patterns instead of reconstructing them from scattered source files.
+
+The repository MUST provide repository-owned playbooks for the current high-frequency change scenarios, including structured solution-input definition, solution-to-manifest recommendation guidance, template-slot and customization-boundary guidance, derived-application lifecycle, release advisory, release-history / lineage lookup, upgrade evaluation, upgrade execution, and AI tool-orchestration guidance, so contributors can follow repeatable extension patterns instead of reconstructing them from scattered source files.
+
+#### Scenario: A contributor prepares module recommendation guidance from planning output
+- GIVEN a contributor has prepared deterministic planning output from a valid structured solution input
+- WHEN they read the corresponding repository playbook
+- THEN they can identify how recommendation output should be prepared, interpreted, and translated into standalone `app-manifest` decisions

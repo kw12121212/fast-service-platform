@@ -792,6 +792,8 @@ public final class PlatformTooling {
         Map<String, Object> contractInputs = new LinkedHashMap<>();
         contractInputs.put("manifest", "app-manifest.json");
         contractInputs.put("aiSolutionInputContract", "docs/ai/ai-solution-input-contract.json");
+        contractInputs.put("solutionToManifestPlanningContract", "docs/ai/solution-to-manifest-planning-contract.json");
+        contractInputs.put("solutionToManifestRecommendationContract", "docs/ai/solution-to-manifest-recommendation-contract.json");
         contractInputs.put("moduleRegistry", "docs/ai/module-registry.json");
         contractInputs.put("aiToolOrchestrationContract", "docs/ai/ai-tool-orchestration-contract.json");
         contractInputs.put("structuredAppTemplateContract", STRUCTURED_APP_TEMPLATE_CONTRACT_PATH);

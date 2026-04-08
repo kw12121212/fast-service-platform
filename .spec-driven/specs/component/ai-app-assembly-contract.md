@@ -2,7 +2,7 @@
 
 ### Requirement: Derived Applications Use A Machine-Readable Application Manifest
 The system MUST define a machine-readable application manifest contract for derived applications.
-The manifest MUST let a contributor identify the target application and the selected platform modules for assembly, and it MUST remain the direct input consumed by repository-owned assembly tooling even when a higher-level AI solution input model is present.
+The manifest MUST let a contributor identify the target application and the selected platform modules for assembly, and it MUST remain the direct input consumed by repository-owned assembly tooling even when higher-level AI solution input assets, solution-to-manifest planning assets, and solution-to-manifest recommendation assets are present.
 
 #### Scenario: An AI agent describes a new application to be derived
 - GIVEN an AI agent needs to derive an independent application from the platform
@@ -14,6 +14,18 @@ The manifest MUST let a contributor identify the target application and the sele
 - WHEN it prepares the actual assembly request
 - THEN it produces an `app-manifest` that remains the direct input to repository-owned assembly tooling
 - AND it does not bypass the manifest layer by treating the higher-level solution input as the assembly runtime contract
+
+#### Scenario: An AI contributor prepares assembly after reviewing planning output
+- GIVEN an AI contributor has prepared a repository-owned planning artifact from a valid structured solution input
+- WHEN it prepares the actual assembly request
+- THEN it produces a standalone `app-manifest` for repository-owned assembly tooling
+- AND it does not submit the planning artifact itself as the assembly runtime input
+
+#### Scenario: An AI contributor prepares assembly after reviewing recommendation output
+- GIVEN an AI contributor has prepared a repository-owned recommendation artifact from valid planning output
+- WHEN it prepares the actual assembly request
+- THEN it produces a standalone `app-manifest` for repository-owned assembly tooling
+- AND it does not submit the recommendation artifact itself as the assembly runtime input
 
 ### Requirement: Platform Provides A Machine-Readable Module Registry
 The system MUST provide a machine-readable module registry that exposes the available platform core and optional modules, their assembly roles, their dependency expectations, and the finer-grained optional business capability units that may be selected during application assembly.
@@ -82,12 +94,24 @@ The system MUST define its app assembly contract independently from any single i
 - THEN they can identify the required machine-readable assets and observable behaviors without depending on Node-specific internal implementation details
 
 ### Requirement: Machine-Readable Contract Distinguishes Normative Inputs From Reference Implementations
-The system MUST identify which machine-readable assets are normative assembly and verification inputs, which higher-level AI solution input assets may precede assembly, and which repository-owned Java tooling paths implement those workflows, without treating the higher-level solution input as the assembly runtime contract itself.
+The system MUST identify which machine-readable assets are normative assembly and verification inputs, which higher-level AI solution input assets, solution-to-manifest planning assets, and solution-to-manifest recommendation assets may precede assembly, and which repository-owned Java tooling paths implement those workflows, without treating those upstream planning or recommendation assets as the assembly runtime contract itself.
 
 #### Scenario: An AI or multi-language implementer reads the assembly assets
 - GIVEN a contributor wants to build a compatible implementation in another language
 - WHEN they inspect the repository-owned assembly and verification assets
 - THEN they can distinguish the standard inputs and required outputs from the current reference implementation details
+
+#### Scenario: An AI or multi-language implementer reads the planning and assembly assets
+- GIVEN a contributor wants to build or inspect a compatible planning and assembly workflow
+- WHEN they inspect the repository-owned planning, assembly, and verification assets
+- THEN they can distinguish the upstream planning assets from the direct assembly runtime contract
+- AND they can identify that repository-owned assembly tooling still expects a valid `app-manifest`
+
+#### Scenario: An AI or multi-language implementer reads the recommendation and assembly assets
+- GIVEN a contributor wants to build or inspect a compatible planning, recommendation, and assembly workflow
+- WHEN they inspect the repository-owned recommendation, planning, assembly, and verification assets
+- THEN they can distinguish the upstream recommendation guidance from the direct assembly runtime contract
+- AND they can identify that repository-owned assembly tooling still expects a valid `app-manifest`
 
 ### Requirement: Compatible Implementations Must Satisfy Output Invariants
 The system MUST define the observable output invariants that any compatible app assembly implementation must satisfy, including the requirement that selected decomposed optional business units are reflected consistently across generated routes, services, tables, validation guidance, and the structured template-layer ownership model exposed for generated output.

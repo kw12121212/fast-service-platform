@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fastservice.local/docs/ai/schemas/solution-to-manifest-recommendation.schema.json",
+  "title": "Fast Service Platform Solution To Manifest Recommendation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "solutionInput",
+    "planningInput",
+    "application",
+    "acceptedConstraints",
+    "recommendations",
+    "manifestShaping",
+    "followUpGuidance",
+    "manifestPreparationBoundary"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "fsp-solution-to-manifest-recommendation/v1"
+    },
+    "solutionInput": {
+      "$ref": "#/$defs/sourceAssetReference"
+    },
+    "planningInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceAsset",
+        "schemaVersion"
+      ],
+      "properties": {
+        "sourceAsset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schemaVersion": {
+          "const": "fsp-solution-to-manifest-plan/v1"
+        }
+      }
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "manifestId",
+        "packagePrefix"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifestId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "packagePrefix": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+        }
+      }
+    },
+    "acceptedConstraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/acceptedConstraint"
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/recommendation"
+      }
+    },
+    "manifestShaping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "suggestedProfile",
+        "suggestedModules",
+        "notes"
+      ],
+      "properties": {
+        "suggestedProfile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "suggestedModules": {
+          "$ref": "#/$defs/moduleIdList"
+        },
+        "notes": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "followUpGuidance": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/followUpGuidance"
+      }
+    },
+    "manifestPreparationBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "standaloneManifestRequired",
+        "nextStep"
+      ],
+      "properties": {
+        "standaloneManifestRequired": {
+          "const": true
+        },
+        "nextStep": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sourceAssetReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceAsset",
+        "schemaVersion"
+      ],
+      "properties": {
+        "sourceAsset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schemaVersion": {
+          "const": "fsp-ai-solution-input/v1"
+        }
+      }
+    },
+    "moduleIdList": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "stringList": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "recommendationBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "reference",
+        "summary"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "acceptedConstraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "reference",
+        "summary",
+        "effect"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effect": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "recommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "target",
+        "recommendation",
+        "guidanceMode",
+        "confidence",
+        "basis",
+        "prerequisites",
+        "boundaryNotes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "category": {
+          "enum": [
+            "module-selection",
+            "manifest-shaping"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recommendation": {
+          "enum": [
+            "prefer",
+            "defer",
+            "preserve"
+          ]
+        },
+        "guidanceMode": {
+          "enum": [
+            "heuristic",
+            "constraint-derived"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "basis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/recommendationBasis"
+          }
+        },
+        "prerequisites": {
+          "$ref": "#/$defs/stringList"
+        },
+        "boundaryNotes": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "followUpGuidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "topic",
+        "guidance",
+        "requiredBeforeAssembly"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1
+        },
+        "guidance": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requiredBeforeAssembly": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

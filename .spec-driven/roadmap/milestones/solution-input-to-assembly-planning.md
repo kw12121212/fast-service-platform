@@ -26,4 +26,4 @@ Make the path from structured business intent to repository-owned assembly decis
 
 ## Status
 
-- Declared: proposed
+- Declared: complete

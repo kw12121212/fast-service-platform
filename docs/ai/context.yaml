@@ -39,6 +39,8 @@ ai_indexes:
     - docs/ai/context.yaml
   schemas:
     - docs/ai/schemas/ai-solution-input.schema.json
+    - docs/ai/schemas/solution-to-manifest-planning.schema.json
+    - docs/ai/schemas/solution-to-manifest-recommendation.schema.json
     - docs/ai/schemas/ai-tool-orchestration-contract.schema.json
     - docs/ai/schemas/structured-app-template-contract.schema.json
     - docs/ai/schemas/derived-app-template-map.schema.json
@@ -53,6 +55,8 @@ ai_indexes:
     - docs/ai/schemas/app-assembly-compatibility-suite.schema.json
   module_registry: docs/ai/module-registry.json
   ai_solution_input_contract: docs/ai/ai-solution-input-contract.json
+  solution_to_manifest_planning_contract: docs/ai/solution-to-manifest-planning-contract.json
+  solution_to_manifest_recommendation_contract: docs/ai/solution-to-manifest-recommendation-contract.json
   ai_tool_orchestration_contract: docs/ai/ai-tool-orchestration-contract.json
   structured_app_template_contract: docs/ai/structured-app-template-contract.json
   structured_app_template_map: docs/ai/template-classifications/default-derived-app-template-map.json
@@ -66,6 +70,10 @@ ai_indexes:
   compatibility_suite: docs/ai/compatibility/app-assembly-suite.json
   example_solution_inputs:
     - docs/ai/solution-inputs/core-admin-console.solution-input.json
+  example_solution_plans:
+    - docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json
+  example_solution_recommendations:
+    - docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json
   example_manifests:
     - docs/ai/manifests/default-baseline-app.json
     - docs/ai/manifests/core-admin-app.json
@@ -126,6 +134,7 @@ high_frequency_change_playbooks:
   - docs/ai/playbooks/backend-domain-change.md
   - docs/ai/playbooks/customize-derived-app-template-boundaries.md
   - docs/ai/playbooks/define-ai-solution-input.md
+  - docs/ai/playbooks/prepare-solution-to-manifest-recommendation.md
   - docs/ai/playbooks/derive-app-from-platform.md
   - docs/ai/playbooks/evaluate-derived-app-upgrade.md
   - docs/ai/playbooks/execute-derived-app-upgrade.md

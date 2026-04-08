@@ -11,28 +11,36 @@
 1. `docs/ai/context.yaml`
 2. `docs/ai/ai-solution-input-contract.json`
 3. `docs/ai/schemas/ai-solution-input.schema.json`
-4. `docs/ai/ai-tool-orchestration-contract.json`
-5. `docs/ai/app-assembly-contract.json`
-6. `docs/ai/schemas/app-manifest.schema.json`
-7. `docs/ai/module-registry.json`
-8. `docs/ai/generated-app-verification-contract.json`
-9. `docs/ai/structured-app-template-contract.json`
-10. `docs/ai/template-classifications/default-derived-app-template-map.json`
-11. `docs/ai/derived-app-lifecycle-contract.json`
-12. `docs/ai/platform-release.json`
-13. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
-14. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
-15. `docs/ai/compatibility/app-assembly-suite.json`
-16. 一个示例 solution input：
+4. `docs/ai/solution-to-manifest-planning-contract.json`
+5. `docs/ai/schemas/solution-to-manifest-planning.schema.json`
+6. `docs/ai/solution-to-manifest-recommendation-contract.json`
+7. `docs/ai/schemas/solution-to-manifest-recommendation.schema.json`
+8. `docs/ai/ai-tool-orchestration-contract.json`
+9. `docs/ai/app-assembly-contract.json`
+10. `docs/ai/schemas/app-manifest.schema.json`
+11. `docs/ai/module-registry.json`
+12. `docs/ai/generated-app-verification-contract.json`
+13. `docs/ai/structured-app-template-contract.json`
+14. `docs/ai/template-classifications/default-derived-app-template-map.json`
+15. `docs/ai/derived-app-lifecycle-contract.json`
+16. `docs/ai/platform-release.json`
+17. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
+18. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
+19. `docs/ai/compatibility/app-assembly-suite.json`
+20. 一个示例 solution input：
    - `docs/ai/solution-inputs/core-admin-console.solution-input.json`
-17. 一个示例 manifest：
+21. 一个示例 solution-to-manifest plan：
+   - `docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json`
+22. 一个示例 solution-to-manifest recommendation：
+   - `docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json`
+23. 一个示例 manifest：
    - `docs/ai/manifests/default-baseline-app.json`
    - `docs/ai/manifests/core-admin-app.json`
 
 优先级：
 
 - 规范事实来源是 `contract + schema + compatibility suite`
-- 如果当前输入还是业务目标，先用 `ai-solution-input-contract` 收敛为 solution input，再映射成 `app-manifest`
+- 如果当前输入还是业务目标，先用 `ai-solution-input-contract` 收敛为 solution input，再产出 `solution-to-manifest plan`，按需评估 `solution-to-manifest recommendation`，最后映射成 `app-manifest`
 - AI 默认先读 orchestration contract，再决定走 `platform-tool.sh` 的哪个 workflow
 - generated app 的验证标准事实来源是 `generated-app verification contract`
 - generated output 的覆盖边界事实来源是 `structured app template contract + default template classification map`
@@ -49,10 +57,12 @@ AI 编排顺序：
 1. 读 `docs/ai/ai-tool-orchestration-contract.json`
 2. 如果当前还没有 manifest，先读 `docs/ai/playbooks/define-ai-solution-input.md`
 3. 读 assembly contract 和 module registry
-4. 先把 solution input 映射成 `app-manifest`
-5. 通过 `platform-tool.sh assembly scaffold ...` 执行装配
-6. 装配完成后立刻执行 `platform-tool.sh generated-app verify ...`
-7. 如果当前环境可启动 generated backend/frontend，再执行 `platform-tool.sh generated-app smoke ...` 补 runtime 证明
+4. 先把 solution input 映射成 `solution-to-manifest plan`
+5. 如果需要 recommendation guidance，再把 planning output 映射成 `solution-to-manifest recommendation`
+6. 再把 planning output 和可选 recommendation 映射成 `app-manifest`
+7. 通过 `platform-tool.sh assembly scaffold ...` 执行装配
+8. 装配完成后立刻执行 `platform-tool.sh generated-app verify ...`
+9. 如果当前环境可启动 generated backend/frontend，再执行 `platform-tool.sh generated-app smoke ...` 补 runtime 证明
 
 只有在 orchestration contract 明确允许时，才回退到具体 wrapper 或实现专用路径。
 
@@ -70,6 +80,8 @@ AI 编排顺序：
 - 生成目标仍然是 `企业内部管理单体应用`
 - 不要引入超出平台边界的新外部软件库
 - `solution input` 不是 assembly runtime contract；真正传给 tooling 的仍然是 `app-manifest`
+- `solution-to-manifest plan` 也不是 assembly runtime contract；它只是显式 planning 输出
+- `solution-to-manifest recommendation` 也不是 assembly runtime contract；它只是可选 guidance 输出
 - 生成完成后如果要做定制，先按 template classification map 判断当前路径是 `stable-template`、`slot-host`、`module-fragment` 还是 `customization-zone`
 
 ## 模块选择规则

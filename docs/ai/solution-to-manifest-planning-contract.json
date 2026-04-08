@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "fsp-solution-to-manifest-planning-contract/v1",
+  "normativeAssets": {
+    "solutionInputContract": "docs/ai/ai-solution-input-contract.json",
+    "solutionInputSchema": "docs/ai/schemas/ai-solution-input.schema.json",
+    "moduleRegistry": "docs/ai/module-registry.json",
+    "manifestSchema": "docs/ai/schemas/app-manifest.schema.json",
+    "assemblyContract": "docs/ai/app-assembly-contract.json"
+  },
+  "planningArtifact": {
+    "schemaVersion": "fsp-solution-to-manifest-plan/v1",
+    "schema": "docs/ai/schemas/solution-to-manifest-planning.schema.json",
+    "role": "deterministic-upstream-planning-output-before-assembly"
+  },
+  "requiredPlanningOutputs": [
+    "application.name",
+    "application.manifestId",
+    "application.packagePrefix",
+    "modulePlanning.includedModules",
+    "modulePlanning.excludedModules",
+    "modulePlanning.decisions",
+    "manifestPreparation.standaloneManifestRequired",
+    "manifestPreparation.resolvedFields",
+    "manifestPreparation.unresolvedFields",
+    "manifestPreparation.conflicts",
+    "manifestPreparation.nextStep"
+  ],
+  "deterministicPlanningSources": {
+    "applicationIdentity": [
+      "solution input application.name",
+      "solution input application.idHint",
+      "solution input application.packagePrefixHint"
+    ],
+    "moduleSelection": [
+      "solution input constraints.requiredModules",
+      "solution input constraints.excludedModules",
+      "solution input roles",
+      "solution input domainObjects",
+      "solution input workflows",
+      "module registry required-core roles",
+      "module registry dependsOn relationships"
+    ],
+    "uiReferenceBoundary": "uiReferences MAY influence UI direction but MUST NOT bypass explicit module planning or manifest preparation"
+  },
+  "boundaries": {
+    "assemblyRuntimeInput": "planning output MUST be translated into a standalone app-manifest before repository-owned assembly tooling is invoked",
+    "recommendationBoundary": "mandatory planning facts MUST remain distinguishable from any future optional recommendation guidance"
+  },
+  "aiToolingGuidance": {
+    "defaultRole": "tool-orchestrator",
+    "playbook": "docs/ai/playbooks/define-ai-solution-input.md",
+    "nextStep": "produce a standalone app-manifest from the planning output before invoking ./scripts/platform-tool.sh assembly scaffold"
+  },
+  "examplePlans": [
+    "docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json"
+  ]
+}
