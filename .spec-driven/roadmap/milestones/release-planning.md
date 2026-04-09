@@ -30,11 +30,8 @@ Add release-level planning so a project can group sprints into releases, manage 
 
 ## Planned Changes
 
-- `release-entity-and-lifecycle` - Release entity, status flow, sprint binding, and CRUD service
-    Release status flow uses the existing workflow component pattern.
-- `release-backlog-and-notes` - Release-scoped work item aggregation, release notes generation, and release dashboard
-    Release notes are assembled from work-item titles grouped by type (Feature, Bug, Task).
-    Reuse dynamic report for release backlog and notes rendering.
+- `release-entity-and-lifecycle` - Declared: planned - Release CRUD, status flow, sprint binding, and release planning service
+- `release-backlog-and-notes` - Declared: planned - Release backlog aggregation, structured release notes generation, and release dashboard
 
 ## Dependencies
 

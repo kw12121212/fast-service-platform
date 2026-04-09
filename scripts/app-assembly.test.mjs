@@ -167,6 +167,15 @@ test('generated app verification contract is exposed as a normative asset', asyn
   const recommendationExample = await readJson(
     path.join(REPO_ROOT, 'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json')
   )
+  const descriptorContract = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/descriptor-driven-management-module-contract.json')
+  )
+  const descriptorSchema = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/schemas/descriptor-driven-management-module.schema.json')
+  )
+  const descriptorExample = await readJson(
+    path.join(REPO_ROOT, 'docs/ai/management-modules/department-directory.management-module.json')
+  )
   const solutionInputExample = await readJson(
     path.join(REPO_ROOT, 'docs/ai/solution-inputs/core-admin-console.solution-input.json')
   )
@@ -211,6 +220,18 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(
     assemblyContract.normativeAssets.solutionToManifestRecommendationSchema,
     'docs/ai/schemas/solution-to-manifest-recommendation.schema.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.descriptorDrivenManagementModuleContract,
+    'docs/ai/descriptor-driven-management-module-contract.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.descriptorDrivenManagementModuleSchema,
+    'docs/ai/schemas/descriptor-driven-management-module.schema.json'
+  )
+  assert.equal(
+    assemblyContract.normativeAssets.descriptorDrivenManagementModuleExample,
+    'docs/ai/management-modules/department-directory.management-module.json'
   )
   assert.equal(
     assemblyContract.normativeAssets.aiToolOrchestrationContract,
@@ -314,6 +335,33 @@ test('generated app verification contract is exposed as a normative asset', asyn
     recommendationExample.manifestPreparationBoundary.standaloneManifestRequired,
     true
   )
+  assert.equal(
+    descriptorContract.schemaVersion,
+    'fsp-descriptor-driven-management-module-contract/v1'
+  )
+  assert.equal(
+    descriptorContract.descriptorArtifact.schema,
+    'docs/ai/schemas/descriptor-driven-management-module.schema.json'
+  )
+  assert.equal(
+    descriptorSchema.title,
+    'Fast Service Platform Descriptor-Driven Management Module'
+  )
+  assert.equal(descriptorExample.schemaVersion, 'fsp-management-module-descriptor/v1')
+  assert.equal(
+    descriptorExample.source.planningInput.sourceAsset,
+    'docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'
+  )
+  assert.equal(
+    descriptorExample.source.recommendationInput.sourceAsset,
+    'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json'
+  )
+  assert.equal(descriptorExample.managementModule.report.componentId, 'dynamic-report')
+  assert.equal(descriptorExample.managementModule.form.componentId, 'dynamic-form')
+  assert.equal(descriptorExample.manifestPreparation.standaloneManifestRequired, true)
+  assert.equal(descriptorExample.boundaries.usesWorkflowGeneration, false)
+  assert.equal(descriptorExample.boundaries.extendsClosedModuleRegistry, false)
+  assert.equal(descriptorExample.boundaries.descriptorIsAssemblyRuntimeInput, false)
   assert.equal(templateContract.schemaVersion, 'fsp-structured-app-template-contract/v1')
   assert.equal(templateContractSchema.title, 'Fast Service Platform Structured App Template Contract')
   assert.equal(templateMap.schemaVersion, 'fsp-derived-app-template-map/v1')
@@ -341,12 +389,24 @@ test('generated app verification contract is exposed as a normative asset', asyn
     'docs/ai/schemas/solution-to-manifest-recommendation.schema.json'
   )
   assert.equal(
+    solutionInputContract.normativeAssets.descriptorDrivenManagementModuleContract,
+    'docs/ai/descriptor-driven-management-module-contract.json'
+  )
+  assert.equal(
+    solutionInputContract.normativeAssets.descriptorDrivenManagementModuleSchema,
+    'docs/ai/schemas/descriptor-driven-management-module.schema.json'
+  )
+  assert.equal(
     solutionInputContract.inputLayering.planningRole,
     'produce-deterministic-module-and-manifest-preparation-decisions-before-assembly'
   )
   assert.equal(
     solutionInputContract.inputLayering.recommendationRole,
     'optionally-produce-manifest-guidance-after-planning-before-assembly'
+  )
+  assert.equal(
+    solutionInputContract.inputLayering.descriptorRole,
+    'optionally-produce-bounded-management-module-generation-facts-before-assembly'
   )
   assert.equal(
     solutionInputContract.mappingGuidance.planningContract,
@@ -356,25 +416,46 @@ test('generated app verification contract is exposed as a normative asset', asyn
     solutionInputContract.mappingGuidance.recommendationContract,
     'docs/ai/solution-to-manifest-recommendation-contract.json'
   )
+  assert.equal(
+    solutionInputContract.mappingGuidance.descriptorContract,
+    'docs/ai/descriptor-driven-management-module-contract.json'
+  )
   assert.deepEqual(solutionInputContract.examplePlans, [
     'docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'
   ])
   assert.deepEqual(solutionInputContract.exampleRecommendations, [
     'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json'
   ])
+  assert.deepEqual(solutionInputContract.exampleDescriptors, [
+    'docs/ai/management-modules/department-directory.management-module.json'
+  ])
   assert.equal(
     planningContract.boundaries.assemblyRuntimeInput,
     'planning output MUST be translated into a standalone app-manifest before repository-owned assembly tooling is invoked'
   )
+  assert.equal(
+    planningContract.boundaries.descriptorBoundary,
+    'planning output MAY feed a bounded management-module descriptor, but that descriptor MUST remain distinct from the standalone app-manifest'
+  )
   assert.deepEqual(planningContract.examplePlans, [
     'docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'
+  ])
+  assert.deepEqual(planningContract.exampleDescriptors, [
+    'docs/ai/management-modules/department-directory.management-module.json'
   ])
   assert.equal(
     recommendationContract.boundaries.assemblyRuntimeInput,
     'contributors MUST still produce a standalone app-manifest before repository-owned assembly tooling is invoked'
   )
+  assert.equal(
+    recommendationContract.boundaries.descriptorBoundary,
+    'recommendation output MAY inform a bounded management-module descriptor, but that descriptor remains upstream guidance rather than the assembly runtime input'
+  )
   assert.deepEqual(recommendationContract.exampleRecommendations, [
     'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json'
+  ])
+  assert.deepEqual(recommendationContract.exampleDescriptors, [
+    'docs/ai/management-modules/department-directory.management-module.json'
   ])
   assert.equal(
     assemblyContract.machineReadableIndexes.solutionToManifestPlanningContract,
@@ -384,11 +465,18 @@ test('generated app verification contract is exposed as a normative asset', asyn
     assemblyContract.machineReadableIndexes.solutionToManifestRecommendationContract,
     'docs/ai/solution-to-manifest-recommendation-contract.json'
   )
+  assert.equal(
+    assemblyContract.machineReadableIndexes.descriptorDrivenManagementModuleContract,
+    'docs/ai/descriptor-driven-management-module-contract.json'
+  )
   assert.deepEqual(assemblyContract.machineReadableIndexes.solutionPlanningExamples, [
     'docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'
   ])
   assert.deepEqual(assemblyContract.machineReadableIndexes.solutionRecommendationExamples, [
     'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json'
+  ])
+  assert.deepEqual(assemblyContract.machineReadableIndexes.managementModuleDescriptorExamples, [
+    'docs/ai/management-modules/department-directory.management-module.json'
   ])
   assert.equal(
     assemblyContract.inputLayers.solutionPlanning.contract,
@@ -399,12 +487,20 @@ test('generated app verification contract is exposed as a normative asset', asyn
     'docs/ai/solution-to-manifest-recommendation-contract.json'
   )
   assert.equal(
+    assemblyContract.inputLayers.descriptorDrivenManagementModule.contract,
+    'docs/ai/descriptor-driven-management-module-contract.json'
+  )
+  assert.equal(
     assemblyContract.aiToolingGuidance.solutionToManifestPlanningContract,
     'docs/ai/solution-to-manifest-planning-contract.json'
   )
   assert.equal(
     assemblyContract.aiToolingGuidance.solutionToManifestRecommendationContract,
     'docs/ai/solution-to-manifest-recommendation-contract.json'
+  )
+  assert.equal(
+    assemblyContract.aiToolingGuidance.descriptorDrivenManagementModuleContract,
+    'docs/ai/descriptor-driven-management-module-contract.json'
   )
   assert.equal(
     orchestrationContract.supportedWorkflowCategories[0].readBefore.includes(
@@ -419,6 +515,12 @@ test('generated app verification contract is exposed as a normative asset', asyn
     true
   )
   assert.equal(
+    orchestrationContract.supportedWorkflowCategories[0].readBefore.includes(
+      'docs/ai/descriptor-driven-management-module-contract.json'
+    ),
+    true
+  )
+  assert.equal(
     orchestrationContract.supportedWorkflowCategories[0].successSignals.includes(
       'solution-input-has-been-mapped-to-solution-plan'
     ),
@@ -427,6 +529,12 @@ test('generated app verification contract is exposed as a normative asset', asyn
   assert.equal(
     orchestrationContract.supportedWorkflowCategories[0].successSignals.includes(
       'solution-plan-has-been-reviewed-for-optional-recommendation'
+    ),
+    true
+  )
+  assert.equal(
+    orchestrationContract.supportedWorkflowCategories[0].successSignals.includes(
+      'descriptor-driven-management-module-has-been-reviewed-or-prepared-when-needed'
     ),
     true
   )
@@ -496,6 +604,20 @@ test('generated app verification contract is exposed as a normative asset', asyn
     executionContract.normativeAssets.templateClassificationMap,
     'docs/ai/template-classifications/default-derived-app-template-map.json'
   )
+  assert.equal(
+    templateContract.normativeAssets.descriptorDrivenManagementModuleContract,
+    'docs/ai/descriptor-driven-management-module-contract.json'
+  )
+  assert.deepEqual(templateContract.descriptorDrivenModuleOutput.allowedSlotHosts, [
+    'frontend-admin-routes',
+    'frontend-admin-navigation',
+    'backend-table-contract',
+    'backend-service-contract'
+  ])
+  assert.deepEqual(templateContract.descriptorDrivenModuleOutput.requiredInteractionComponents, [
+    'dynamic-form',
+    'dynamic-report'
+  ])
   assert.equal(aiContextText.includes('ai_solution_input_contract: docs/ai/ai-solution-input-contract.json'), true)
   assert.equal(
     aiContextText.includes(
@@ -510,11 +632,21 @@ test('generated app verification contract is exposed as a normative asset', asyn
     true
   )
   assert.equal(
+    aiContextText.includes(
+      'descriptor_driven_management_module_contract: docs/ai/descriptor-driven-management-module-contract.json'
+    ),
+    true
+  )
+  assert.equal(
     aiContextText.includes('- docs/ai/schemas/solution-to-manifest-planning.schema.json'),
     true
   )
   assert.equal(
     aiContextText.includes('- docs/ai/schemas/solution-to-manifest-recommendation.schema.json'),
+    true
+  )
+  assert.equal(
+    aiContextText.includes('- docs/ai/schemas/descriptor-driven-management-module.schema.json'),
     true
   )
   assert.equal(
@@ -528,6 +660,10 @@ test('generated app verification contract is exposed as a normative asset', asyn
     true
   )
   assert.equal(
+    aiContextText.includes('- docs/ai/management-modules/department-directory.management-module.json'),
+    true
+  )
+  assert.equal(
     aiContextText.includes('structured_app_template_contract: docs/ai/structured-app-template-contract.json'),
     true
   )
@@ -537,6 +673,10 @@ test('generated app verification contract is exposed as a normative asset', asyn
   )
   assert.equal(
     aiContextText.includes('- docs/ai/playbooks/define-ai-solution-input.md'),
+    true
+  )
+  assert.equal(
+    aiContextText.includes('- docs/ai/playbooks/prepare-descriptor-driven-management-module.md'),
     true
   )
   assert.equal(
@@ -556,6 +696,10 @@ test('generated app verification contract is exposed as a normative asset', asyn
     true
   )
   assert.equal(
+    quickstartText.includes('docs/ai/descriptor-driven-management-module-contract.json'),
+    true
+  )
+  assert.equal(
     quickstartText.includes('docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json'),
     true
   )
@@ -563,6 +707,10 @@ test('generated app verification contract is exposed as a normative asset', asyn
     quickstartText.includes(
       'docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json'
     ),
+    true
+  )
+  assert.equal(
+    quickstartText.includes('docs/ai/management-modules/department-directory.management-module.json'),
     true
   )
   assert.equal(quickstartText.includes('docs/ai/structured-app-template-contract.json'), true)
@@ -760,6 +908,14 @@ test('generated output includes lifecycle metadata and upgrade guidance', async 
     assert.equal(
       context.contractInputs.solutionToManifestRecommendationContract,
       'docs/ai/solution-to-manifest-recommendation-contract.json'
+    )
+    assert.equal(
+      context.contractInputs.descriptorDrivenManagementModuleContract,
+      'docs/ai/descriptor-driven-management-module-contract.json'
+    )
+    assert.equal(
+      context.contractInputs.descriptorDrivenManagementModuleExample,
+      'docs/ai/management-modules/department-directory.management-module.json'
     )
     assert.equal(
       context.lifecycle.repositoryOwnedUpgradeEvaluation,

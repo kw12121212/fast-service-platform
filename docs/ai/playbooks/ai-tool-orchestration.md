@@ -11,10 +11,11 @@
 1. `docs/ai/context.yaml`
 2. `docs/ai/ai-tool-orchestration-contract.json`
 3. `docs/ai/playbooks/define-ai-solution-input.md`
-4. `docs/ai/playbooks/derive-app-from-platform.md`
-5. `docs/ai/playbooks/select-derived-app-upgrade-target.md`
-6. `docs/ai/playbooks/evaluate-derived-app-upgrade.md`
-7. `docs/ai/playbooks/execute-derived-app-upgrade.md`
+4. `docs/ai/playbooks/prepare-descriptor-driven-management-module.md`
+5. `docs/ai/playbooks/derive-app-from-platform.md`
+6. `docs/ai/playbooks/select-derived-app-upgrade-target.md`
+7. `docs/ai/playbooks/evaluate-derived-app-upgrade.md`
+8. `docs/ai/playbooks/execute-derived-app-upgrade.md`
 
 ## 默认原则
 
@@ -30,15 +31,16 @@
 1. 如果当前输入还是业务意图，先读 `docs/ai/ai-solution-input-contract.json`
 2. 再读 `docs/ai/solution-to-manifest-planning-contract.json`，按 `docs/ai/playbooks/define-ai-solution-input.md` 产出 `solution-to-manifest plan`
 3. 如果需要 repository-owned guidance，再读 `docs/ai/solution-to-manifest-recommendation-contract.json`，按 `docs/ai/playbooks/prepare-solution-to-manifest-recommendation.md` 评估或产出 `solution-to-manifest recommendation`
-4. 基于 planning output 和可选 recommendation 产出 standalone `app-manifest`
-5. 再读 `docs/ai/app-assembly-contract.json` 和 `docs/ai/module-registry.json`
-6. 执行：
+4. 如果需要 bounded business-module generation，再读 `docs/ai/descriptor-driven-management-module-contract.json`，按 `docs/ai/playbooks/prepare-descriptor-driven-management-module.md` 产出 descriptor
+5. 基于 planning output、可选 recommendation 和可选 descriptor 产出 standalone `app-manifest`
+6. 再读 `docs/ai/app-assembly-contract.json` 和 `docs/ai/module-registry.json`
+7. 执行：
 
 ```bash
 ./scripts/platform-tool.sh assembly scaffold <manifest-path> <absolute-output-dir>
 ```
 
-7. 生成后立即执行：
+8. 生成后立即执行：
 
 ```bash
 ./scripts/platform-tool.sh generated-app verify <generated-app-dir>

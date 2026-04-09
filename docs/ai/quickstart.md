@@ -36,10 +36,11 @@
 - 输入边界仍然是 `自然语言 + 可选原型图片 + 仅用于 UI 的参考网站`。
 - 平台依赖边界仍然是 `Lealone + 本项目已有依赖`，不要自行引入新的外部软件库。
 - 非平凡改动先进入 `.spec-driven/`，不要跳过 proposal 扩范围。
-- 如果目标是派生新应用，先区分四层输入：
+- 如果目标是派生新应用，先区分五层输入：
   - `solution input` 用来描述业务意图
   - `solution-to-manifest plan` 用来显式收敛模块决策和 manifest 准备结果
   - `solution-to-manifest recommendation` 用来表达可选 guidance，帮助 contributors 调整 manifest shaping
+  - `descriptor-driven management-module descriptor` 用来表达受边界约束的业务模块生成资产，但它仍然不是 assembly runtime contract
   - `app-manifest` 用来驱动实际 assembly
 
 ## 常见任务去哪里改
@@ -151,6 +152,8 @@
 - `docs/ai/schemas/solution-to-manifest-planning.schema.json`
 - `docs/ai/solution-to-manifest-recommendation-contract.json`
 - `docs/ai/schemas/solution-to-manifest-recommendation.schema.json`
+- `docs/ai/descriptor-driven-management-module-contract.json`
+- `docs/ai/schemas/descriptor-driven-management-module.schema.json`
 - `docs/ai/ai-tool-orchestration-contract.json`
 - `docs/ai/schemas/ai-tool-orchestration-contract.schema.json`
 - `docs/ai/structured-app-template-contract.json`
@@ -177,6 +180,7 @@
 - `docs/ai/solution-inputs/core-admin-console.solution-input.json`
 - `docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json`
 - `docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json`
+- `docs/ai/management-modules/department-directory.management-module.json`
 - `docs/ai/manifests/default-baseline-app.json`
 - `docs/ai/manifests/core-admin-app.json`
 
@@ -186,6 +190,7 @@
 - `docs/ai/ai-solution-input-contract.json` 定义更高层的结构化业务输入；它要先映射成 `solution-to-manifest plan`，再产出 `app-manifest` 进入 assembly tooling
 - `docs/ai/solution-to-manifest-planning-contract.json` 定义 deterministic planning 层，显式暴露模块决策依据和 manifest 准备结果，但它本身不是 assembly runtime contract
 - `docs/ai/solution-to-manifest-recommendation-contract.json` 定义 optional recommendation 层，显式暴露 recommendation basis、confidence、prerequisites 和 accepted constraints，但它本身不是 assembly runtime contract
+- `docs/ai/descriptor-driven-management-module-contract.json` 定义受边界约束的 management-module descriptor；它可以引用 planning / recommendation 结果并产出受控模块生成输入，但它本身不是 assembly runtime contract
 - `docs/ai/ai-tool-orchestration-contract.json` 定义 AI 应该怎样优先使用 repository-owned tooling，而不是直接重做 assembly / verification / upgrade 逻辑
 - `docs/ai/generated-app-verification-contract.json` 定义生成后验证的标准输入、检查项和结果语义
 - `docs/ai/structured-app-template-contract.json` 和 `docs/ai/template-classifications/default-derived-app-template-map.json` 定义生成输出里的 stable template、slot host、module fragment 和 customization zone 边界
@@ -204,7 +209,7 @@
 docs/ai/playbooks/define-ai-solution-input.md
 ```
 
-把 solution input 收敛成 `solution-to-manifest plan`，按需补 `solution-to-manifest recommendation`，再产出 `app-manifest` 之后，再执行：
+把 solution input 收敛成 `solution-to-manifest plan`，按需补 `solution-to-manifest recommendation`，需要业务模块 descriptor 时再补 `descriptor-driven management-module descriptor`，再产出 `app-manifest` 之后，再执行：
 
 ```bash
 ./scripts/platform-tool.sh assembly scaffold \

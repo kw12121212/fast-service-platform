@@ -69,6 +69,8 @@ public class AppAssemblyCliTest {
             assertTrue(context.contains("\"aiSolutionInputContract\":\"docs/ai/ai-solution-input-contract.json\""));
             assertTrue(context.contains("\"solutionToManifestPlanningContract\":\"docs/ai/solution-to-manifest-planning-contract.json\""));
             assertTrue(context.contains("\"solutionToManifestRecommendationContract\":\"docs/ai/solution-to-manifest-recommendation-contract.json\""));
+            assertTrue(context.contains("\"descriptorDrivenManagementModuleContract\":\"docs/ai/descriptor-driven-management-module-contract.json\""));
+            assertTrue(context.contains("\"descriptorDrivenManagementModuleExample\":\"docs/ai/management-modules/department-directory.management-module.json\""));
             assertTrue(context.contains("\"structuredAppTemplateContract\":\"docs/ai/structured-app-template-contract.json\""));
             assertTrue(context.contains("\"structuredAppTemplateMap\":\"docs/ai/template-classifications/default-derived-app-template-map.json\""));
             assertTrue(context.contains("\"platformReleaseHistory\":\"docs/ai/platform-release-history.json\""));
@@ -82,10 +84,13 @@ public class AppAssemblyCliTest {
             assertTrue(Files.exists(outputDir.resolve("docs/ai/platform-release-history.json")));
             assertTrue(Files.exists(outputDir.resolve("docs/ai/solution-to-manifest-planning-contract.json")));
             assertTrue(Files.exists(outputDir.resolve("docs/ai/solution-to-manifest-recommendation-contract.json")));
+            assertTrue(Files.exists(outputDir.resolve("docs/ai/descriptor-driven-management-module-contract.json")));
             assertTrue(Files.exists(outputDir.resolve("docs/ai/schemas/solution-to-manifest-planning.schema.json")));
             assertTrue(Files.exists(outputDir.resolve("docs/ai/schemas/solution-to-manifest-recommendation.schema.json")));
+            assertTrue(Files.exists(outputDir.resolve("docs/ai/schemas/descriptor-driven-management-module.schema.json")));
             assertTrue(Files.exists(outputDir.resolve("docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json")));
             assertTrue(Files.exists(outputDir.resolve("docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json")));
+            assertTrue(Files.exists(outputDir.resolve("docs/ai/management-modules/department-directory.management-module.json")));
             assertTrue(Files.exists(outputDir.resolve("docs/ai/structured-app-template-contract.json")));
             assertTrue(Files.exists(outputDir.resolve("docs/ai/template-classifications/default-derived-app-template-map.json")));
         } finally {

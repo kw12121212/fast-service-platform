@@ -4,6 +4,8 @@
     "solutionInputContract": "docs/ai/ai-solution-input-contract.json",
     "solutionInputSchema": "docs/ai/schemas/ai-solution-input.schema.json",
     "moduleRegistry": "docs/ai/module-registry.json",
+    "descriptorDrivenManagementModuleContract": "docs/ai/descriptor-driven-management-module-contract.json",
+    "descriptorDrivenManagementModuleSchema": "docs/ai/schemas/descriptor-driven-management-module.schema.json",
     "manifestSchema": "docs/ai/schemas/app-manifest.schema.json",
     "assemblyContract": "docs/ai/app-assembly-contract.json"
   },
@@ -44,14 +46,18 @@
   },
   "boundaries": {
     "assemblyRuntimeInput": "planning output MUST be translated into a standalone app-manifest before repository-owned assembly tooling is invoked",
-    "recommendationBoundary": "mandatory planning facts MUST remain distinguishable from any future optional recommendation guidance"
+    "recommendationBoundary": "mandatory planning facts MUST remain distinguishable from any future optional recommendation guidance",
+    "descriptorBoundary": "planning output MAY feed a bounded management-module descriptor, but that descriptor MUST remain distinct from the standalone app-manifest"
   },
   "aiToolingGuidance": {
     "defaultRole": "tool-orchestrator",
     "playbook": "docs/ai/playbooks/define-ai-solution-input.md",
-    "nextStep": "produce a standalone app-manifest from the planning output before invoking ./scripts/platform-tool.sh assembly scaffold"
+    "nextStep": "review whether a bounded management-module descriptor is needed, then produce a standalone app-manifest from the planning output before invoking ./scripts/platform-tool.sh assembly scaffold"
   },
   "examplePlans": [
     "docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json"
+  ],
+  "exampleDescriptors": [
+    "docs/ai/management-modules/department-directory.management-module.json"
   ]
 }

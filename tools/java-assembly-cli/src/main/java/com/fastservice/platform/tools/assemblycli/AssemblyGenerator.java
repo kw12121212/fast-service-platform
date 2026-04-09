@@ -590,6 +590,8 @@ final class AssemblyGenerator {
         contractInputs.put("aiSolutionInputContract", "docs/ai/ai-solution-input-contract.json");
         contractInputs.put("solutionToManifestPlanningContract", "docs/ai/solution-to-manifest-planning-contract.json");
         contractInputs.put("solutionToManifestRecommendationContract", "docs/ai/solution-to-manifest-recommendation-contract.json");
+        contractInputs.put("descriptorDrivenManagementModuleContract", "docs/ai/descriptor-driven-management-module-contract.json");
+        contractInputs.put("descriptorDrivenManagementModuleExample", "docs/ai/management-modules/department-directory.management-module.json");
         contractInputs.put("moduleRegistry", "docs/ai/module-registry.json");
         contractInputs.put("aiToolOrchestrationContract", "docs/ai/ai-tool-orchestration-contract.json");
         contractInputs.put("structuredAppTemplateContract", STRUCTURED_APP_TEMPLATE_CONTRACT_PATH);

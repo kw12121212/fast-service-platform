@@ -30,11 +30,8 @@ Provide Kanban and Scrum board views so teams can visually manage work item stat
 
 ## Planned Changes
 
-- `kanban-board-component` - Reusable board component with columns, cards, drag-and-drop, and swimlanes
-    Board columns are derived from the work-item status flow defined in work-item-entity-model.
-    Card interaction triggers the same state transition that the form-based workflow uses.
-- `scrum-board-view` - Sprint-scoped board view that filters to a specific sprint's items
-    Depends on sprint backlog queries from sprint-backlog-management.
+- `kanban-board-component` - Declared: planned - Reusable board component with columns, cards, drag-and-drop, and swimlanes derived from work-item status flow
+- `scrum-board-view` - Declared: planned - Sprint-scoped board view that filters to a specific sprint's work items
 
 ## Dependencies
 

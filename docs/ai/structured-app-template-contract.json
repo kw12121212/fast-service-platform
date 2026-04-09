@@ -5,6 +5,7 @@
     "templateContractSchema": "docs/ai/schemas/structured-app-template-contract.schema.json",
     "defaultTemplateClassificationMap": "docs/ai/template-classifications/default-derived-app-template-map.json",
     "templateClassificationMapSchema": "docs/ai/schemas/derived-app-template-map.schema.json",
+    "descriptorDrivenManagementModuleContract": "docs/ai/descriptor-driven-management-module-contract.json",
     "assemblyContract": "docs/ai/app-assembly-contract.json",
     "derivedAppLifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
     "derivedAppUpgradeExecutionContract": "docs/ai/derived-app-upgrade-execution-contract.json",
@@ -117,6 +118,22 @@
       "docs/ai/schemas/derived-app-template-map.schema.json"
     ],
     "defaultClassificationMap": "docs/ai/template-classifications/default-derived-app-template-map.json"
+  },
+  "descriptorDrivenModuleOutput": {
+    "allowedSlotHosts": [
+      "frontend-admin-routes",
+      "frontend-admin-navigation",
+      "backend-table-contract",
+      "backend-service-contract"
+    ],
+    "allowedCustomizationZones": [
+      "frontend/src/features/custom/",
+      "backend/src/main/java/com/fastservice/platform/backend/custom/"
+    ],
+    "requiredInteractionComponents": [
+      "dynamic-form",
+      "dynamic-report"
+    ]
   },
   "upgradeSemantics": {
     "platformRefreshableUnitTypes": [

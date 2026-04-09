@@ -15,32 +15,36 @@
 5. `docs/ai/schemas/solution-to-manifest-planning.schema.json`
 6. `docs/ai/solution-to-manifest-recommendation-contract.json`
 7. `docs/ai/schemas/solution-to-manifest-recommendation.schema.json`
-8. `docs/ai/ai-tool-orchestration-contract.json`
-9. `docs/ai/app-assembly-contract.json`
-10. `docs/ai/schemas/app-manifest.schema.json`
-11. `docs/ai/module-registry.json`
-12. `docs/ai/generated-app-verification-contract.json`
-13. `docs/ai/structured-app-template-contract.json`
-14. `docs/ai/template-classifications/default-derived-app-template-map.json`
-15. `docs/ai/derived-app-lifecycle-contract.json`
-16. `docs/ai/platform-release.json`
-17. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
-18. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
-19. `docs/ai/compatibility/app-assembly-suite.json`
-20. 一个示例 solution input：
+8. `docs/ai/descriptor-driven-management-module-contract.json`
+9. `docs/ai/schemas/descriptor-driven-management-module.schema.json`
+10. `docs/ai/ai-tool-orchestration-contract.json`
+11. `docs/ai/app-assembly-contract.json`
+12. `docs/ai/schemas/app-manifest.schema.json`
+13. `docs/ai/module-registry.json`
+14. `docs/ai/generated-app-verification-contract.json`
+15. `docs/ai/structured-app-template-contract.json`
+16. `docs/ai/template-classifications/default-derived-app-template-map.json`
+17. `docs/ai/derived-app-lifecycle-contract.json`
+18. `docs/ai/platform-release.json`
+19. `docs/ai/schemas/derived-app-lifecycle-contract.schema.json`
+20. `docs/ai/schemas/derived-app-lifecycle-metadata.schema.json`
+21. `docs/ai/compatibility/app-assembly-suite.json`
+22. 一个示例 solution input：
    - `docs/ai/solution-inputs/core-admin-console.solution-input.json`
-21. 一个示例 solution-to-manifest plan：
+23. 一个示例 solution-to-manifest plan：
    - `docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json`
-22. 一个示例 solution-to-manifest recommendation：
+24. 一个示例 solution-to-manifest recommendation：
    - `docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json`
-23. 一个示例 manifest：
+25. 一个示例 management-module descriptor：
+   - `docs/ai/management-modules/department-directory.management-module.json`
+26. 一个示例 manifest：
    - `docs/ai/manifests/default-baseline-app.json`
    - `docs/ai/manifests/core-admin-app.json`
 
 优先级：
 
 - 规范事实来源是 `contract + schema + compatibility suite`
-- 如果当前输入还是业务目标，先用 `ai-solution-input-contract` 收敛为 solution input，再产出 `solution-to-manifest plan`，按需评估 `solution-to-manifest recommendation`，最后映射成 `app-manifest`
+- 如果当前输入还是业务目标，先用 `ai-solution-input-contract` 收敛为 solution input，再产出 `solution-to-manifest plan`，按需评估 `solution-to-manifest recommendation`，需要时补 `descriptor-driven management-module descriptor`，最后映射成 `app-manifest`
 - AI 默认先读 orchestration contract，再决定走 `platform-tool.sh` 的哪个 workflow
 - generated app 的验证标准事实来源是 `generated-app verification contract`
 - generated output 的覆盖边界事实来源是 `structured app template contract + default template classification map`
@@ -59,10 +63,11 @@ AI 编排顺序：
 3. 读 assembly contract 和 module registry
 4. 先把 solution input 映射成 `solution-to-manifest plan`
 5. 如果需要 recommendation guidance，再把 planning output 映射成 `solution-to-manifest recommendation`
-6. 再把 planning output 和可选 recommendation 映射成 `app-manifest`
-7. 通过 `platform-tool.sh assembly scaffold ...` 执行装配
-8. 装配完成后立刻执行 `platform-tool.sh generated-app verify ...`
-9. 如果当前环境可启动 generated backend/frontend，再执行 `platform-tool.sh generated-app smoke ...` 补 runtime 证明
+6. 如果需要受边界约束的业务模块生成资产，再把 planning output 和可选 recommendation 映射成 `descriptor-driven management-module descriptor`
+7. 再把 planning output、可选 recommendation 和可选 descriptor 映射成 `app-manifest`
+8. 通过 `platform-tool.sh assembly scaffold ...` 执行装配
+9. 装配完成后立刻执行 `platform-tool.sh generated-app verify ...`
+10. 如果当前环境可启动 generated backend/frontend，再执行 `platform-tool.sh generated-app smoke ...` 补 runtime 证明
 
 只有在 orchestration contract 明确允许时，才回退到具体 wrapper 或实现专用路径。
 
@@ -82,6 +87,7 @@ AI 编排顺序：
 - `solution input` 不是 assembly runtime contract；真正传给 tooling 的仍然是 `app-manifest`
 - `solution-to-manifest plan` 也不是 assembly runtime contract；它只是显式 planning 输出
 - `solution-to-manifest recommendation` 也不是 assembly runtime contract；它只是可选 guidance 输出
+- `descriptor-driven management-module descriptor` 也不是 assembly runtime contract；它只是受边界约束的业务模块生成资产
 - 生成完成后如果要做定制，先按 template classification map 判断当前路径是 `stable-template`、`slot-host`、`module-fragment` 还是 `customization-zone`
 
 ## 模块选择规则
@@ -148,6 +154,7 @@ AI 编排顺序：
 
 - 只看文档，不读 `module-registry.json`，导致模块依赖判断错误
 - 不看 `structured-app-template-contract.json` 和 classification map，就直接编辑生成输出
+- 把 descriptor path 误当成开放式 low-code DSL
 - 把某个旧的 `Node` 辅助脚本误当成规范本身
 - 输出目录放在仓库内，污染当前母体应用工作区
 - 以为“可选模块”意味着可以忽略依赖关系

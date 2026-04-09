@@ -30,11 +30,8 @@ Add sprint/iteration lifecycle management so a team can plan time-boxed iteratio
 
 ## Planned Changes
 
-- `sprint-entity-and-lifecycle` - Sprint entity, state machine, and CRUD service
-    Sprint state machine uses the existing workflow component pattern.
-- `sprint-backlog-management` - Sprint-scoped work item list, planning drag-from-backlog, and sprint view
-    Reuse dynamic report for sprint backlog rendering.
-    Sprint backlog queries must expose sprint-scoped item counts for downstream dashboard consumption.
+- `sprint-entity-and-lifecycle` - Declared: planned - Sprint entity, state machine, team binding, and CRUD service
+- `sprint-backlog-management` - Declared: planned - Sprint-scoped backlog view, planning flow, and downstream sprint metrics queries
 
 ## Dependencies
 

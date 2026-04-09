@@ -30,11 +30,9 @@ Add comment, mention, notification, and activity tracking so team members can di
 
 ## Planned Changes
 
-- `comment-and-mention-system` - Comment entity, threaded replies, @mention parsing, and comment UI
-    @mention resolution must query the project's team member list (human and AI) from team-and-people-management.
-- `notification-service-and-center` - Notification generation, storage, delivery, and frontend notification center
-    Notification types are produced by work-item and sprint state changes, not manually created.
-- `project-activity-feed` - Chronological event log and feed UI for project-level activity
+- `comment-and-mention-system` - Declared: planned - Threaded comments, replies, @mention parsing, and comment UI for project team members
+- `notification-service-and-center` - Declared: planned - Notification generation, storage, and notification center for assignment, mention, and sprint events
+- `project-activity-feed` - Declared: planned - Chronological project activity log and feed UI for notable work-item and sprint events
 
 ## Dependencies
 

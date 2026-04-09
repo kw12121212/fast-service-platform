@@ -33,13 +33,9 @@ Introduce the core agile entity model — work items and product backlog — so 
 
 ## Planned Changes
 
-- `work-item-entity-model` - Backend work item entity, state machine, and CRUD service
-    Define a work-item-type-aware status flow that is declarative enough for the board milestone to consume.
-    Use the existing workflow component pattern for state transitions where applicable.
-- `product-backlog-management` - Backlog list, prioritization, filtering, and search
-    Use dynamic report component for backlog list rendering.
-    Use dynamic form component for work-item create/edit.
-- `work-item-linking` - Parent-child linking and traceability between work-item levels
+- `work-item-entity-model` - Declared: planned - Work item entity, status flow, assignee support, and CRUD service for agile item types
+- `product-backlog-management` - Declared: planned - Product backlog list, prioritization, filtering, search, and work-item create/edit flows
+- `work-item-linking` - Declared: planned - Parent-child linking and traceability across Epic, Feature, Story, Bug, and Task items
 
 ## Dependencies
 

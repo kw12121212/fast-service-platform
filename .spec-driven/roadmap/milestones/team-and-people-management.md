@@ -36,18 +36,10 @@ Extend the existing RBAC baseline into a team-aware people model that treats AI 
 
 ## Planned Changes
 
-- `team-management-module` - Team CRUD, membership, and team-project binding backend and frontend
-    Define work-item-type-aware team roles (SM, PO, Dev, Observer) that downstream modules will reference.
-    Membership model must be member-type-agnostic so that human and AI members share the same queries and UI paths.
-    Reuse existing dynamic form and dynamic report components for team admin pages.
-- `user-profile-baseline` - Basic human user profile model with display name and avatar
-    Extend the existing user entity without introducing a separate identity system.
-- `ai-employee-model` - AI employee as a distinct member type with API binding and persona configuration
-    An AI employee has: display name, avatar, capabilities tag list, API endpoint config, model ID, system prompt / persona template.
-    The member-type discriminator (human vs AI) is internal — the collaboration surface does not branch on it.
-- `ai-api-integration-surface` - Backend service that routes messages to the configured AI API and returns responses
-    Supports at least one AI provider (Claude API) with a provider-agnostic interface for future extension.
-    Message format maps naturally to the comment/notification system so AI responses appear as regular collaboration activity.
+- `team-management-module` - Declared: planned - Team CRUD, membership, team-project binding, and team roles for human and AI members
+- `user-profile-baseline` - Declared: planned - Basic human user profile fields such as display name, email, and avatar
+- `ai-employee-model` - Declared: planned - AI employee member type with persona, capabilities, and provider binding configuration
+- `ai-api-integration-surface` - Declared: planned - Backend API integration surface for sending collaboration messages to configured AI providers
 
 ## Dependencies
 

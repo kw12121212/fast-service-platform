@@ -72,6 +72,7 @@ The repository already includes platform-owned contracts, manifests, schemas, co
 AI agents and platform contributors can:
 
 - converge from structured solution input into an application manifest
+- prepare a bounded descriptor-driven management-module asset between planning guidance and manifest shaping
 - scaffold a derived admin application from repository-owned contracts and module metadata
 - verify generated applications against repository-owned validation rules
 - inspect release history and upgrade targets
@@ -81,6 +82,7 @@ Primary entrypoints:
 
 - `docs/ai/quickstart.md`
 - `docs/ai/context.yaml`
+- `docs/ai/descriptor-driven-management-module-contract.json`
 - `docs/ai/ai-tool-orchestration-contract.json`
 - `docs/ai/app-assembly-contract.json`
 - `docs/ai/generated-app-verification-contract.json`

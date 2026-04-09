@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "fsp-descriptor-driven-management-module-contract/v1",
+  "normativeAssets": {
+    "solutionToManifestPlanningContract": "docs/ai/solution-to-manifest-planning-contract.json",
+    "solutionToManifestPlanningSchema": "docs/ai/schemas/solution-to-manifest-planning.schema.json",
+    "solutionToManifestRecommendationContract": "docs/ai/solution-to-manifest-recommendation-contract.json",
+    "solutionToManifestRecommendationSchema": "docs/ai/schemas/solution-to-manifest-recommendation.schema.json",
+    "moduleRegistry": "docs/ai/module-registry.json",
+    "appAssemblyContract": "docs/ai/app-assembly-contract.json",
+    "managementModuleDescriptorSchema": "docs/ai/schemas/descriptor-driven-management-module.schema.json",
+    "structuredAppTemplateContract": "docs/ai/structured-app-template-contract.json",
+    "structuredAppTemplateMap": "docs/ai/template-classifications/default-derived-app-template-map.json"
+  },
+  "descriptorArtifact": {
+    "schemaVersion": "fsp-management-module-descriptor/v1",
+    "schema": "docs/ai/schemas/descriptor-driven-management-module.schema.json",
+    "role": "bounded-upstream-management-module-generation-asset-before-manifest-driven-assembly"
+  },
+  "supportedModuleShape": {
+    "id": "bounded-management-module-v1",
+    "description": "A narrow internal-management module shape with one primary record type, one report/list view, and one create-edit form view.",
+    "requiredSections": [
+      "application",
+      "source",
+      "managementModule",
+      "manifestPreparation",
+      "generatedModuleInputs",
+      "templateBindings",
+      "boundaries"
+    ],
+    "excludedCapabilities": [
+      "workflow-specific-page-generation",
+      "arbitrary-crud-dsl",
+      "runtime-ai-features",
+      "closed-module-registry-extension"
+    ]
+  },
+  "platformOwnedInteractions": {
+    "formComponentId": "dynamic-form",
+    "reportComponentId": "dynamic-report",
+    "componentPaths": {
+      "dynamicForm": "frontend/src/components/admin/dynamic-form.tsx",
+      "dynamicReport": "frontend/src/components/admin/dynamic-report.tsx"
+    }
+  },
+  "boundaries": {
+    "planningDependency": "descriptor output MUST cite a valid solution-to-manifest planning artifact as its deterministic upstream source",
+    "recommendationDependency": "descriptor output MAY cite a solution-to-manifest recommendation artifact when optional guidance was reviewed",
+    "assemblyRuntimeInput": "contributors MUST still produce a standalone app-manifest before repository-owned assembly tooling is invoked",
+    "moduleRegistryBoundary": "descriptor output MUST stay inside the closed repository-owned module registry and MUST NOT register a new platform-owned module",
+    "interactionBoundary": "the first descriptor-driven path MUST reuse dynamic-form and dynamic-report instead of defining a parallel interaction system",
+    "workflowBoundary": "workflow-specific generation remains outside the first descriptor-driven management-module path"
+  },
+  "templateOwnership": {
+    "routeSlot": "frontend-admin-routes",
+    "navigationSlot": "frontend-admin-navigation",
+    "backendTableSlot": "backend-table-contract",
+    "backendServiceSlot": "backend-service-contract",
+    "frontendCustomizationZone": "frontend/src/features/custom/",
+    "backendCustomizationZone": "backend/src/main/java/com/fastservice/platform/backend/custom/"
+  },
+  "aiToolingGuidance": {
+    "defaultRole": "tool-orchestrator",
+    "playbook": "docs/ai/playbooks/prepare-descriptor-driven-management-module.md",
+    "nextStep": "Review planning output, optionally review recommendation guidance, prepare a bounded management-module descriptor, then produce a standalone app-manifest and controlled module-generation inputs before invoking ./scripts/platform-tool.sh assembly scaffold"
+  },
+  "exampleDescriptors": [
+    "docs/ai/management-modules/department-directory.management-module.json"
+  ]
+}

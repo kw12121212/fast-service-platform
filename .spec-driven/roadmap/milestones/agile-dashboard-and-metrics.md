@@ -30,11 +30,8 @@ Provide sprint-level and project-level dashboards with key agile metrics so team
 
 ## Planned Changes
 
-- `sprint-metrics-dashboard` - Sprint burndown chart, sprint summary card, and velocity chart
-    Burndown data source: sprint work items + status change history from activity feed.
-    Velocity data source: completed story points per closed sprint.
-- `project-progress-dashboard` - Project-level work item counts, completion rates, and cumulative flow
-    Cumulative flow requires status-change event history — coordinate with activity-feed design.
+- `sprint-metrics-dashboard` - Declared: planned - Sprint burndown, sprint summary, and velocity charts based on sprint work items and status history
+- `project-progress-dashboard` - Declared: planned - Project-level work item counts, completion rates, and cumulative flow dashboard
 
 ## Dependencies
 

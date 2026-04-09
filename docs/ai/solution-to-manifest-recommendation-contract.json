@@ -5,6 +5,8 @@
     "solutionInputSchema": "docs/ai/schemas/ai-solution-input.schema.json",
     "planningContract": "docs/ai/solution-to-manifest-planning-contract.json",
     "planningSchema": "docs/ai/schemas/solution-to-manifest-planning.schema.json",
+    "descriptorDrivenManagementModuleContract": "docs/ai/descriptor-driven-management-module-contract.json",
+    "descriptorDrivenManagementModuleSchema": "docs/ai/schemas/descriptor-driven-management-module.schema.json",
     "moduleRegistry": "docs/ai/module-registry.json",
     "manifestSchema": "docs/ai/schemas/app-manifest.schema.json",
     "assemblyContract": "docs/ai/app-assembly-contract.json"
@@ -42,14 +44,18 @@
   "boundaries": {
     "planningDependency": "recommendation output MUST cite a valid solution-to-manifest planning artifact as its upstream deterministic source",
     "optionalGuidance": "recommendation output MAY guide module or manifest-shaping decisions but MUST remain optional relative to deterministic planning",
+    "descriptorBoundary": "recommendation output MAY inform a bounded management-module descriptor, but that descriptor remains upstream guidance rather than the assembly runtime input",
     "assemblyRuntimeInput": "contributors MUST still produce a standalone app-manifest before repository-owned assembly tooling is invoked"
   },
   "aiToolingGuidance": {
     "defaultRole": "tool-orchestrator",
     "playbook": "docs/ai/playbooks/prepare-solution-to-manifest-recommendation.md",
-    "nextStep": "review the recommendation artifact, keep accepted constraints intact, decide which guidance to adopt, and then produce a standalone app-manifest before invoking ./scripts/platform-tool.sh assembly scaffold"
+    "nextStep": "review the recommendation artifact, keep accepted constraints intact, decide which guidance to adopt, optionally prepare a bounded management-module descriptor, and then produce a standalone app-manifest before invoking ./scripts/platform-tool.sh assembly scaffold"
   },
   "exampleRecommendations": [
     "docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json"
+  ],
+  "exampleDescriptors": [
+    "docs/ai/management-modules/department-directory.management-module.json"
   ]
 }

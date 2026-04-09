@@ -22,6 +22,7 @@
 - [ai-solution-input-model.md](core/ai-solution-input-model.md) - AI Solution Input Model
 - [ai-tool-orchestration-contract.md](core/ai-tool-orchestration-contract.md) - AI Tool Orchestration Contract
 - [app-assembly-compatibility-suite.md](core/app-assembly-compatibility-suite.md) - App Assembly Compatibility Suite
+- [descriptor-driven-management-module-generation.md](core/descriptor-driven-management-module-generation.md) - Descriptor-Driven Management-Module Generation
 - [derived-app-lifecycle-and-upgrade-contract.md](core/derived-app-lifecycle-and-upgrade-contract.md) - Derived App Lifecycle And Upgrade Contract
 - [derived-app-runtime-smoke-validation.md](core/derived-app-runtime-smoke-validation.md) - Derived App Runtime Smoke Validation
 - [generated-app-verification-contract.md](core/generated-app-verification-contract.md) - Generated App Verification Contract

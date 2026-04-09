@@ -15,16 +15,20 @@
 5. `docs/ai/schemas/solution-to-manifest-planning.schema.json`
 6. `docs/ai/solution-to-manifest-recommendation-contract.json`
 7. `docs/ai/schemas/solution-to-manifest-recommendation.schema.json`
-8. `docs/ai/ai-tool-orchestration-contract.json`
-9. `docs/ai/app-assembly-contract.json`
-10. `docs/ai/module-registry.json`
-11. 一个 solution input example：
+8. `docs/ai/descriptor-driven-management-module-contract.json`
+9. `docs/ai/schemas/descriptor-driven-management-module.schema.json`
+10. `docs/ai/ai-tool-orchestration-contract.json`
+11. `docs/ai/app-assembly-contract.json`
+12. `docs/ai/module-registry.json`
+13. 一个 solution input example：
    - `docs/ai/solution-inputs/core-admin-console.solution-input.json`
-12. 一个 solution-to-manifest plan example：
+14. 一个 solution-to-manifest plan example：
    - `docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json`
-13. 一个 solution-to-manifest recommendation example：
+15. 一个 solution-to-manifest recommendation example：
    - `docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json`
-14. 一个对应的 manifest example：
+16. 一个 management-module descriptor example：
+   - `docs/ai/management-modules/department-directory.management-module.json`
+17. 一个对应的 manifest example：
    - `docs/ai/manifests/core-admin-app.json`
 
 ## 默认原则
@@ -32,8 +36,9 @@
 - `solution input` 用来描述业务意图，不是 assembly runtime contract。
 - `solution-to-manifest plan` 用来显式记录 deterministic planning 结果，也不是 assembly runtime contract。
 - `solution-to-manifest recommendation` 用来表达可选 guidance，同样不是 assembly runtime contract。
+- `descriptor-driven management-module descriptor` 用来表达受边界约束的业务模块生成资产，同样不是 assembly runtime contract。
 - `app-manifest` 仍然是 repository-owned assembly tooling 的直接输入。
-- AI 应先整理 solution input，再产出 `solution-to-manifest plan`，按需评估 `solution-to-manifest recommendation`，再把它收敛成 `app-manifest`，最后调用 `platform-tool.sh assembly scaffold ...`。
+- AI 应先整理 solution input，再产出 `solution-to-manifest plan`，按需评估 `solution-to-manifest recommendation`，需要时再准备 bounded descriptor，最后把它收敛成 `app-manifest`，再调用 `platform-tool.sh assembly scaffold ...`。
 - `uiReferences` 只提供 UI 方向，不直接绕过模块选择或 manifest 约束。
 
 ## 标准顺序
@@ -41,8 +46,9 @@
 1. 用 `docs/ai/ai-solution-input-contract.json` 定义结构化输入
 2. 结合 `docs/ai/module-registry.json` 和 `docs/ai/solution-to-manifest-planning-contract.json` 产出 planning output
 3. 如需可选 guidance，再结合 `docs/ai/solution-to-manifest-recommendation-contract.json` 产出 recommendation output
-4. 根据 planning output 和可选 recommendation 产出 standalone `app-manifest`
-5. 再调用：
+4. 如需受边界约束的业务模块生成资产，再结合 `docs/ai/descriptor-driven-management-module-contract.json` 产出 descriptor output
+5. 根据 planning output、可选 recommendation 和可选 descriptor 产出 standalone `app-manifest`
+6. 再调用：
 
 ```bash
 ./scripts/platform-tool.sh assembly scaffold <manifest-path> <absolute-output-dir>
@@ -64,13 +70,14 @@
 - `application.packagePrefix`
 - `modules`
 
-即使 solution input 给了 `idHint` 或 `packagePrefixHint`，AI 也应先把这些信息沉淀进 `solution-to-manifest plan`，必要时再补 recommendation guidance，最后产出一个合法的 `app-manifest` 进入 assembly tooling。
+即使 solution input 给了 `idHint` 或 `packagePrefixHint`，AI 也应先把这些信息沉淀进 `solution-to-manifest plan`，必要时再补 recommendation guidance 和 bounded descriptor，最后产出一个合法的 `app-manifest` 进入 assembly tooling。
 
 ## 常见坑
 
 - 把 solution input 当成可以直接替代 `app-manifest`
 - 跳过 planning 层，直接凭零散 prose 猜模块决策
 - 把 recommendation 当成 mandatory runtime input，而不是可选 guidance
+- 把 descriptor 当成 assembly tooling 的直接输入
 - 只写业务摘要，不写角色和流程，导致后续模块选择缺少依据
 - 让 `uiReferences` 直接决定模块，而不是通过 solution input -> manifest 的映射过程
 - 在没有 manifest 的情况下直接调用 `platform-tool.sh assembly scaffold`

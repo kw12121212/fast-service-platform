@@ -1440,6 +1440,10 @@ function buildGeneratedContext(manifest, selectedModules, registry, platformRele
         aiSolutionInputContract: 'docs/ai/ai-solution-input-contract.json',
         solutionToManifestPlanningContract: 'docs/ai/solution-to-manifest-planning-contract.json',
         solutionToManifestRecommendationContract: 'docs/ai/solution-to-manifest-recommendation-contract.json',
+        descriptorDrivenManagementModuleContract:
+          'docs/ai/descriptor-driven-management-module-contract.json',
+        descriptorDrivenManagementModuleExample:
+          'docs/ai/management-modules/department-directory.management-module.json',
         moduleRegistry: 'docs/ai/module-registry.json',
         aiToolOrchestrationContract: 'docs/ai/ai-tool-orchestration-contract.json',
         structuredAppTemplateContract: STRUCTURED_APP_TEMPLATE_CONTRACT_PATH,

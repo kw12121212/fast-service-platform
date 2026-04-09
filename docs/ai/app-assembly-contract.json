@@ -16,6 +16,9 @@
     "solutionToManifestPlanningSchema": "docs/ai/schemas/solution-to-manifest-planning.schema.json",
     "solutionToManifestRecommendationContract": "docs/ai/solution-to-manifest-recommendation-contract.json",
     "solutionToManifestRecommendationSchema": "docs/ai/schemas/solution-to-manifest-recommendation.schema.json",
+    "descriptorDrivenManagementModuleContract": "docs/ai/descriptor-driven-management-module-contract.json",
+    "descriptorDrivenManagementModuleSchema": "docs/ai/schemas/descriptor-driven-management-module.schema.json",
+    "descriptorDrivenManagementModuleExample": "docs/ai/management-modules/department-directory.management-module.json",
     "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
     "aiToolOrchestrationContractSchema": "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
     "structuredAppTemplateContract": "docs/ai/structured-app-template-contract.json",
@@ -54,6 +57,7 @@
       "docs/ai/ai-solution-input-contract.json",
       "docs/ai/solution-to-manifest-planning-contract.json",
       "docs/ai/solution-to-manifest-recommendation-contract.json",
+      "docs/ai/descriptor-driven-management-module-contract.json",
       "docs/ai/ai-tool-orchestration-contract.json",
       "docs/ai/structured-app-template-contract.json",
       "docs/ai/derived-app-lifecycle.json",
@@ -81,9 +85,11 @@
       "docs/ai/solution-inputs/core-admin-console.solution-input.json",
       "docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json",
       "docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json",
+      "docs/ai/management-modules/department-directory.management-module.json",
       "docs/ai/schemas/ai-solution-input.schema.json",
       "docs/ai/schemas/solution-to-manifest-planning.schema.json",
       "docs/ai/schemas/solution-to-manifest-recommendation.schema.json",
+      "docs/ai/schemas/descriptor-driven-management-module.schema.json",
       "docs/ai/schemas/app-manifest.schema.json",
       "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
       "docs/ai/schemas/structured-app-template-contract.schema.json",
@@ -119,6 +125,7 @@
     "solutionInputContract": "docs/ai/ai-solution-input-contract.json",
     "solutionToManifestPlanningContract": "docs/ai/solution-to-manifest-planning-contract.json",
     "solutionToManifestRecommendationContract": "docs/ai/solution-to-manifest-recommendation-contract.json",
+    "descriptorDrivenManagementModuleContract": "docs/ai/descriptor-driven-management-module-contract.json",
     "moduleRegistry": "docs/ai/module-registry.json",
     "aiToolOrchestrationContract": "docs/ai/ai-tool-orchestration-contract.json",
     "derivedAppLifecycleContract": "docs/ai/derived-app-lifecycle-contract.json",
@@ -131,6 +138,7 @@
     "schemas": [
       "docs/ai/schemas/solution-to-manifest-planning.schema.json",
       "docs/ai/schemas/solution-to-manifest-recommendation.schema.json",
+      "docs/ai/schemas/descriptor-driven-management-module.schema.json",
       "docs/ai/schemas/ai-tool-orchestration-contract.schema.json",
       "docs/ai/schemas/structured-app-template-contract.schema.json",
       "docs/ai/schemas/derived-app-template-map.schema.json",
@@ -155,6 +163,9 @@
     "solutionRecommendationExamples": [
       "docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json"
     ],
+    "managementModuleDescriptorExamples": [
+      "docs/ai/management-modules/department-directory.management-module.json"
+    ],
     "assemblyExamples": [
       "docs/ai/manifests/default-baseline-app.json",
       "docs/ai/manifests/core-admin-app.json"
@@ -172,6 +183,10 @@
     "solutionRecommendation": {
       "contract": "docs/ai/solution-to-manifest-recommendation-contract.json",
       "role": "optional-manifest-guidance-after-planning-before-assembly"
+    },
+    "descriptorDrivenManagementModule": {
+      "contract": "docs/ai/descriptor-driven-management-module-contract.json",
+      "role": "bounded-management-module-generation-output-before-manifest-driven-assembly"
     },
     "assemblyManifest": {
       "contract": "docs/ai/schemas/app-manifest.schema.json",
@@ -207,6 +222,7 @@
     "solutionInputPlaybook": "docs/ai/playbooks/define-ai-solution-input.md",
     "solutionToManifestPlanningContract": "docs/ai/solution-to-manifest-planning-contract.json",
     "solutionToManifestRecommendationContract": "docs/ai/solution-to-manifest-recommendation-contract.json",
+    "descriptorDrivenManagementModuleContract": "docs/ai/descriptor-driven-management-module-contract.json",
     "orchestrationContract": "docs/ai/ai-tool-orchestration-contract.json"
   },
   "legacyCommands": {

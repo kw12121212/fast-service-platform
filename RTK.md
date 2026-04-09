@@ -107,6 +107,7 @@ The V1 platform baseline must include at least:
 - When AI creates or changes applications, it should reuse built-in platform components before inventing new dependency stacks or external libraries.
 - The repository should provide stable AI-facing entrypoints: quickstart docs, machine-readable context, playbooks, module metadata, assembly contracts, and verification commands.
 - For app assembly, the source of truth is `contract + schemas + compatibility suite`. Language-specific implementations are compatible implementations or references, not the definition of the standard.
+- The upstream AI path may now include `solution input -> planning -> recommendation -> descriptor-driven management module -> app-manifest -> assembly`, but `app-manifest` remains the direct assembly runtime input.
 
 ## Implementation Reality
 
