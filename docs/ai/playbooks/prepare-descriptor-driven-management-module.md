@@ -27,8 +27,8 @@
 - descriptor 是 `bounded upstream asset`，不是 assembly runtime contract。
 - descriptor 必须依赖合法的 planning output；如果有 recommendation guidance，可以引用，但不能跳过 planning。
 - 当前首条 path 只支持窄范围 management-module shape：一个主记录类型、一个 report/list 视图、一个 create-edit form 视图。
-- 首条 path 必须复用 `dynamic form` 与 `dynamic report`。
-- descriptor 不能扩展关闭的 `module-registry`，也不能把 workflow-specific page generation 一起吞进来。
+- 首条 path 必须复用 `dynamic form` 与 `dynamic report`，当需要 workflow 时复用 `workflow panel`。
+- descriptor 不能扩展关闭的 `module-registry`。
 - 真正传给 assembly tooling 的仍然是 standalone `app-manifest`。
 
 ## 标准顺序
@@ -62,7 +62,7 @@
 - 输出落在哪些 slot host / customization zone
 - 明确声明：
   - `standaloneManifestRequired: true`
-  - `usesWorkflowGeneration: false`
+  - `usesWorkflowGeneration: true`（当包含 workflow 时）或 `false`（当不含 workflow 时）
   - `extendsClosedModuleRegistry: false`
   - `descriptorIsAssemblyRuntimeInput: false`
 
@@ -138,10 +138,64 @@ sectionKey 映射：
 - 使用 **sections** 当：需要混合可视化（卡片 + 表格 + 图表）或仪表盘布局
 - 两者互斥：一个 report descriptor 只能包含 `columns` 或 `sections`，不能同时包含两者
 
+## workflow descriptor（可选工作流）
+
+### 何时包含 workflow
+
+当业务模块需要单记录工作流交互（提交、审批、拒绝、转办）时，在 `managementModule` 中添加可选的 `workflow` section。不需要工作流的模块保持不填即可。
+
+### workflow section 如何映射到 WorkflowPanel
+
+workflow descriptor 的属性与 `WorkflowPanel` 组件的 `WorkflowDescriptor` 类型 1:1 对应：
+
+| descriptor 属性 | WorkflowPanel 映射 |
+|---|---|
+| `entityName` | 工作流实体名称 |
+| `stateLabel` | 状态字段标签 |
+| `assigneeLabel` | 指派人字段标签 |
+| `commentLabel` | 评论字段标签 |
+| `commentPlaceholder` | 评论输入占位文本 |
+| `historyTitle` | 工作流历史标题 |
+| `actions` | 可执行操作数组（submit/approve/reject/reassign） |
+| `backendWorkflowService` | 后端工作流服务声明（可选） |
+
+### workflow descriptor 示例
+
+```json
+{
+  "componentId": "workflow-panel",
+  "entityName": "LeaveRequest",
+  "stateLabel": "Status",
+  "assigneeLabel": "Assignee",
+  "commentLabel": "Comment",
+  "commentPlaceholder": "Add a comment about this action...",
+  "historyTitle": "Workflow History",
+  "actions": [
+    {"action": "submit", "label": "Submit"},
+    {"action": "approve", "label": "Approve"},
+    {"action": "reject", "label": "Reject"},
+    {"action": "reassign", "label": "Reassign", "requiresAssignee": true}
+  ],
+  "backendWorkflowService": {
+    "workflowServiceName": "leave_request_workflow_service",
+    "ddlReference": "backend/src/main/resources/sql/workflows/leave-request.sql"
+  }
+}
+```
+
+### 边界约束
+
+- 包含 `workflow` 时，`boundaries.usesWorkflowGeneration` 必须为 `true`
+- 不包含 `workflow` 时，`boundaries.usesWorkflowGeneration` 必须为 `false`
+- 包含 `workflow` 时，`generatedModuleInputs.frontend` 必须包含 `workflowComponentId: "workflow-panel"`
+- action 类型限定为 submit、approve、reject、reassign（与 `WorkflowActionType` 一致）
+
+参考示例：`docs/ai/management-modules/leave-request.management-module.json`
+
 ## 常见坑
 
 - 把 descriptor 当成可以直接传给 assembly tooling 的 runtime input
 - 跳过 planning，直接从 prose 或 recommendation 猜 descriptor
 - 把 descriptor 扩成任意 CRUD / low-code DSL
-- 在首条 path 中加入 workflow-specific 页面生成
+- 在首条 path 中加入 workflow-specific 页面生成但不设置 `usesWorkflowGeneration: true`
 - 绕开 `structured-app-template-contract.json` 与 template classification map，直接定义未分类输出路径

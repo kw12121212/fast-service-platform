@@ -92,6 +92,9 @@
         },
         "form": {
           "$ref": "#/$defs/formDescriptor"
+        },
+        "workflow": {
+          "$ref": "#/$defs/workflowDescriptor"
         }
       }
     },
@@ -147,6 +150,9 @@
             "featurePath": {
               "type": "string",
               "minLength": 1
+            },
+            "workflowComponentId": {
+              "const": "workflow-panel"
             }
           }
         },
@@ -192,7 +198,7 @@
       ],
       "properties": {
         "usesWorkflowGeneration": {
-          "const": false
+          "type": "boolean"
         },
         "extendsClosedModuleRegistry": {
           "const": false
@@ -203,6 +209,59 @@
       }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "required": ["managementModule"],
+        "properties": {
+          "managementModule": {
+            "required": ["workflow"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "boundaries": {
+            "properties": {
+              "usesWorkflowGeneration": {
+                "const": true
+              }
+            }
+          },
+          "generatedModuleInputs": {
+            "properties": {
+              "frontend": {
+                "required": ["workflowComponentId"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["managementModule"],
+        "properties": {
+          "managementModule": {
+            "not": {
+              "required": ["workflow"]
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "boundaries": {
+            "properties": {
+              "usesWorkflowGeneration": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
     "sourceReference": {
       "type": "object",
@@ -479,6 +538,100 @@
         },
         "notes": {
           "type": "string"
+        }
+      }
+    },
+    "workflowActionDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "label"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "submit",
+            "approve",
+            "reject",
+            "reassign"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requiresAssignee": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "workflowDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "componentId",
+        "entityName",
+        "stateLabel",
+        "assigneeLabel",
+        "commentLabel",
+        "commentPlaceholder",
+        "historyTitle",
+        "actions"
+      ],
+      "properties": {
+        "componentId": {
+          "const": "workflow-panel"
+        },
+        "entityName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stateLabel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assigneeLabel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commentLabel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commentPlaceholder": {
+          "type": "string",
+          "minLength": 1
+        },
+        "historyTitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/workflowActionDescriptor"
+          }
+        },
+        "backendWorkflowService": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "workflowServiceName",
+            "ddlReference"
+          ],
+          "properties": {
+            "workflowServiceName": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "ddlReference": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
         }
       }
     }

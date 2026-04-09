@@ -27,14 +27,20 @@ The first descriptor-driven management-module path MUST reuse the existing dynam
 - THEN they can identify form and report interactions that reuse the repository-owned dynamic form and dynamic report capabilities
 - AND they do not find a separate one-off form or report pattern created only for that generated module
 
-### Requirement: First Descriptor-Driven Module Shape Excludes Workflow-Specific Generation
-The first descriptor-driven management-module path MUST stay narrower than the dedicated workflow-generation roadmap item and MUST NOT require workflow-specific page generation in order to be considered complete.
+### Requirement: Descriptor-Driven Module Generation Supports Optional Workflow Page Generation
+The descriptor-driven management-module path MUST support an optional workflow section that reuses the existing `WorkflowPanel` component for single-record workflow interactions, including status presentation, bounded action controls (submit, approve, reject, reassign), comment entry, assignee metadata, and workflow history display.
 
-#### Scenario: A contributor checks whether the first descriptor-driven path includes workflow generation
-- GIVEN a contributor reviews the first descriptor-driven management-module capability
-- WHEN they inspect its supported output shape
-- THEN they can identify that workflow-specific generation remains outside the first descriptor-driven module scope
-- AND they do not need repository-owned workflow page generation for the first descriptor-driven path to be valid
+#### Scenario: A contributor includes a workflow section in a management-module descriptor
+- GIVEN a contributor prepares a management-module descriptor that includes a `workflow` section
+- WHEN they validate and process the descriptor
+- THEN the generated module includes a workflow panel that reuses the repository-owned `WorkflowPanel` component
+- AND the workflow descriptor's properties map directly to the `WorkflowPanel` component's `WorkflowDescriptor` type
+
+#### Scenario: A contributor omits the workflow section
+- GIVEN a contributor prepares a management-module descriptor without a `workflow` section
+- WHEN they validate and process the descriptor
+- THEN the generated module does not include a workflow panel
+- AND the descriptor validates successfully with `boundaries.usesWorkflowGeneration` set to `false`
 
 ### Requirement: Descriptor-Driven Module Generation Provides Repository-Owned Example And Validation Coverage
 The repository MUST provide at least one repository-owned descriptor-driven management-module example and validation coverage that checks the path as a first-class repository asset.

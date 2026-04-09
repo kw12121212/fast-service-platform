@@ -27,7 +27,7 @@ Lift the platform from reusable interaction components plus assembly contracts t
 ## Planned Changes
 - `descriptor-driven-management-module` - Declared: complete - Bounded descriptor-driven generation for at least one management-module shape
 - `descriptor-driven-report-page-generation` - Declared: complete - Descriptor-driven generation path for report pages that reuse platform-owned report patterns
-- `descriptor-driven-workflow-page-generation` - Declared: planned - Descriptor-driven generation path for workflow pages that reuse platform-owned workflow patterns
+- `descriptor-driven-workflow-page-generation` - Declared: complete - Descriptor-driven generation path for workflow pages that reuse platform-owned workflow patterns
 
 ## Dependencies
 
@@ -40,11 +40,12 @@ Lift the platform from reusable interaction components plus assembly contracts t
 - Generated output must continue to respect template ownership boundaries and module-selection constraints rather than bypassing the existing assembly model.
 
 ## Status
-
-- Declared: proposed
+- Declared: complete
 
 ## Notes
 
 - This milestone is the remaining critical path between the completed solution-input planning work and V1 closure.
+
+
 
 

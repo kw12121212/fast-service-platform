@@ -5,7 +5,7 @@
 - [agile-dashboard-and-metrics.md](milestones/agile-dashboard-and-metrics.md) - Agile Dashboard And Metrics - proposed
 - [collaboration-and-notification.md](milestones/collaboration-and-notification.md) - Collaboration And Notification - proposed
 - [derived-app-trust-and-module-composability.md](milestones/derived-app-trust-and-module-composability.md) - Derived App Trust And Module Composability - complete
-- [descriptor-driven-business-module-generation.md](milestones/descriptor-driven-business-module-generation.md) - Descriptor-Driven Business Module Generation - proposed
+- [descriptor-driven-business-module-generation.md](milestones/descriptor-driven-business-module-generation.md) - Descriptor-Driven Business Module Generation - complete
 - [engineering-support-workflows.md](milestones/engineering-support-workflows.md) - Engineering Support Workflows - complete
 - [platform-v1-integration-and-closure.md](milestones/platform-v1-integration-and-closure.md) - Platform V1 Integration And Closure - proposed
 - [project-scoped-derived-app-lifecycle.md](milestones/project-scoped-derived-app-lifecycle.md) - Project-Scoped Derived App Lifecycle - complete

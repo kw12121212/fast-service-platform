@@ -29,7 +29,6 @@
       "boundaries"
     ],
     "excludedCapabilities": [
-      "workflow-specific-page-generation",
       "arbitrary-crud-dsl",
       "runtime-ai-features",
       "closed-module-registry-extension"
@@ -38,9 +37,11 @@
   "platformOwnedInteractions": {
     "formComponentId": "dynamic-form",
     "reportComponentId": "dynamic-report",
+    "workflowComponentId": "workflow-panel",
     "componentPaths": {
       "dynamicForm": "frontend/src/components/admin/dynamic-form.tsx",
-      "dynamicReport": "frontend/src/components/admin/dynamic-report.tsx"
+      "dynamicReport": "frontend/src/components/admin/dynamic-report.tsx",
+      "workflowPanel": "frontend/src/components/admin/workflow-panel.tsx"
     }
   },
   "boundaries": {
@@ -49,7 +50,7 @@
     "assemblyRuntimeInput": "contributors MUST still produce a standalone app-manifest before repository-owned assembly tooling is invoked",
     "moduleRegistryBoundary": "descriptor output MUST stay inside the closed repository-owned module registry and MUST NOT register a new platform-owned module",
     "interactionBoundary": "the first descriptor-driven path MUST reuse dynamic-form and dynamic-report instead of defining a parallel interaction system",
-    "workflowBoundary": "workflow-specific generation remains outside the first descriptor-driven management-module path"
+    "workflowBoundary": "the descriptor-driven path supports optional workflow generation via the workflow-panel component when a workflow section is present in the descriptor"
   },
   "templateOwnership": {
     "routeSlot": "frontend-admin-routes",
@@ -66,7 +67,8 @@
   },
   "exampleDescriptors": [
     "docs/ai/management-modules/department-directory.management-module.json",
-    "docs/ai/management-modules/department-overview.management-module.json"
+    "docs/ai/management-modules/department-overview.management-module.json",
+    "docs/ai/management-modules/leave-request.management-module.json"
   ],
   "reportDescriptorCapabilities": {
     "columnsPath": {
@@ -86,5 +88,27 @@
       ],
       "example": "docs/ai/management-modules/department-overview.management-module.json"
     }
+  },
+  "workflowDescriptorCapabilities": {
+    "supportedComponent": "workflow-panel",
+    "description": "Optional workflow section in management-module descriptors for single-record workflow interactions",
+    "supportedActionTypes": [
+      "submit",
+      "approve",
+      "reject",
+      "reassign"
+    ],
+    "descriptorMapping": {
+      "entityName": "maps to WorkflowPanel's WorkflowDescriptor entityName",
+      "stateLabel": "maps to WorkflowPanel's WorkflowDescriptor stateLabel",
+      "assigneeLabel": "maps to WorkflowPanel's WorkflowDescriptor assigneeLabel",
+      "commentLabel": "maps to WorkflowPanel's WorkflowDescriptor commentLabel",
+      "commentPlaceholder": "maps to WorkflowPanel's WorkflowDescriptor commentPlaceholder",
+      "historyTitle": "maps to WorkflowPanel's WorkflowDescriptor historyTitle",
+      "actions": "maps to WorkflowPanel's WorkflowDescriptor actions array"
+    },
+    "conditionalConstraint": "usesWorkflowGeneration MUST be true when workflow section is present, false when absent",
+    "backendBinding": "workflow section MAY include backendWorkflowService declaring the CREATE WORKFLOW service name and DDL reference",
+    "example": "docs/ai/management-modules/leave-request.management-module.json"
   }
 }
