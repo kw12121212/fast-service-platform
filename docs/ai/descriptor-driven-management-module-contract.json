@@ -65,6 +65,26 @@
     "nextStep": "Review planning output, optionally review recommendation guidance, prepare a bounded management-module descriptor, then produce a standalone app-manifest and controlled module-generation inputs before invoking ./scripts/platform-tool.sh assembly scaffold"
   },
   "exampleDescriptors": [
-    "docs/ai/management-modules/department-directory.management-module.json"
-  ]
+    "docs/ai/management-modules/department-directory.management-module.json",
+    "docs/ai/management-modules/department-overview.management-module.json"
+  ],
+  "reportDescriptorCapabilities": {
+    "columnsPath": {
+      "description": "Legacy flat-table path for simple report views",
+      "supportedComponent": "dynamic-report",
+      "example": "docs/ai/management-modules/department-directory.management-module.json"
+    },
+    "sectionsPath": {
+      "description": "Multi-section dashboard path supporting mixed visualization types",
+      "supportedComponent": "dynamic-report",
+      "supportedSectionTypes": [
+        "summary-cards",
+        "table",
+        "bar-chart",
+        "line-chart",
+        "pie-chart"
+      ],
+      "example": "docs/ai/management-modules/department-overview.management-module.json"
+    }
+  }
 }

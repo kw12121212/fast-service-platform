@@ -248,13 +248,115 @@
         }
       }
     },
+    "reportSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sectionKey",
+        "type"
+      ],
+      "properties": {
+        "sectionKey": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]*$"
+        },
+        "type": {
+          "enum": [
+            "summary-cards",
+            "table",
+            "bar-chart",
+            "line-chart",
+            "pie-chart"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/reportColumn"
+          }
+        },
+        "cardKeys": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-zA-Z0-9]*$"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "table"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "columns",
+              "title"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "bar-chart",
+                  "line-chart",
+                  "pie-chart"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "title"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "summary-cards"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "cardKeys"
+            ]
+          }
+        }
+      ]
+    },
     "reportDescriptor": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "componentId",
-        "title",
-        "columns"
+        "title"
+      ],
+      "oneOf": [
+        {
+          "required": [
+            "columns"
+          ]
+        },
+        {
+          "required": [
+            "sections"
+          ]
+        }
       ],
       "properties": {
         "componentId": {
@@ -269,6 +371,13 @@
           "minItems": 1,
           "items": {
             "$ref": "#/$defs/reportColumn"
+          }
+        },
+        "sections": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/reportSection"
           }
         }
       }

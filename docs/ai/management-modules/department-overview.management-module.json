@@ -1,0 +1,175 @@
+{
+  "schemaVersion": "fsp-management-module-descriptor/v1",
+  "source": {
+    "planningInput": {
+      "sourceAsset": "docs/ai/solution-plans/core-admin-console.solution-to-manifest-plan.json",
+      "schemaVersion": "fsp-solution-to-manifest-plan/v1"
+    },
+    "recommendationInput": {
+      "sourceAsset": "docs/ai/solution-recommendations/core-admin-console.solution-to-manifest-recommendation.json",
+      "schemaVersion": "fsp-solution-to-manifest-recommendation/v1"
+    }
+  },
+  "application": {
+    "name": "Core Admin Console",
+    "manifestId": "core-admin-console",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "managementModule": {
+    "moduleId": "department-overview",
+    "displayName": "Department Overview",
+    "routePath": "/department-overview",
+    "primaryEntity": "Department",
+    "summary": "A multi-section dashboard view for department statistics with summary cards, detailed table, and distribution chart.",
+    "report": {
+      "componentId": "dynamic-report",
+      "title": "Department Overview",
+      "sections": [
+        {
+          "sectionKey": "summary",
+          "type": "summary-cards",
+          "cardKeys": [
+            "totalDepartments",
+            "activeDepartments",
+            "totalEmployees",
+            "avgDepartmentSize"
+          ]
+        },
+        {
+          "sectionKey": "details",
+          "type": "table",
+          "title": "Department Details",
+          "columns": [
+            {
+              "id": "departmentCode",
+              "label": "Department Code"
+            },
+            {
+              "id": "departmentName",
+              "label": "Department Name"
+            },
+            {
+              "id": "managerName",
+              "label": "Manager"
+            },
+            {
+              "id": "employeeCount",
+              "label": "Employees"
+            },
+            {
+              "id": "active",
+              "label": "Active"
+            }
+          ]
+        },
+        {
+          "sectionKey": "headcountChart",
+          "type": "bar-chart",
+          "title": "Headcount by Department"
+        }
+      ]
+    },
+    "form": {
+      "componentId": "dynamic-form",
+      "title": "Department",
+      "submitLabel": "Save Department",
+      "fields": [
+        {
+          "id": "departmentCode",
+          "label": "Department Code",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "departmentName",
+          "label": "Department Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "managerName",
+          "label": "Manager",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "active",
+          "label": "Active",
+          "type": "checkbox",
+          "required": true
+        }
+      ]
+    }
+  },
+  "manifestPreparation": {
+    "standaloneManifestRequired": true,
+    "selectedPlatformModules": [
+      "admin-shell",
+      "user-management",
+      "role-permission-management"
+    ],
+    "profileAlignment": "core-admin",
+    "nextStep": "Keep the core-admin standalone app-manifest as the assembly runtime input, then pass the descriptor-derived module inputs through repository-owned template boundaries."
+  },
+  "generatedModuleInputs": {
+    "frontend": {
+      "reportComponentId": "dynamic-report",
+      "formComponentId": "dynamic-form",
+      "featurePath": "frontend/src/features/custom/department-overview/"
+    },
+    "backend": {
+      "serviceContractId": "department_overview_service",
+      "tableName": "department_overview_record",
+      "implementationPath": "backend/src/main/java/com/fastservice/platform/backend/custom/department-overview/"
+    }
+  },
+  "templateBindings": [
+    {
+      "slotId": "frontend-admin-routes",
+      "path": "frontend/src/app/router.tsx",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "notes": "The descriptor contributes a bounded route entry through the existing admin route slot."
+    },
+    {
+      "slotId": "frontend-admin-navigation",
+      "path": "frontend/src/app/navigation.ts",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "notes": "The descriptor contributes a navigation item through the existing admin navigation slot."
+    },
+    {
+      "slotId": "frontend-customization-zone",
+      "path": "frontend/src/features/custom/department-overview/",
+      "unitType": "customization-zone",
+      "ownership": "derived-managed",
+      "notes": "Generated report and form descriptors stay inside the existing derived-managed frontend customization zone."
+    },
+    {
+      "slotId": "backend-table-contract",
+      "path": "backend/src/main/resources/sql/tables.sql",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "notes": "The descriptor contributes SQL table fragments through the repository-owned backend table slot."
+    },
+    {
+      "slotId": "backend-service-contract",
+      "path": "backend/src/main/resources/sql/services.sql",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "notes": "The descriptor contributes SQL service fragments through the repository-owned backend service slot."
+    },
+    {
+      "slotId": "backend-customization-zone",
+      "path": "backend/src/main/java/com/fastservice/platform/backend/custom/department-overview/",
+      "unitType": "customization-zone",
+      "ownership": "derived-managed",
+      "notes": "Generated Java implementation details stay inside the existing backend customization zone."
+    }
+  ],
+  "boundaries": {
+    "usesWorkflowGeneration": false,
+    "extendsClosedModuleRegistry": false,
+    "descriptorIsAssemblyRuntimeInput": false
+  }
+}

@@ -44,6 +44,36 @@ The system MUST treat independent application scaffolding and module assembly as
 - WHEN they inspect how new applications are created
 - THEN they see repository-owned scaffolding and assembly capabilities defined as platform behavior
 
+### Requirement: Dynamic Report Supports Multiple Section Types
+The system MUST support dynamic report pages with multiple section types including summary cards, tables, bar charts, line charts, and pie charts, so descriptor-driven generation can express full dashboard capabilities.
+
+#### Scenario: A contributor reviews dynamic report section capabilities
+- GIVEN a contributor reviews the platform's dynamic report component
+- WHEN they inspect the supported section types
+- THEN they see support for: summary-cards, table, bar-chart, line-chart, pie-chart
+- AND each section type has clearly defined required properties
+
+#### Scenario: An AI generates a descriptor with multi-section report
+- GIVEN an AI prepares a management-module descriptor
+- WHEN it defines a report with multiple sections
+- THEN it can use section types: summary-cards (with cardKeys), table (with columns and title), bar-chart (with title), line-chart (with title), pie-chart (with title)
+- AND the descriptor validates against the management-module schema
+
+### Requirement: Report Descriptor Supports Both Columns And Sections Paths
+The system MUST support both legacy columns-based report descriptors and new sections-based report descriptors, maintaining backward compatibility while enabling richer dashboard expressions.
+
+#### Scenario: A contributor uses the legacy columns path
+- GIVEN a contributor prepares a simple table-only report descriptor
+- WHEN they use the columns array format
+- THEN the descriptor validates successfully
+- AND the generated report renders as a single table
+
+#### Scenario: A contributor uses the sections path
+- GIVEN a contributor prepares a multi-section dashboard descriptor
+- WHEN they use the sections array format
+- THEN the descriptor validates successfully
+- AND the generated report renders all specified sections in order
+
 ### Requirement: Optional Module Dependency Declarations Are Operationally Enforced
 The system MUST ensure that omitting an optional delivery-management module from an assembly profile removes that module's routes, navigation items, database schema, and backend services from the generated output, so that module dependency declarations are operationally real and not only descriptive.
 
