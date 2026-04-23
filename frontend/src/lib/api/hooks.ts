@@ -12,6 +12,7 @@ import type {
   ProjectDerivedAppUpgradeSupportContext,
   ProjectDerivedAppVerificationContext,
   SoftwareProject,
+  Team,
   Ticket,
   TicketWorkflow,
   TicketWorkflowAction,
@@ -63,6 +64,7 @@ const EMPTY_PERMISSIONS: AccessPermission[] = []
 const EMPTY_PROJECTS: SoftwareProject[] = []
 const EMPTY_KANBANS: KanbanBoard[] = []
 const EMPTY_TICKETS: Ticket[] = []
+const EMPTY_TEAMS: Team[] = []
 
 function resourceReducer<T>(
   state: ResourceState<T>,
@@ -584,5 +586,22 @@ export function useExecuteTicketWorkflowAction() {
       comment: string
       assigneeUserId?: number
     }) => invokeService<string>('ticket_workflow_service/executeWorkflowAction', args),
+  })
+}
+
+export function useTeamsResource() {
+  return useBackendResource({
+    key: 'teams',
+    initialData: EMPTY_TEAMS,
+    load: () => getJson<Team[]>('team_service/listTeams'),
+  })
+}
+
+export function useCreateTeamAction() {
+  return useBackendMutation({
+    run: (args: {
+      name: string
+      description: string
+    }) => invokeService<number>('team_service/createTeam', args),
   })
 }

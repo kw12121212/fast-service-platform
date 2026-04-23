@@ -112,6 +112,37 @@ create table if not exists project_derived_app_upgrade_support (
   updated_at varchar
 ) package @packageName generate code @modelSrcDir;
 
+-- MODULE: team-management
+create table if not exists team (
+  id long auto_increment primary key,
+  name varchar,
+  description varchar,
+  status varchar
+) package @packageName generate code @modelSrcDir;
+
+create table if not exists team_member (
+  id long auto_increment primary key,
+  team_id long,
+  user_id long
+) package @packageName generate code @modelSrcDir;
+
+create table if not exists team_project_binding (
+  id long auto_increment primary key,
+  team_id long,
+  project_id long
+) package @packageName generate code @modelSrcDir;
+
+create table if not exists team_role (
+  id long auto_increment primary key,
+  role_code varchar,
+  role_name varchar
+) package @packageName generate code @modelSrcDir;
+
+create table if not exists team_member_role (
+  team_member_id long,
+  team_role_id long
+) package @packageName generate code @modelSrcDir;
+
 -- MODULE: kanban-management
 create table if not exists kanban_board (
   id long auto_increment primary key,

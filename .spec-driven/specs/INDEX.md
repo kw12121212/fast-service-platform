@@ -10,6 +10,7 @@
 - [project-sandbox-environment.md](backend/project-sandbox-environment.md) - Project Sandbox Environment
 - [project-worktree-management.md](backend/project-worktree-management.md) - Project Worktree Management
 - [runtime-bootstrap.md](backend/runtime-bootstrap.md) - Runtime Bootstrap
+- [team-management.md](backend/team-management.md) - Team Management
 - [testing-and-demo-data.md](backend/testing-and-demo-data.md) - Testing And Demo Data
 
 ## component
@@ -47,6 +48,7 @@
 - [project-repository-management.md](frontend/project-repository-management.md) - Project Repository Management
 - [project-sandbox-environment.md](frontend/project-sandbox-environment.md) - Project Sandbox Environment
 - [project-worktree-management.md](frontend/project-worktree-management.md) - Project Worktree Management
+- [team-management.md](frontend/team-management.md) - Team Management
 - [workflow-component.md](frontend/workflow-component.md) - Workflow Component
 
 ## platform

@@ -50,6 +50,25 @@ package @packageName
 implement by 'com.fastservice.platform.backend.project.ProjectServiceImpl'
 generate code @serviceSrcDir;
 
+-- MODULE: team-management
+create service if not exists team_service (
+  createTeam(name varchar, description varchar) long,
+  updateTeam(teamId long, name varchar, description varchar) void,
+  deleteTeam(teamId long) void,
+  listTeams() varchar,
+  addMember(teamId long, userId long) long,
+  removeMember(memberId long) void,
+  listMembers(teamId long) varchar,
+  bindProject(teamId long, projectId long) long,
+  unbindProject(bindingId long) void,
+  listProjectTeams(projectId long) varchar,
+  assignTeamRole(memberId long, roleId long) void,
+  removeTeamRole(memberId long, roleId long) void
+)
+package @packageName
+implement by 'com.fastservice.platform.backend.team.TeamServiceImpl'
+generate code @serviceSrcDir;
+
 -- MODULE: kanban-management
 create service if not exists kanban_service (
   createKanban(projectId long, boardName varchar) long,

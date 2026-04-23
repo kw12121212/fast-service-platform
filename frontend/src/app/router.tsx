@@ -7,6 +7,7 @@ import { DashboardPage } from '@/features/dashboard/dashboard-page'
 import { KanbanPage } from '@/features/kanban/kanban-page'
 import { ProjectsPage } from '@/features/projects/projects-page'
 import { RolePermissionsPage } from '@/features/roles/role-permissions-page'
+import { TeamsPage } from '@/features/teams/teams-page'
 import { TicketsPage } from '@/features/tickets/tickets-page'
 import { UsersPage } from '@/features/users/users-page'
 
@@ -43,6 +44,9 @@ export const adminRoutes: RouteObject[] = [
         : []),
       ...(moduleSelection.kanban
         ? [{ path: 'kanban', element: <KanbanPage /> }]
+        : []),
+      ...(moduleSelection.team
+        ? [{ path: 'teams', element: <TeamsPage /> }]
         : []),
       {
         path: '*',

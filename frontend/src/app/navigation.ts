@@ -5,6 +5,7 @@ import {
   ShieldCheck,
   Ticket,
   Users,
+  UsersRound,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -98,6 +99,21 @@ export const adminNavigation: AdminNavigationItem[] = [
             title: 'Kanban Management',
             description:
               'Inspect project boards and minimal state flow using the current backend kanban model.',
+          },
+        },
+      ]
+    : []),
+  ...(moduleSelection.team
+    ? [
+        {
+          to: '/teams',
+          label: 'Teams',
+          eyebrow: 'Organization',
+          icon: UsersRound,
+          meta: {
+            title: 'Team Management',
+            description:
+              'Manage teams, assign members, and bind teams to projects for agile delivery.',
           },
         },
       ]

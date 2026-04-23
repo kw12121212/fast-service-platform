@@ -11,6 +11,7 @@
         "project-management",
         "project-repository-management",
         "kanban-management",
+        "team-management",
         "ticket-management"
       ]
     },
@@ -28,7 +29,8 @@
         "admin-shell",
         "user-management",
         "role-permission-management",
-        "project-management"
+        "project-management",
+        "team-management"
       ]
     },
     "project-repository": {
@@ -38,7 +40,8 @@
         "user-management",
         "role-permission-management",
         "project-management",
-        "project-repository-management"
+        "project-repository-management",
+        "team-management"
       ]
     },
     "project-kanban": {
@@ -48,7 +51,8 @@
         "user-management",
         "role-permission-management",
         "project-management",
-        "kanban-management"
+        "kanban-management",
+        "team-management"
       ]
     }
   },
@@ -143,6 +147,33 @@
       "backend": {
         "tables": [
           "project_repository_binding"
+        ]
+      }
+    },
+    {
+      "id": "team-management",
+      "role": "optional-business-module",
+      "description": "Team CRUD, membership management, team-project binding, and team-scoped roles.",
+      "dependsOn": [
+        "admin-shell",
+        "user-management",
+        "role-permission-management"
+      ],
+      "backend": {
+        "tables": [
+          "team",
+          "team_member",
+          "team_project_binding",
+          "team_role",
+          "team_member_role"
+        ],
+        "services": [
+          "team_service"
+        ]
+      },
+      "frontend": {
+        "routes": [
+          "/teams"
         ]
       }
     },

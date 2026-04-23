@@ -35,8 +35,7 @@ Extend the existing RBAC baseline into a team-aware people model that treats AI 
 - All planned changes in this milestone are archived.
 
 ## Planned Changes
-
-- `team-management-module` - Declared: planned - Team CRUD, membership, team-project binding, and team roles for human and AI members
+- `team-management-module` - Declared: complete - Team CRUD, membership, team-project binding, and team roles for human and AI members
 - `user-profile-baseline` - Declared: planned - Basic human user profile fields such as display name, email, and avatar
 - `ai-employee-model` - Declared: planned - AI employee member type with persona, capabilities, and provider binding configuration
 - `ai-api-integration-surface` - Declared: planned - Backend API integration surface for sending collaboration messages to configured AI providers
@@ -63,3 +62,4 @@ Extend the existing RBAC baseline into a team-aware people model that treats AI 
 - This is the V2 foundation milestone — all downstream agile milestones depend on teams and people (human + AI) existing.
 - The AI employee design principle is: "AI is a team member, not a tool." Every downstream module treats AI employees the same as human members. If a module needs to distinguish, it queries capabilities, not member type.
 - Time tracking and capacity features are explicitly deferred beyond this milestone.
+

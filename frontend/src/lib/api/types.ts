@@ -312,3 +312,25 @@ export type TicketWorkflow = {
   availableActions: TicketWorkflowAction[]
   history: TicketWorkflowHistoryEntry[]
 }
+
+export type TeamMemberRole = {
+  roleCode: string
+  roleName: string
+}
+
+export type TeamMember = {
+  memberId: number
+  userId: number
+  username: string
+  displayName: string
+  email: string
+  roles: TeamMemberRole[]
+}
+
+export type Team = {
+  id: number
+  name: string
+  description: string
+  status: string
+  memberCount: number
+}

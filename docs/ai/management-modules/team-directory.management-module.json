@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "fsp-management-module-descriptor/v1",
+  "source": {
+    "planningInput": {
+      "sourceAsset": "docs/ai/solution-plans/v2-agile-foundation.solution-to-manifest-plan.json",
+      "schemaVersion": "fsp-solution-to-manifest-plan/v1"
+    },
+    "recommendationInput": {
+      "sourceAsset": "docs/ai/solution-recommendations/v2-agile-foundation.solution-to-manifest-recommendation.json",
+      "schemaVersion": "fsp-solution-to-manifest-recommendation/v1"
+    }
+  },
+  "application": {
+    "name": "Fast Service Platform",
+    "manifestId": "fast-service-platform",
+    "packagePrefix": "com.fastservice.platform.backend"
+  },
+  "managementModule": {
+    "moduleId": "team-directory",
+    "displayName": "Team Directory",
+    "routePath": "/teams",
+    "primaryEntity": "Team",
+    "summary": "Team CRUD, membership management, team-project binding, and team-scoped roles for human and AI members.",
+    "report": {
+      "componentId": "dynamic-report",
+      "title": "Team Directory",
+      "columns": [
+        {
+          "id": "name",
+          "label": "Team Name"
+        },
+        {
+          "id": "description",
+          "label": "Description"
+        },
+        {
+          "id": "status",
+          "label": "Status"
+        },
+        {
+          "id": "memberCount",
+          "label": "Members"
+        }
+      ]
+    },
+    "form": {
+      "componentId": "dynamic-form",
+      "title": "Team",
+      "submitLabel": "Save Team",
+      "fields": [
+        {
+          "id": "name",
+          "label": "Team Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "description",
+          "label": "Description",
+          "type": "text",
+          "required": false
+        }
+      ]
+    }
+  },
+  "manifestPreparation": {
+    "standaloneManifestRequired": false,
+    "selectedPlatformModules": [
+      "admin-shell",
+      "user-management",
+      "role-permission-management",
+      "team-management"
+    ],
+    "profileAlignment": "baseline-v1",
+    "nextStep": "Register team-management as an optional business module and add to baseline-v1 and project-related assembly profiles."
+  },
+  "generatedModuleInputs": {
+    "frontend": {
+      "reportComponentId": "dynamic-report",
+      "formComponentId": "dynamic-form",
+      "featurePath": "frontend/src/features/teams/"
+    },
+    "backend": {
+      "serviceContractId": "team_service",
+      "tableName": "team",
+      "implementationPath": "backend/src/main/java/com/fastservice/platform/backend/team/"
+    }
+  },
+  "templateBindings": [
+    {
+      "slotId": "frontend-admin-routes",
+      "path": "frontend/src/app/router.tsx",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "notes": "The descriptor contributes a bounded route entry through the existing admin route slot."
+    },
+    {
+      "slotId": "frontend-admin-navigation",
+      "path": "frontend/src/app/navigation.ts",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "notes": "The descriptor contributes a navigation item through the existing admin navigation slot."
+    },
+    {
+      "slotId": "frontend-customization-zone",
+      "path": "frontend/src/features/teams/",
+      "unitType": "customization-zone",
+      "ownership": "platform-managed",
+      "notes": "Generated report and form descriptors stay inside the team management frontend feature zone."
+    },
+    {
+      "slotId": "backend-table-contract",
+      "path": "backend/src/main/resources/sql/tables.sql",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "notes": "The descriptor contributes SQL table fragments through the repository-owned backend table slot."
+    },
+    {
+      "slotId": "backend-service-contract",
+      "path": "backend/src/main/resources/sql/services.sql",
+      "unitType": "slot-host",
+      "ownership": "platform-managed",
+      "notes": "The descriptor contributes SQL service fragments through the repository-owned backend service slot."
+    },
+    {
+      "slotId": "backend-customization-zone",
+      "path": "backend/src/main/java/com/fastservice/platform/backend/team/",
+      "unitType": "customization-zone",
+      "ownership": "platform-managed",
+      "notes": "Generated Java implementation details stay inside the existing backend customization zone."
+    }
+  ],
+  "boundaries": {
+    "usesWorkflowGeneration": false,
+    "extendsClosedModuleRegistry": false,
+    "descriptorIsAssemblyRuntimeInput": false
+  }
+}
