@@ -32,7 +32,7 @@ what the known open edges are, and what a V2 direction would need to address.
 
 ## Planned Changes
 - `e2e-solution-to-module-validation` - Declared: complete - Repository-owned end-to-end validation from solution input through derived-app smoke
-- `v1-closure-and-v2-handoff` - Declared: planned - Factual V1 closure record and explicit V2 handoff boundaries
+- `v1-closure-and-v2-handoff` - Declared: complete - Factual V1 closure record and explicit V2 handoff boundaries
 
 ## Dependencies
 
@@ -51,9 +51,10 @@ what the known open edges are, and what a V2 direction would need to address.
 
 ## Status
 
-- Declared: proposed
+- Declared: complete
 
 ## Notes
 
 - This milestone closes V1 only after the descriptor-driven path is operationally proven.
+
 

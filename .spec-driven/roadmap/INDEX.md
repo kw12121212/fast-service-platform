@@ -7,7 +7,7 @@
 - [derived-app-trust-and-module-composability.md](milestones/derived-app-trust-and-module-composability.md) - Derived App Trust And Module Composability - complete
 - [descriptor-driven-business-module-generation.md](milestones/descriptor-driven-business-module-generation.md) - Descriptor-Driven Business Module Generation - complete
 - [engineering-support-workflows.md](milestones/engineering-support-workflows.md) - Engineering Support Workflows - complete
-- [platform-v1-integration-and-closure.md](milestones/platform-v1-integration-and-closure.md) - Platform V1 Integration And Closure - proposed
+- [platform-v1-integration-and-closure.md](milestones/platform-v1-integration-and-closure.md) - Platform V1 Integration And Closure - complete
 - [project-scoped-derived-app-lifecycle.md](milestones/project-scoped-derived-app-lifecycle.md) - Project-Scoped Derived App Lifecycle - complete
 - [release-planning.md](milestones/release-planning.md) - Release Planning - proposed
 - [reusable-enterprise-interaction-components.md](milestones/reusable-enterprise-interaction-components.md) - Reusable Enterprise Interaction Components - complete

@@ -75,3 +75,13 @@ repository-owned module set.
 - WHEN they check V1 module extension support
 - THEN they find that the module registry is closed in V1 and new module registration
   is not a supported contributor path
+
+---
+
+## V1 Closure
+
+V1 is closed. The authoritative closure record is at `docs/ai/V1-CLOSURE.md`.
+
+All six boundaries above remain in effect for V1 output. They are preserved, not relaxed.
+
+The e2e fixture at `docs/ai/tests/e2e-fixture.solution-input.json` validates the complete V1 pipeline end-to-end.
