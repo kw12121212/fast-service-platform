@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "fsp-ai-solution-input/v1",
+  "application": {
+    "name": "Leave Management Console",
+    "summary": "Internal HR console for managing leave requests with approval workflows and leave tracking.",
+    "domain": "enterprise-internal-management",
+    "targetShape": "monolith",
+    "idHint": "e2e-leave-management",
+    "packagePrefixHint": "com.fastservice.platform.derived"
+  },
+  "roles": [
+    {
+      "id": "hr-admin",
+      "name": "HR Admin",
+      "summary": "Manages leave policies, reviews leave requests, and maintains employee leave records."
+    },
+    {
+      "id": "employee",
+      "name": "Employee",
+      "summary": "Submits leave requests and views personal leave history."
+    }
+  ],
+  "domainObjects": [
+    {
+      "id": "leave-request",
+      "name": "Leave Request",
+      "summary": "Represents a single leave request with type, dates, status, and approval workflow."
+    },
+    {
+      "id": "leave-policy",
+      "name": "Leave Policy",
+      "summary": "Defines the rules and entitlements for different leave types."
+    }
+  ],
+  "workflows": [
+    {
+      "id": "submit-leave-request",
+      "name": "Submit Leave Request",
+      "summary": "Employee submits a leave request that goes through approval workflow."
+    },
+    {
+      "id": "approve-leave-request",
+      "name": "Approve Leave Request",
+      "summary": "HR Admin reviews and approves or rejects submitted leave requests."
+    }
+  ],
+  "uiReferences": {
+    "prototypeImages": [],
+    "referenceSites": []
+  },
+  "constraints": {
+    "requiredModules": [
+      "admin-shell",
+      "user-management",
+      "role-permission-management"
+    ],
+    "excludedModules": [
+      "project-management",
+      "project-repository-management",
+      "kanban-management",
+      "ticket-management"
+    ],
+    "notes": [
+      "E2E fixture: focused on core admin + leave-request descriptor-driven module.",
+      "Delivery-management modules are excluded to keep the fixture narrow."
+    ]
+  }
+}

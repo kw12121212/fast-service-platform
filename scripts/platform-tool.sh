@@ -9,6 +9,7 @@ Usage:
   ./scripts/platform-tool.sh assembly scaffold [java] <manifest-path> <absolute-output-dir>
   ./scripts/platform-tool.sh assembly verify
   ./scripts/platform-tool.sh assembly compatibility
+  ./scripts/platform-tool.sh e2e pipeline [--skip-smoke]
   ./scripts/platform-tool.sh generated-app verify [generated-app-dir]
   ./scripts/platform-tool.sh generated-app smoke [generated-app-dir]
   ./scripts/platform-tool.sh generated-app verify-java [generated-app-dir]
@@ -48,6 +49,9 @@ case "$group/$command" in
     ;;
   assembly/verify)
     "$ROOT_DIR/scripts/verify-app-assembly.sh"
+    ;;
+  e2e/pipeline)
+    "$ROOT_DIR/scripts/verify-e2e-solution-pipeline.sh" "$@"
     ;;
   assembly/compatibility)
     java "$ROOT_DIR/scripts/PlatformTooling.java" assembly-compatibility --repo-root "$ROOT_DIR"

@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "fsp-solution-to-manifest-recommendation/v1",
+  "solutionInput": {
+    "sourceAsset": "docs/ai/tests/e2e-fixture.solution-input.json",
+    "schemaVersion": "fsp-ai-solution-input/v1"
+  },
+  "planningInput": {
+    "sourceAsset": "docs/ai/tests/e2e-fixture.solution-to-manifest-plan.json",
+    "schemaVersion": "fsp-solution-to-manifest-plan/v1"
+  },
+  "application": {
+    "name": "Leave Management Console",
+    "manifestId": "e2e-leave-management",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "acceptedConstraints": [
+    {
+      "id": "keep-required-core-modules",
+      "type": "required-core-modules",
+      "reference": "docs/ai/module-registry.json#profiles/core-admin",
+      "summary": "The e2e fixture requires admin-shell, user-management, and role-permission-management as the stable core.",
+      "effect": "The standalone app-manifest must keep the core-admin module set intact."
+    },
+    {
+      "id": "preserve-delivery-exclusions",
+      "type": "explicit-excluded-modules",
+      "reference": "docs/ai/tests/e2e-fixture.solution-to-manifest-plan.json#modulePlanning/excludedModules",
+      "summary": "The planning output excludes project-management, project-repository-management, kanban-management, and ticket-management for this fixture.",
+      "effect": "Those delivery-management modules must remain out of the manifest."
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "prefer-core-admin-profile",
+      "category": "manifest-shaping",
+      "target": "profile:core-admin",
+      "recommendation": "prefer",
+      "guidanceMode": "heuristic",
+      "confidence": "high",
+      "basis": [
+        {
+          "type": "profile-match",
+          "reference": "docs/ai/module-registry.json#profiles/core-admin",
+          "summary": "The core-admin profile exactly matches the deterministic planning output."
+        },
+        {
+          "type": "planning-alignment",
+          "reference": "docs/ai/tests/e2e-fixture.solution-to-manifest-plan.json#manifestPreparation",
+          "summary": "The planning output resolves every required manifest field and leaves no unresolved conflicts."
+        }
+      ],
+      "prerequisites": [
+        "Keep admin-shell, user-management, and role-permission-management in the manifest",
+        "Leave the excluded delivery-management modules deferred for this fixture"
+      ],
+      "boundaryNotes": [
+        "This is optional guidance for the e2e fixture. The fixture uses the suggested profile."
+      ]
+    },
+    {
+      "id": "defer-project-family",
+      "category": "module-selection",
+      "target": "project-management-and-dependent-modules",
+      "recommendation": "defer",
+      "guidanceMode": "constraint-derived",
+      "confidence": "high",
+      "basis": [
+        {
+          "type": "accepted-constraint",
+          "reference": "acceptedConstraints/preserve-delivery-exclusions",
+          "summary": "The fixture explicitly excludes the delivery-management module family."
+        },
+        {
+          "type": "dependency-rule",
+          "reference": "docs/ai/module-registry.json#modules/project-management",
+          "summary": "Project-management is the dependency root for repository, kanban, and ticket workflows."
+        }
+      ],
+      "prerequisites": [
+        "Regenerate the planning artifact before reintroducing project-management"
+      ],
+      "boundaryNotes": [
+        "Because this recommendation is constraint-derived, contributors should not override it by editing the recommendation artifact alone."
+      ]
+    }
+  ],
+  "manifestShaping": {
+    "suggestedProfile": "core-admin",
+    "suggestedModules": [
+      "admin-shell",
+      "user-management",
+      "role-permission-management"
+    ],
+    "notes": [
+      "E2E fixture: produce a standalone app-manifest with core-admin modules.",
+      "The leave-request descriptor-driven module is validated separately from the manifest."
+    ]
+  },
+  "followUpGuidance": [
+    {
+      "id": "validate-leave-request-descriptor",
+      "topic": "descriptor-validation",
+      "guidance": "Validate the leave-request management-module descriptor against the descriptor schema before proceeding to assembly.",
+      "requiredBeforeAssembly": true
+    }
+  ],
+  "manifestPreparationBoundary": {
+    "standaloneManifestRequired": true,
+    "nextStep": "Validate the leave-request descriptor, create the standalone app-manifest, then invoke ./scripts/platform-tool.sh assembly scaffold."
+  }
+}

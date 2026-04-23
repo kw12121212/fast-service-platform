@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "fsp-solution-to-manifest-plan/v1",
+  "solutionInput": {
+    "sourceAsset": "docs/ai/tests/e2e-fixture.solution-input.json",
+    "schemaVersion": "fsp-ai-solution-input/v1"
+  },
+  "application": {
+    "name": "Leave Management Console",
+    "manifestId": "e2e-leave-management",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "modulePlanning": {
+    "includedModules": [
+      "admin-shell",
+      "user-management",
+      "role-permission-management"
+    ],
+    "excludedModules": [
+      "project-management",
+      "project-repository-management",
+      "kanban-management",
+      "ticket-management"
+    ],
+    "decisions": [
+      {
+        "moduleId": "admin-shell",
+        "disposition": "include",
+        "basis": [
+          {
+            "type": "required-core-module",
+            "reference": "docs/ai/module-registry.json#modules[admin-shell]",
+            "summary": "The admin shell is a required core module in every valid assembly manifest."
+          }
+        ]
+      },
+      {
+        "moduleId": "user-management",
+        "disposition": "include",
+        "basis": [
+          {
+            "type": "explicit-required-module",
+            "reference": "constraints.requiredModules",
+            "summary": "The solution input explicitly requires user-management."
+          }
+        ]
+      },
+      {
+        "moduleId": "role-permission-management",
+        "disposition": "include",
+        "basis": [
+          {
+            "type": "explicit-required-module",
+            "reference": "constraints.requiredModules",
+            "summary": "The solution input explicitly requires role-permission-management."
+          }
+        ]
+      },
+      {
+        "moduleId": "project-management",
+        "disposition": "exclude",
+        "basis": [
+          {
+            "type": "explicit-excluded-module",
+            "reference": "constraints.excludedModules",
+            "summary": "The solution input excludes project-management for this e2e fixture."
+          }
+        ]
+      },
+      {
+        "moduleId": "project-repository-management",
+        "disposition": "exclude",
+        "basis": [
+          {
+            "type": "explicit-excluded-module",
+            "reference": "constraints.excludedModules",
+            "summary": "The solution input excludes project-repository-management."
+          }
+        ]
+      },
+      {
+        "moduleId": "kanban-management",
+        "disposition": "exclude",
+        "basis": [
+          {
+            "type": "explicit-excluded-module",
+            "reference": "constraints.excludedModules",
+            "summary": "The solution input excludes kanban-management."
+          }
+        ]
+      },
+      {
+        "moduleId": "ticket-management",
+        "disposition": "exclude",
+        "basis": [
+          {
+            "type": "explicit-excluded-module",
+            "reference": "constraints.excludedModules",
+            "summary": "The solution input excludes ticket-management."
+          }
+        ]
+      }
+    ]
+  },
+  "manifestPreparation": {
+    "standaloneManifestRequired": true,
+    "resolvedFields": [
+      "application.id",
+      "application.name",
+      "application.packagePrefix",
+      "modules"
+    ],
+    "unresolvedFields": [],
+    "conflicts": [],
+    "nextStep": "Create a standalone app-manifest with the resolved application identity and included modules, then validate the leave-request descriptor, then invoke ./scripts/platform-tool.sh assembly scaffold."
+  }
+}

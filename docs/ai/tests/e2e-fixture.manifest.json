@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "fsp-app-manifest/v1",
+  "application": {
+    "id": "e2e-leave-management",
+    "name": "E2E Leave Management Console",
+    "packagePrefix": "com.fastservice.platform.derived"
+  },
+  "modules": [
+    "admin-shell",
+    "user-management",
+    "role-permission-management"
+  ]
+}
