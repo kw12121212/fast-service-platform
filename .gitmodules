@@ -1,0 +1,3 @@
+[submodule "vendor/lealone"]
+	path = vendor/lealone
+	url = git@github.com:kw12121212/lealone-source.git

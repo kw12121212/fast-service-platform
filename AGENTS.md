@@ -26,8 +26,8 @@
 
 ## Dependency Rules
 
-- `Lealone` 需要以源码形式存在于 `vendor/`：
-  - `vendor/lealone`
+- `Lealone` 以 git submodule 形式存在于 `vendor/`：
+  - `vendor/lealone`（初始化：`git submodule update --init vendor/lealone`）
 - 本地安装使用 `scripts/install-lealone-source-deps.sh`。
 - `backend/pom.xml` 中直接声明的 Tomcat 依赖当前版本为 `11.0.18`（与上游 lealone-http/pom.xml 保持一致）。
 - 不要随意把产品原则改成依赖额外外部软件库。

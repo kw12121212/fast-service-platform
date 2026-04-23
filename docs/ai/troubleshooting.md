@@ -11,8 +11,10 @@
 
 处理：
 
-1. 把源码仓库 clone 到：
-   - `vendor/lealone`
+1. 初始化 git submodule：
+   ```bash
+   git submodule update --init vendor/lealone
+   ```
 2. 执行：
 
 ```bash

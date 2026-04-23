@@ -127,7 +127,7 @@ frontend 会代理 `/service/*` 到本地 backend。
 
 - 如果只想稳定展示 baseline，先用默认 demo data 完成首页和主流程展示，再补少量现场写操作
 - 如果要演示 Git repository binding，请提前准备一个本地绝对路径 Git 仓库
-- 如果 `vendor/lealone` 依赖未准备好，先回到仓库根目录执行：
+- 如果 `vendor/lealone` 依赖未准备好，先回到仓库根目录初始化 submodule 并安装：
 
 ```bash
 ./scripts/install-lealone-source-deps.sh

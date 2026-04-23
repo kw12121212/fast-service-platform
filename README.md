@@ -123,13 +123,13 @@ Useful commands:
 
 ## Prerequisites
 
-The backend expects a source checkout of `Lealone` under `vendor/`.
+The backend expects a source checkout of `Lealone` as a git submodule under `vendor/`.
 
 Expected paths:
 
-- `vendor/lealone`
+- `vendor/lealone` (git submodule)
 
-After cloning those repositories, install the local source dependencies:
+After cloning the repository (with `--recurse-submodules` or running `git submodule update --init`), install the local source dependencies:
 
 ```bash
 ./scripts/install-lealone-source-deps.sh

@@ -8,8 +8,8 @@ MVN_BIN="${MVN_BIN:-$HOME/.sdkman/candidates/maven/current/bin/mvn}"
 export JAVA_HOME
 export PATH="$JAVA_HOME/bin:$(dirname "$MVN_BIN"):$PATH"
 
-if [[ ! -d "$ROOT_DIR/vendor/lealone/.git" ]]; then
-  echo "Missing vendor/lealone clone" >&2
+if [[ ! -e "$ROOT_DIR/vendor/lealone/.git" ]]; then
+  echo "vendor/lealone submodule not initialized. Run: git submodule update --init vendor/lealone" >&2
   exit 1
 fi
 

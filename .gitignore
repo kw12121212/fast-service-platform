@@ -42,7 +42,8 @@ test-results/
 playwright-report/
 
 # Vendored source dependencies
-vendor/
+vendor/*
+!vendor/lealone
 
 # Temporary files
 tmp/

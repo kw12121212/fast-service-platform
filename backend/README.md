@@ -15,6 +15,11 @@
 
 本地依赖策略：
 
-- `vendor/lealone`
+- `vendor/lealone`（git submodule）
 
-这个源码仓库需要先 clone 到本项目内，再通过 `scripts/install-lealone-source-deps.sh` 安装到本地 Maven 仓库。
+这个源码仓库通过 git submodule 管理，初始化后通过 `scripts/install-lealone-source-deps.sh` 安装到本地 Maven 仓库。
+
+```bash
+git submodule update --init vendor/lealone
+./scripts/install-lealone-source-deps.sh
+```
